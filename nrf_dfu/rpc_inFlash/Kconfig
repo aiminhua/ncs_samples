@@ -1,0 +1,12 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+source "Kconfig.zephyr"
+
+config BLE_NETWORK_CORE
+	bool "Both BLE host and controller run on network core"
+	help
+	  Enable the whole BLE stack running on network core

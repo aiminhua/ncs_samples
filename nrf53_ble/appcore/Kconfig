@@ -1,0 +1,90 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
+#
+
+source "Kconfig.zephyr"
+menu "nRF53 BLE custom"
+
+config BLE_NETWORK_CORE
+	bool "Both BLE host and controller run on network core"
+	help
+	  Enable the whole BLE stack running on network core
+
+config EXAMPLE_IIC
+	bool "load IIC example or not"
+	help
+		if yes, load IIC example
+		
+config EXAMPLE_SPIM
+	bool "load SPI master example or not"
+	help
+		if yes, load SPI master example		
+		
+config EXAMPLE_EXT_INT
+	bool "load external IO interrupt example or not"
+	help
+		if yes, load external IO interrupt example
+
+config EXAMPLE_ADC
+	bool "load ADC example or not"
+	help
+		if yes, load ADC example		
+
+config EXAMPLE_RPC_IN_USE
+	bool "load RPC usage example or not"
+	help
+		if yes,load RPC usage example
+choice
+	prompt "RPC usage mode"
+	depends on 	EXAMPLE_RPC_IN_USE
+	default RPC_REMOTE_API
+	help
+		Select which RPC mode to use:
+		-  API method
+		-  simulated UART mode
+	config RPC_REMOTE_API
+		bool "app core and net core communicate by API. that is, app core call net core API, and net core can also call app core API"	  
+	config RPC_SIMULATE_UART
+		bool "app core and net core communicate by tx and rx data directly, just like uart"
+endchoice
+
+config RPC_NUS_DEDICATE
+	bool "load dedicated NUS RPC API"
+	help
+		if yes, load dedicated NUS RPC API
+
+config EXAMPLE_HS_UART
+	bool "load high speed UART example or not"
+	help
+		if yes, load high speed UART example	  
+
+config EXAMPLE_DFU_OTA
+	bool "load DFU example over BLE SMP"
+	help
+		if yes, load BLE OTA example
+
+config DFU_EXTERNAL_FLASH
+	bool "external flash is used as the secondary slot of MCUBoot"
+	default n
+	help
+		if yes, external flash is used as the secondary slot of MCUBoot
+
+config EXAMPLE_FLASH
+	bool "load Flash access usage example"
+	default n
+	help
+		if yes, load Flash access usage example
+
+config EXAMPLE_RAW_NRFX
+	bool "load raw nrfx driver(spim3 & rtc) usage example"
+	default n
+	help
+		if yes, load raw spim3 & rtc API usage example		
+
+module = NRF53_EXAMPLES_CONFIG
+module-str = nrf53 specific examples configurations
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endmenu

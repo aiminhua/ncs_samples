@@ -1,0 +1,29 @@
+/* overlay file for app core */
+
+/* adjust the RAM size of application image */
+&sram0_image{
+	reg = < 0x20000000 0x7A000 >;
+};
+
+&sram0_s{
+	reg = < 0x20000000 0x7A000 >;
+};
+
+/delete-node/ &sram0_shared;
+
+/ {
+	chosen {
+		/* shared memory reserved for the inter-processor communication */
+		zephyr,ipc_shm = &sram0_shared;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;	
+		sram0_shared: memory@0x2007A000 {
+			/* SRAM allocated to shared memory */
+			reg = <0x2007A000 0x4000>;
+		};
+	};
+};
