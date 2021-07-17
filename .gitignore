@@ -13,6 +13,8 @@ cscope.*
 .dir
 venv
 .venv
+*.hex
+*.bin
 
 /*.patch
 
