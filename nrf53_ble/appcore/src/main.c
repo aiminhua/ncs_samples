@@ -18,8 +18,8 @@
 #ifdef CONFIG_MCUMGR_CMD_OS_MGMT
 #include "os_mgmt/os_mgmt.h"
 #endif
-#ifdef CONFIG_EXAMPLE_DFU_OTA
-#include "rpc_app_smp.h"
+#ifdef CONFIG_RPC_SMP_BT
+#include "rpc_app_smp_bt.h"
 #include <img_mgmt/img_mgmt_impl.h>
 #endif
 #include <logging/log.h>
@@ -28,7 +28,12 @@
 LOG_MODULE_REGISTER(main, 3);
 
 #define ERASE_DELAY_AFTER_BOOT 30   //unit: s
+#ifndef CONFIG_NCS_OLD
+static struct k_work_delayable blinky_work;
+#else
 static struct k_delayed_work blinky_work;
+#endif
+
 K_SEM_DEFINE(sem_rpc_tx, 0, 1);
 K_SEM_DEFINE(sem_spi_txrx, 0, 1);
 K_SEM_DEFINE(sem_raw_nrfx_txrx, 0, 1);
@@ -62,7 +67,7 @@ static void get_device_handle(void)
 	devUart0 = device_get_binding("UART_0");
     devUart1 = device_get_binding("UART_1");
 }
-
+#ifdef CONFIG_NCS_OLD
 void set_device_pm_state(void)
 {
 	int err;
@@ -131,8 +136,78 @@ void set_device_pm_state(void)
 	}
 
 }
+#else
+void set_device_pm_state(void)
+{
+	int err;
+	uint32_t pm_state;
 
-#endif
+	pm_device_state_get(devUart1, &pm_state);
+	if (pm_state == PM_DEVICE_STATE_SUSPEND)
+	{
+		LOG_INF("UART1 is in suspend state. We activate it");
+		err = pm_device_state_set(devUart1,
+						PM_DEVICE_STATE_ACTIVE,
+						NULL, NULL);
+		if (err) {
+			LOG_ERR("UART1 enable failed");			
+		}
+		else
+		{
+			LOG_INF("## UART1 is actvie now ##");
+		}		
+	}
+	else{
+		LOG_INF("UART1 is in active state. We suspend it");
+		err = pm_device_state_set(devUart1,
+						PM_DEVICE_STATE_SUSPEND,
+						NULL, NULL);
+		if (err) {
+			LOG_ERR("UART1 disable failed");
+		}
+		else
+		{
+			LOG_INF("## UART1 is suspended now ##");
+		}		
+	}
+
+
+
+	pm_device_state_get(devUart0, &pm_state);
+	if (pm_state == PM_DEVICE_STATE_SUSPEND)
+	{
+		LOG_INF("UART0 is in suspend state. We activate it");
+		err = pm_device_state_set(devUart0,
+						PM_DEVICE_STATE_ACTIVE,
+						NULL, NULL);
+		if (err) {
+			LOG_ERR("UART0 enable failed");			
+		}
+		else
+		{
+			LOG_INF("## UART0 is actvie now ##");
+		}		
+	}
+	else{
+		LOG_INF("UART0 is in active state. We suspend it");
+		//print out all the pending logging messages
+		while(log_process(false));
+		err = pm_device_state_set(devUart0,
+						PM_DEVICE_STATE_SUSPEND,
+						NULL, NULL);
+		if (err) {
+			LOG_ERR("UART0 disable failed");
+		}
+		else
+		{
+			LOG_INF("## UART0 is suspended now ##");
+		}		
+	}
+
+}
+#endif //CONFIG_NCS_OLD
+
+#endif //CONFIG_PM_DEVICE
 
 void button_changed(uint32_t button_state, uint32_t has_changed)
 {
@@ -164,10 +239,17 @@ static void blinky_work_fn(struct k_work *work)
 {
     //printk("blinky fn in system workqueue\n");
 	gpio_pin_set(ledDev, LED0_PIN, (int)led_is_on);
-	led_is_on = !led_is_on;    
+	led_is_on = !led_is_on;
+
+#ifndef CONFIG_NCS_OLD
+	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
+					   	K_SECONDS(2));
+#else
     //k_delayed_work_submit(&blinky_work, K_SECONDS(2));
 	k_delayed_work_submit_to_queue(&application_work_q, &blinky_work,
-				       K_SECONDS(2));			
+				       K_SECONDS(2));
+#endif
+
 }
 
 static void assign_io_to_netcore(void)
@@ -176,14 +258,16 @@ static void assign_io_to_netcore(void)
 					GPIO_PIN_CNF_MCUSEL_Pos);
 }
 
-#ifdef CONFIG_EXAMPLE_DFU_OTA
+// #ifdef CONFIG_NCS_OLD
 // static struct k_delayed_work erase_slot_work;
+// #else
+// static struct k_work_delayable erase_slot_work;
+// #endif //CONFIG_NCS_OLD
 // static void erase_work_fn(struct k_work *work)
 // {   	
 //    	img_mgmt_impl_erase_slot();
-// 	LOG_WRN("Time is out and erase the secondary slot to prepare next DFU");
+// 	LOG_WRN("Time is out and erase the secondary slot to speed up DFU");
 // }
-#endif  //CONFIG_EXAMPLE_DFU_OTA
 
 void main(void)
 {
@@ -212,27 +296,39 @@ void main(void)
 		printk("Cannot init buttons (err: %d)", err);
 	}
 
+#ifndef CONFIG_NCS_OLD
+	k_work_queue_start(&application_work_q, application_stack_area,
+			   K_THREAD_STACK_SIZEOF(application_stack_area), 10,
+			   NULL);
+	k_work_init_delayable(&blinky_work, blinky_work_fn);
+	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
+					   	K_MSEC(20));	
+#else
 	k_work_q_start(&application_work_q, application_stack_area,
 		       K_THREAD_STACK_SIZEOF(application_stack_area),
 		       10);
-
 	k_delayed_work_init(&blinky_work, blinky_work_fn);
 	// k_delayed_work_submit(&blinky_work, K_MSEC(20));
 	k_delayed_work_submit_to_queue(&application_work_q, &blinky_work,
 				       K_MSEC(20));				   	
-
-#ifdef CONFIG_EXAMPLE_DFU_OTA
+#endif
+#ifdef CONFIG_RPC_SMP_BT
 	LOG_INF("## OTA/Serial DFU example ##");
-	smp_rpc_init();
+	
 #ifdef CONFIG_MCUMGR_CMD_OS_MGMT
 	os_mgmt_register_group();
 #endif	
 #ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
 	img_mgmt_register_group();
 #endif //CONFIG_MCUMGR_CMD_IMG_MGMT
-	//k_delayed_work_init(&erase_slot_work, erase_work_fn);
-	//k_delayed_work_submit(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
-#endif  //CONFIG_EXAMPLE_DFU_OTA
+// #ifdef CONFIG_NCS_OLD
+// 	k_delayed_work_init(&erase_slot_work, erase_work_fn);
+// 	k_delayed_work_submit(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
+// #else
+// 	k_work_init_delayable(&erase_slot_work, erase_work_fn);
+// 	k_work_reschedule(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
+// #endif
+#endif  //CONFIG_RPC_SMP_BT
 
 	//main thread 
 	// while(1)

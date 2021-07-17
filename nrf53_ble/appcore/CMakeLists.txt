@@ -2,12 +2,6 @@
 
 cmake_minimum_required(VERSION 3.13.1)
 
-# Use static partition layout to ensure consistency between builds.
-# This is to ensure settings storage will be at the same location after the DFU.
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pm_static_external_flash.yml")
-  set(PM_STATIC_YML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/pm_static_external_flash.yml)
-endif()
-
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(comprensive_example)
 
@@ -25,24 +19,14 @@ target_sources_ifdef(CONFIG_EXAMPLE_HS_UART app
                      PRIVATE src/uart_thread.c)
 					 
 target_sources_ifdef(CONFIG_EXAMPLE_ADC app
-                     PRIVATE src/adc_thread.c)					 
-
-if (CONFIG_EXAMPLE_RPC_IN_USE AND CONFIG_RPC_REMOTE_API)
-  target_sources(app PRIVATE src/rpc_thread1.c)
-endif()
-
-if (CONFIG_EXAMPLE_RPC_IN_USE AND CONFIG_RPC_SIMULATE_UART)
-  target_sources(app PRIVATE src/rpc_thread2.c)
-endif()                 
+                     PRIVATE src/adc_thread.c)
 					 
 target_sources_ifdef(CONFIG_RPC_REMOTE_API app
-                     PRIVATE src/rpc_app_api_general.c src/rpc_app_api.c)
-					 
-target_sources_ifdef(CONFIG_RPC_NUS_DEDICATE app
-                     PRIVATE src/rpc_app_nus.c)						 
+                     PRIVATE src/rpc_app_api_general.c src/rpc_app_api.c src/rpc_thread.c)
+				 
 
-target_sources_ifdef(CONFIG_EXAMPLE_DFU_OTA app
-                     PRIVATE src/rpc_app_smp.c)		
+target_sources_ifdef(CONFIG_RPC_SMP_BT app
+                     PRIVATE src/rpc_app_smp_bt.c)		
 
 target_sources_ifdef(CONFIG_EXAMPLE_FLASH app
                      PRIVATE src/flash_thread.c)

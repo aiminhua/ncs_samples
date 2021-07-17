@@ -38,22 +38,18 @@ endmenu
 menu "nRF53 BLE custom"
 
 config RPC_REMOTE_API
-	bool "(test purpose) app core and net core communicate by API. that is, app core call net core API, and net core can also call app core API"
+	bool "app core and net core communicate by remote API. that is, app core can call net core API, and net core can also call app core API"
 	help
 	  enable the RPC api mode
-	  
-config RPC_SIMULATE_UART
-	bool "(test purpose) app core and net core communicate by tx and rx data directly, just like uart"
-	help
-	  enable the RPC uart mode
-	  
-config RPC_NUS_DEDICATE
-	bool "load dedicated NUS RPC API"
-	help
-		if yes, load dedicated NUS RPC API
-		
-config EXAMPLE_DFU_OTA
+	
+config RPC_SMP_BT
 	bool "(test purpose) load DFU example over BLE SMP"
 	help
-		if yes, load BLE OTA example	  
+		if yes, load DFU example over BLE SMP
+
+config NCS_OLD
+	bool "use NCS v1.5.1 or earlier API"
+	help
+		use NCS v1.5.1 or earlier API
+		
 endmenu	  

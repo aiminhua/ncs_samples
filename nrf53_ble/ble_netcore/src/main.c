@@ -11,38 +11,24 @@
 #include <zephyr/types.h>
 #include <zephyr.h>
 #include <drivers/uart.h>
-
 #include <device.h>
 #include <soc.h>
-
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
 #include <bluetooth/hci.h>
-
 #include <bluetooth/services/nus.h>
-
-// #include <dk_buttons_and_leds.h>
-
 #include <settings/settings.h>
-
 #include <stdio.h>
 #include <logging/log.h>
-#include "rpc_net_nus.h"
-#include "rpc_net_smp_bt.h"
 #include "rpc_net_api.h"
-
-#ifdef CONFIG_RPC_SIMULATE_UART
-#include "nrf_rpc_tr.h"
-#endif
-
 #include <drivers/gpio.h>
 
-#ifdef CONFIG_EXAMPLE_DFU_OTA
+#ifdef CONFIG_RPC_SMP_BT
 #include "rpc_net_smp_bt.h"
 #endif
 
-#define LOG_MODULE_NAME peripheral_uart
+#define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define STACKSIZE CONFIG_BT_NUS_THREAD_STACK_SIZE
@@ -97,12 +83,6 @@ static void exchange_func(struct bt_conn *conn, uint8_t att_err,
 }
 #endif
 
-/*
-* format: 0x55 CMD LEN Payload 0xAA (Checksum)
-* 0x55 0x01 0x01 0x00 0xAA  //connected
-* 0x55 0x01 0x01 0x01 0xAA  //disconnected
-*/
-
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];	
@@ -124,16 +104,6 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	if (err) {
 		LOG_ERR("send connected err %d", err);
 	}	
-#endif
-#ifdef CONFIG_RPC_SIMULATE_UART
-	int ret;
-	uint8_t data[] = {0x55, 0x01, 0x01, 0x00, 0xAA};
-	size_t len = 5;
-
-	ret = nrf_rpc_tr_send(data, len);
-	if (ret) {
-		printk("connected @ rpc failed: %d\n", ret);			
-	}
 #endif
 
 #ifdef CONFIG_BT_GATT_CLIENT		
@@ -166,16 +136,6 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	}	
 #endif
 
-#ifdef CONFIG_RPC_SIMULATE_UART
-	int ret;
-	uint8_t data[] = {0x55, 0x01, 0x01, 0x01, 0xAA};
-	size_t len = 5;
-
-	ret = nrf_rpc_tr_send(data, len);
-	if (ret) {
-		printk("disconnected @ rpc failed: %d\n", ret);			
-	}
-#endif		
 }
 
 
@@ -196,9 +156,6 @@ static void bt_nus_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 	LOG_INF("Received data from: %s", log_strdup(addr));
 	LOG_HEXDUMP_INF(data, len, "data:");
 
-#ifdef CONFIG_RPC_NUS_DEDICATE
-	rpc_net_bt_nus_receive_cb(data, len);
-#endif
 #ifdef CONFIG_RPC_REMOTE_API	
 	err = net2app_send_nus((uint8_t *)data, len);
 	if (err) {
@@ -206,55 +163,11 @@ static void bt_nus_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 	}	
 #endif
 
-#ifdef CONFIG_RPC_SIMULATE_UART
-		uint8_t * data1 = (uint8_t *)data;
-		err = nrf_rpc_tr_send(data1, len);
-		if (err) {
-			printk("nrf_rpc_tr_send netcore failed: %d\n", err);			
-		}
-		else
-		{
-			printk("nrf_rpc_tr_send success netcore\n");
-		}
-#endif
-
 }
 
 static struct bt_nus_cb nus_cb = {
 	.received = bt_nus_receive_cb,
 };
-
-#ifdef CONFIG_RPC_SIMULATE_UART
-/* Callback from transport layer that handles incoming. */
-static void rpc_receive_handler(const uint8_t *packet, size_t len)
-{
-	uint16_t i;
-	int err;
-	uint16_t nus_len;
-
-	printk("received data from app core by RPC \n");
-	for (i = 0; i < len; i++) {
-		printk("%x", packet[i]);
-	}
-	printk("\n");
-
-	if (!NRF_RPC_TR_AUTO_FREE_RX_BUF) {
-		nrf_rpc_tr_free_rx_buf(packet);
-	}
-
-	nus_len = len;
-
-	if (nus_len > (bt_gatt_get_mtu(current_conn)-3))
-	{
-		LOG_WRN("RPC data length is greater than MTU size");
-		nus_len = bt_gatt_get_mtu(current_conn)-3;
-	}
-	err = bt_nus_send(current_conn, packet, nus_len);
-	if (err) {
-		LOG_WRN("bt_nus_send @ rpc err %d", err);
-	}
-}
-#endif
 
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
@@ -295,18 +208,6 @@ void setup_ext_int(void)
 	}
 }
 
-
-// static void button_changed(uint32_t button_state, uint32_t has_changed)
-// {
-// 	uint32_t buttons = button_state & has_changed;
-	
-// 	if (buttons & DK_BTN4_MSK) {
-// 		LOG_INF("button4 isr and going to send a nus packet");
-// 		 k_sem_give(&sem_nus_op);	
-// 	}	
-// }
-
-
 void main(void)
 {
 	
@@ -315,19 +216,6 @@ void main(void)
 	LOG_INF("### netcore firmware compiled at %s %s\n", __TIME__, __DATE__);
 
 	setup_ext_int();
-	// err = dk_buttons_init(button_changed);
-	// if (err) {
-	// 	LOG_ERR("Cannot init buttons (err: %d)", err);
-	// }
-
-
-#ifdef CONFIG_RPC_SIMULATE_UART
-	err = nrf_rpc_tr_init(rpc_receive_handler);
-	if (err < 0) {
-		printk("rpc tr init error %d \n", err);
-		return;
-	}	
-#endif
 
 	bt_conn_cb_register(&conn_callbacks);
 
@@ -337,7 +225,7 @@ void main(void)
 		return;
 	}
 
-#ifdef CONFIG_EXAMPLE_DFU_OTA
+#ifdef CONFIG_RPC_SMP_BT
 	/* Initialize the Bluetooth mcumgr transport. */
 	smp_bt_register_rpc();
 #endif
