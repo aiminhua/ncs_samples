@@ -17,11 +17,11 @@ Most samples can be put anywhere under NCS local repo. However, to build **ble_n
 And put it at the same folder level as nrf or zephyr folder just like below.
 
 --NCS root folder
-	--nrf
-	--zephyr
-	--sample
-		--nrf53_ble
-			--ble_netcore
+  --nrf
+  --zephyr
+    --sample
+      --nrf53_ble
+        --ble_netcore
 
 Thus, all the description documents would assume that you put this repo under folder **sample**.
 
@@ -29,18 +29,18 @@ A overview of the samples in this repo is shown below.
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |Sample                                 |Brief                                                                                      +
 +=======================================+===========================================================================================+
-|sample/nrf53_ble/appcore               |a comprehensive example containing rpc, dfu, spi, uart, etc. Work with ble_netcore|
-+---------------------------------------+----------------------------------------------------------------------------------+
-|sample/nrf53_ble/ble_netcore           |the whole ble stack and services running on the netcore                           |
-+---------------------------------------+----------------------------------------------------------------------------------+
-|sample/nrf_dfu/inFlash                 |nrf dfu example with secondary slot on internal Flash                             |
-+---------------------------------------+----------------------------------------------------------------------------------+
-|sample/nrf_dfu/exFlash                 |nrf dfu example with secondary slot on external Flash                             |
-+---------------------------------------+----------------------------------------------------------------------------------+
+|sample/nrf53_ble/appcore               |a comprehensive example containing rpc, dfu, spi, uart, etc. Work with ble_netcore         |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/nrf53_ble/ble_netcore           |the whole ble stack and services running on the netcore                                    |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/nrf_dfu/inFlash                 |nrf dfu example with secondary slot on internal Flash                                      |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/nrf_dfu/exFlash                 |nrf dfu example with secondary slot on external Flash                                      |
++---------------------------------------+-------------------------------------------------------------------------------------------+
 |sample/nrf_dfu/ap_inFlash_rpc          |5340 appcore nrf dfu example with secondary slot on internal Flash. Work with ble_netcore  |
-+---------------------------------------+----------------------------------------------------------------------------------+
++---------------------------------------+-------------------------------------------------------------------------------------------+
 |sample/nrf_dfu/ap_exFlash_rpc          |5340 appcore nrf dfu example with secondary slot on external Flash. Work with ble_netcore  |
-+---------------------------------------+----------------------------------------------------------------------------------+
++---------------------------------------+-------------------------------------------------------------------------------------------+
 
 **note: see the README.rst in the individual sample folder for a detailed description of the sample**
 
