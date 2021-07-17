@@ -16,16 +16,21 @@ You can check the diff file for a quick overview of the changes. To make the sam
 Most samples can be put anywhere under NCS local repo. However, to build **ble_netcore** automatically, you must rename the repo's local folder name as **sample**. 
 And put it at the same folder level as nrf or zephyr folder just like below.
 
---NCS root folder
-  --nrf
-  --zephyr
-    --sample
-      --nrf53_ble
-        --ble_netcore
+::
+
+    NCS root folder
+    ├── nrf
+    ├── zephyr
+    ├── sample          
+    │   ├── nrf53_ble
+    │       └── ble_netcore
+    |       └── appcore 
+
 
 Thus, all the description documents would assume that you put this repo under folder **sample**.
 
 A overview of the samples in this repo is shown below.
+
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |Sample                                 |Brief                                                                                      +
 +=======================================+===========================================================================================+
