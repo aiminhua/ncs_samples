@@ -1,7 +1,7 @@
-.. exFlash:
+.. ap_inFlash_rpc:
 
-nrf_dfu OTA example(external Secondary slot)
-############################################
+nrf_dfu OTA example(internal Secondary slot & RPC)
+##################################################
 
 .. contents::
    :local:
@@ -14,11 +14,23 @@ for a detailed description of nRF5 SDK DFU steps if you don't have too much know
 Overview
 ********
 
-In this sample, the secondary slot is on the external Flash. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
-the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the BLE host is running on the application core in this sample(``zephyr/samples/bluetooth/hci_rpmsg`` runs on the netcore). 
+In this sample, the secondary slot is on the internal Flash of ``nRF5340``. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
+the swap operation to finish the whole DFU process. This sample only supports ``nRF5340``, and both BLE host and controller run on the network core(``nrf53_ble/ble_netcore`` runs on the netcore).
+Applicatoin core and network core communicate with each other by ``nrf_rpc''.  
 
 Build
 *****
+
+Make sure nrf53_ble/ble_netcore is put in the following folder.
+
+::
+
+    NCS root folder
+    ├── nrf
+    ├── zephyr
+    ├── **sample**          
+    │   ├── nrf53_ble
+    │       └── **ble_netcore**
 
 By default, this sample works with NCS ``v1.6.0``. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
@@ -31,7 +43,7 @@ The following development kits are tested for this sample. However, other nRF52 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
+|nrf5340dk_nrf5340_cpuapp                                          |
 +------------------------------------------------------------------+
 
 For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
@@ -50,6 +62,6 @@ After programming the sample to your development kit, test it by performing the 
 #. |connect_terminal|
 #. Optionally, connect the RTT console to display logging messages.
 #. Reset the kit. It shall advertise ``nus_netcore``
-#. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex and net_core_app_signed.hex(this file is not present for nRF52) to folder ``update_zip``. Double click ``zip_generate.bat``.
-#. If you want to update net core image, use 53_netcore_extFlash_norpc.zip. if you want to update app core image, use 53_appcore_extFlash_norpc.zip
+#. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex and net_core_app_signed.hex to folder ``update_zip``. Double click ``zip_generate.bat``.
+#. If you want to update net core image, use 53_netcore_inFlash_rpc.zip. if you want to update app core image, use 53_appcore_inFlash_rpc.zip
 #. Perform the DFU steps as nRF5 SDK do
