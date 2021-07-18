@@ -28,9 +28,9 @@ Make sure nrf53_ble/ble_netcore is put in the following folder.
     NCS root folder
     ├── nrf
     ├── zephyr
-    ├── **sample**          
+    ├── sample          
     │   ├── nrf53_ble
-    │       └── **ble_netcore**
+    │       └── ble_netcore
 
 By default, this sample works with NCS ``v1.6.0``. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.

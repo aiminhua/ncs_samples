@@ -142,9 +142,6 @@ int my_uart_send(const uint8_t *buf, size_t len)
 	return err;		
 }
 
-#ifdef CONFIG_RPC_SIMULATE_UART
-extern bool get_ble_connection_status(void);
-#endif
 void uart_thread(void)
 {    
 	static uint32_t uart_len;	
@@ -166,15 +163,7 @@ void uart_thread(void)
 			}	
 		}
 #endif
-#ifdef CONFIG_RPC_SIMULATE_UART
-		if (get_ble_connection_status())
-		{
-			int err = nrf_rpc_tr_send(buf->data,buf->len);
-			if (err) {
-				LOG_WRN("nrf_rpc_tr_send err %d", err);			
-			}			
-		}
-#endif
+
 		my_uart_send(buf->data,buf->len);
 
 		uart_len += buf->len;

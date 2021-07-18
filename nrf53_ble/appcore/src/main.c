@@ -22,13 +22,20 @@
 #include "rpc_app_smp_bt.h"
 #include <img_mgmt/img_mgmt_impl.h>
 #endif
+#ifdef CONFIG_NRF_DFU
+#include "nrf_dfu_settings.h"
+#include "nrf_dfu.h"
+#include "power/reboot.h"
+#include "nrf_dfu.h"
+#include "nrf_dfu_validation.h"
+#endif
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
-
-LOG_MODULE_REGISTER(main, 3);
+#define LOG_MODULE_NAME main
+LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define ERASE_DELAY_AFTER_BOOT 30   //unit: s
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 static struct k_work_delayable blinky_work;
 #else
 static struct k_delayed_work blinky_work;
@@ -67,7 +74,7 @@ static void get_device_handle(void)
 	devUart0 = device_get_binding("UART_0");
     devUart1 = device_get_binding("UART_1");
 }
-#ifdef CONFIG_NCS_OLD
+#ifdef CONFIG_NCS_V1_5_1
 void set_device_pm_state(void)
 {
 	int err;
@@ -205,7 +212,7 @@ void set_device_pm_state(void)
 	}
 
 }
-#endif //CONFIG_NCS_OLD
+#endif //CONFIG_NCS_V1_5_1
 
 #endif //CONFIG_PM_DEVICE
 
@@ -241,7 +248,7 @@ static void blinky_work_fn(struct k_work *work)
 	gpio_pin_set(ledDev, LED0_PIN, (int)led_is_on);
 	led_is_on = !led_is_on;
 
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
 					   	K_SECONDS(2));
 #else
@@ -258,16 +265,64 @@ static void assign_io_to_netcore(void)
 					GPIO_PIN_CNF_MCUSEL_Pos);
 }
 
-// #ifdef CONFIG_NCS_OLD
+// #ifdef CONFIG_NCS_V1_5_1
 // static struct k_delayed_work erase_slot_work;
 // #else
 // static struct k_work_delayable erase_slot_work;
-// #endif //CONFIG_NCS_OLD
+// #endif //CONFIG_NCS_V1_5_1
 // static void erase_work_fn(struct k_work *work)
 // {   	
 //    	img_mgmt_impl_erase_slot();
 // 	LOG_WRN("Time is out and erase the secondary slot to speed up DFU");
 // }
+
+#ifdef CONFIG_NRF_DFU
+/**@brief Function for handling DFU events.
+ */
+static void dfu_observer(nrf_dfu_evt_type_t evt_type)
+{
+    switch (evt_type)
+    {
+        case NRF_DFU_EVT_DFU_STARTED:
+        case NRF_DFU_EVT_OBJECT_RECEIVED:
+
+            break;
+        case NRF_DFU_EVT_DFU_COMPLETED:
+        case NRF_DFU_EVT_DFU_ABORTED:
+			LOG_INF("resetting...");
+			while(log_process(false));
+            sys_reboot(SYS_REBOOT_WARM);
+            break;
+        case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:
+            // Reset the internal state of the DFU settings to the last stored state.
+			LOG_INF("NRF_DFU_EVT_TRANSPORT_DEACTIVATED");
+            nrf_dfu_settings_reinit();
+            break;
+        default:
+            break;
+    }
+
+}
+
+int dfu_init(void)
+{
+    int ret_val;
+
+    ret_val = nrf_dfu_settings_init(true);
+    if (ret_val != NRF_SUCCESS)
+	{
+		LOG_WRN("dfu settings init err %d", ret_val);
+	}
+
+    ret_val = nrf_dfu_init(dfu_observer);
+    if (ret_val != NRF_SUCCESS)
+	{
+		LOG_WRN("dfu init err %d", ret_val);
+	}
+
+    return ret_val;
+}
+#endif //CONFIG_NRF_DFU
 
 void main(void)
 {
@@ -296,7 +351,7 @@ void main(void)
 		printk("Cannot init buttons (err: %d)", err);
 	}
 
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 	k_work_queue_start(&application_work_q, application_stack_area,
 			   K_THREAD_STACK_SIZEOF(application_stack_area), 10,
 			   NULL);
@@ -312,16 +367,16 @@ void main(void)
 	k_delayed_work_submit_to_queue(&application_work_q, &blinky_work,
 				       K_MSEC(20));				   	
 #endif
+
 #ifdef CONFIG_RPC_SMP_BT
-	LOG_INF("## OTA/Serial DFU example ##");
-	
+	LOG_INF("## OTA/Serial DFU example ##");	
 #ifdef CONFIG_MCUMGR_CMD_OS_MGMT
 	os_mgmt_register_group();
 #endif	
 #ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
 	img_mgmt_register_group();
 #endif //CONFIG_MCUMGR_CMD_IMG_MGMT
-// #ifdef CONFIG_NCS_OLD
+// #ifdef CONFIG_NCS_V1_5_1
 // 	k_delayed_work_init(&erase_slot_work, erase_work_fn);
 // 	k_delayed_work_submit(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
 // #else
@@ -330,6 +385,12 @@ void main(void)
 // #endif
 #endif  //CONFIG_RPC_SMP_BT
 
+#ifdef CONFIG_NRF_DFU
+	err = dfu_init();
+	if (err) {
+		LOG_ERR("dfu service init err %d", err);		
+	}
+#endif //CONFIG_NRF_DFU
 	//main thread 
 	// while(1)
 	// {

@@ -77,7 +77,7 @@ uint32_t nrf_dfu_init(nrf_dfu_observer_t observer)
 
     m_user_observer = observer;
 
-    printk("##DFU module enter");
+    printk("initialize nrf_dfu \n\r");
 
     boot_write_img_confirmed();
 

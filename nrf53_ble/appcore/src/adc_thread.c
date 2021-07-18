@@ -41,7 +41,7 @@ static const struct device *adc_dev;
 static int16_t adc_buffer[NUM_OF_CH];
 static bool adc_async_read_pending;
 
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 static struct k_work_delayable adc_work;
 #else
 static struct k_delayed_work adc_work;
@@ -140,7 +140,7 @@ static void adc_sample_async(struct k_work *work)
 			}			
 		}
 	}
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 	k_work_reschedule(&adc_work, K_SECONDS(ADC_SAMPLE_INTERVAL));
 #else
 	k_delayed_work_submit(&adc_work, K_SECONDS(ADC_SAMPLE_INTERVAL));
@@ -188,13 +188,13 @@ static int init_adc(void)
 
 
 #ifdef CONFIG_ADC_ASYNC
-#ifndef CONFIG_NCS_OLD
+#ifndef CONFIG_NCS_V1_5_1
 	k_work_init_delayable(&adc_work, adc_sample_async);
 	k_work_reschedule(&adc_work, K_MSEC(10));
 #else
 	k_delayed_work_init(&adc_work, adc_sample_async);
 	k_delayed_work_submit(&adc_work, K_MSEC(10));
-#endif //CONFIG_NCS_OLD	
+#endif //CONFIG_NCS_V1_5_1	
 #endif //CONFIG_ADC_ASYNC
 
 	return 0;
