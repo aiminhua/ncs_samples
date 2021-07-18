@@ -4,28 +4,6 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
-# Enable a firmware update of the network core application if
-# parent image enables a firmware update for itself.
-macro(network_core_firmware_update_enable netcore_image)
-  if (CONFIG_BOOTLOADER_MCUBOOT AND CONFIG_NRF53_UPGRADE_NETWORK_CORE)
-    # Inject this configuration from parent image to enable
-    # secure bootloader on the network core. This enables firmware update
-    # of the network core application.
-    add_overlay_config(
-      ${netcore_image}
-      "${ZEPHYR_NRF_MODULE_DIR}/subsys/bootloader/image/secure_boot.conf"
-    )
-
-    # Inject this configuration from parent image mcuboot to enable
-    # the PCD subsystem which is used to communicate the firmware update
-    # to the network core bootloader.
-    add_overlay_config(
-      mcuboot
-      "${ZEPHYR_NRF_MODULE_DIR}/subsys/pcd/pcd.conf"
-    )
-  endif()
-endmacro()
-
 if (CONFIG_SPM)
   get_cmake_property(VARIABLES              VARIABLES)
   get_cmake_property(VARIABLES_CACHED CACHE_VARIABLES)
@@ -40,20 +18,6 @@ if (CONFIG_SPM)
   endforeach()
 
   set(spm_CONFIG_SPM_SECURE_SERVICES ${CONFIG_SPM_SECURE_SERVICES})
-
-  if (CONFIG_SPM_SERVICE_NS_HANDLER_FROM_SPM_FAULT)
-      add_overlay_config(
-        spm
-        ${NRF_DIR}/samples/spm/spm_ns_handler_from_spm_fault.conf
-        )
-  endif()
-
-  if (CONFIG_BOARD_ENABLE_CPUNET)
-      add_overlay_config(
-        spm
-        ${NRF_DIR}/samples/spm/spm_enable_cpunet.conf
-        )
-  endif()
 
   add_child_image(
     NAME spm
@@ -115,7 +79,7 @@ if (CONFIG_BT_RPMSG_NRF53 OR CONFIG_BLE_NETWORK_CORE)
     else()
       set(NETCORE_IMAGE "hci_rpmsg")
       if (CONFIG_BLE_NETWORK_CORE)
-        set(NETCORE_IMAGE_PATH "${ZEPHYR_BASE}/../sample/nrf53_ble/ble_netcore")
+        set(NETCORE_IMAGE_PATH "${ZEPHYR_BASE}/../nrf53_ble/ble_netcore")
         message("Adding 'ble_netcore' firmware as child image since "
         "CONFIG_BLE_NETWORK_CORE is set to 'y'")	  
       else()
@@ -131,8 +95,23 @@ if (CONFIG_BT_RPMSG_NRF53 OR CONFIG_BLE_NETWORK_CORE)
         ${NRF_DIR}/subsys/bluetooth/controller/bt_ll_softdevice_hci_rpmsg.conf
         )
     endif()
+    if (CONFIG_BOOTLOADER_MCUBOOT AND CONFIG_NRF53_UPGRADE_NETWORK_CORE)
+      # Inject this configuration from parent image hci_rpmsg to enable
+      # secure bootloader on the network core. This enables firmware update
+      # of the network core application.
+      add_overlay_config(
+        ${NETCORE_IMAGE}
+        "${ZEPHYR_NRF_MODULE_DIR}/subsys/bootloader/image/secure_boot.conf"
+        )
 
-    network_core_firmware_update_enable(${NETCORE_IMAGE})
+      # Inject this configuration from parent image mcuboot to enable
+      # the PCD subsystem which is used to communicate the firmware update
+      # to the network core bootloader.
+      add_overlay_config(
+        mcuboot
+        "${ZEPHYR_NRF_MODULE_DIR}/subsys/pcd/pcd.conf"
+        )
+    endif()
 
     add_child_image(
       NAME ${NETCORE_IMAGE}
@@ -169,20 +148,4 @@ if (CONFIG_NCS_SAMPLE_EMPTY_APP_CORE_CHILD_IMAGE)
     SOURCE_DIR ${NRF_DIR}/samples/nrf5340/empty_app_core
     DOMAIN CPUAPP
     BOARD ${CONFIG_DOMAIN_CPUAPP_BOARD})
-endif()
-
-if (CONFIG_BT_RPC)
-  if (CONFIG_SOC_NRF5340_CPUAPP)
-    message("Adding 'rpc_host' firmware as child image since "
-      "CONFIG_BT_RPC is set to 'y'")
-
-    network_core_firmware_update_enable(rpc_host)
-
-    add_child_image(
-      NAME rpc_host
-      SOURCE_DIR ${NRF_DIR}/samples/bluetooth/rpc_host
-      DOMAIN CPUNET
-      BOARD ${CONFIG_DOMAIN_CPUNET_BOARD}
-    )
-  endif()
 endif()

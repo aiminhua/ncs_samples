@@ -22,7 +22,7 @@ By default, this sample works with NCS ``v1.6.0``. To work with other versions o
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
 	
 Before building this sample, enter folder ``sdk_change/ncs_v1.6.0`` and overwrite the same files in the correspondent NCS ``v1.6.0`` folders. If you want to build this sample
-in NCS ``v1.5.1`` or ealier. Use folder ``sdk_change/ncs_v1.5.1`` instead. 
+in NCS ``v1.5.1`` or earlier. Use folder ``sdk_change/ncs_v1.5.1`` instead. 
 
 
 Build & Programming
@@ -65,21 +65,47 @@ Testing
 
 After programming the sample to your development kit, you can test following samples directly.
 
+BLE OTA DFU
+===========
+
+By default, we use DFU module from nRF5 SDK v17.0.2 to do OTA in this sample. This DFU module is called nrf_dfu in this document. The OTA procedure is exactly
+the same as that of nRF5 SDK. Perform the following steps for the test.
+
+1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
+#. |connect_terminal|
+#. Reset the kit. It shall advertise ``nus_netcore``
+#. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex and net_core_app_signed.hex to folder ``update_zip``. Double click ``zip_generate.bat``.
+#. If you want to update net core image, use 53_many_netcore_extFlash_rpc.zip. if you want to update app core image, use 53_many_appcore_extFlash_rpc.zip
+#. Perform the DFU steps as nRF5 SDK do
+
+Refer to https://github.com/aiminhua/ncs_sample/tree/master/nrf_dfu/ap_exFlash_rpc for a detailed description.
+
 BLE NUS Service
 ===============
 
-Refer to https://github.com/nrfconnect/sdk-nrf/tree/master/samples/bluetooth/peripheral_uart for the testing steps(Please ignore LED operation).
+Peform the following steps for the test.
 
-BLE OTA Service
-===============
+1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
+#. |connect_terminal|
+#. Optionally, connect the RTT console to display debug messages. See :ref:`peripheral_uart_debug`.
+#. Reset the kit.
+#. Connect to the device using nRF Connect for Mobile. Tap `Enable CCCDs`.
+#. Select the UART RX characteristic value in nRF Connect.
+   You can write to the UART RX and get the text displayed on the COM listener.
+#. Type '0123456789' and tap `Write`.
+   Verify that the text "0123456789" is displayed on the COM listener.
+#. To send data from the device to your phone or tablet, enter any text, for example, "Hello", and press Enter to see it on the COM listener.
+   Observe that a notification is sent to the peer.
+#. Disconnect the device in nRF Connect.
+   Observe that **LED 2** turns off.
 
-Refer to https://github.com/aiminhua/ncs_sample/tree/master/nrf_dfu/ap_exFlash_rpc for the testing steps.
+Refer to https://github.com/nrfconnect/sdk-nrf/tree/master/samples/bluetooth/peripheral_uart for a detailed description.
 
 Dual core interactions
 ======================
 
 In fact, when you test NUS service or OTA service, application core and networek core already communicate with each other. 
-You can also press **Button1** to let appcore send a message to netcore by ``nrf_rpc``. Then netcore would forward the mesage to mobile app if connected.
+You can also press **Button1** to let appcore send a message to netcore by ``nrf_rpc``. Then netcore would forward the message to mobile app if connected.
 
 SPI master example
 ==================
@@ -193,10 +219,97 @@ The logging is like below.
 	<inf> main: UART0 is in suspend state. We activate it
 	<inf> main: ## UART0 is active now ##
 
+SMP BT DFU
+==========
+
+We can also do OTA by SMP BT protocol which is an inherent module of NCS. Change the default configurations before the building process.
+
+* Change ``nrf53_ble/appcore/prj.conf``.
+
+.. code-block:: console
+
+	## Open the following config to run SMP DFU ##
+	CONFIG_MCUMGR=y
+	CONFIG_MCUMGR_CMD_IMG_MGMT=y
+	CONFIG_MCUMGR_CMD_OS_MGMT=y
+	CONFIG_OS_MGMT_TASKSTAT=n
+	CONFIG_OS_MGMT_ECHO=y
+	CONFIG_IMG_BLOCK_BUF_SIZE=2048
+	CONFIG_MCUMGR_BUF_SIZE=256
+	CONFIG_MCUMGR_BUF_COUNT=4
+	CONFIG_MGMT_CBORATTR_MAX_SIZE=512
+	## CONFIG_IMG_ERASE_PROGRESSIVELY=y
+
+	## SMP BLE DFU via RPC config ##
+	CONFIG_RPC_SMP_BT=y
+
+	## Open the following config to run nrf_dfu OTA ##
+	# CONFIG_NRF_DFU=y
+	# CONFIG_NRF_DFU_RPC_APP=y
+	# # CONFIG_NRF_DFU_LOG_LEVEL=3
+	# CONFIG_IMG_MANAGER=y
+	# CONFIG_MCUBOOT_IMG_MANAGER=y
+	# CONFIG_IMG_BLOCK_BUF_SIZE=4096
+
+* Change ``nrf53_ble/ble_netcore/prj.conf``. 
+
+.. code-block:: console
+
+	## Open the following config to run SMP OTA ##
+	CONFIG_RPC_SMP_BT=y
+
+	## Open the following config to run nrf_dfu OTA ##
+	# CONFIG_NRF_DFU_BT=y
+	# CONFIG_NRF_DFU_RPC_NET=y
+	# CONFIG_BT_RX_STACK_SIZE=4096
+
+Then build the project and program it to the board.
+
+To OTA application core application, follow the steps below.
+1. Copy ``build*\zephyr\app_update.bin`` to your mobile phone.
+#. Open nRF connect for Mobile on your phone. 
+#. Connect the board. 
+#. Tap `DFU` button on the right top corner. 
+#. Select **app_update.bin** in your phone.
+#. DFU complete 
+
+To OTA network core application, follow the steps below.
+1. Copy ``build*\zephyr\net_core_app_update.bin`` to your mobile phone
+#. Open nRF connect for Mobile on your phone. 
+#. Connect the board. 
+#. Tap `DFU` button on the right top corner. 
+#. Select **net_core_app_update.bin** in your phone.
+#. DFU complete 
+
+
+SMP UART DFU
+============
+
+Based on the changes of `SMP BT DFU`_, you need to add the following changes to make ``SMP UART DFU`` work.
+
+* Change ``nrf53_ble/appcore/prj.conf``.
+
+.. code-block:: console
+
+	## SMP UART DFU config ##
+	CONFIG_MCUMGR_SMP_UART=y
+	CONFIG_UART_MCUMGR_RX_BUF_SIZE=256
+	CONFIG_UART_MCUMGR_RX_BUF_COUNT=2
+	CONFIG_UART_0_INTERRUPT_DRIVEN=y
+	
+	CONFIG_LOG_BACKEND_UART=n
+	CONFIG_LOG_BACKEND_RTT=y
+	CONFIG_USE_SEGGER_RTT=y
+	CONFIG_RTT_CONSOLE=y
+	CONFIG_UART_CONSOLE=n
+
+Refer to https://docs.zephyrproject.org/latest/guides/device_mgmt/index.html#mcumgr-cli for the DFU procedures. And see ``nrf53_ble/resources/mcumgr_uart_cmd.txt``
+for the commands tested in Windows(mcumgr cli is not so stable on Windows)	
+	
 High speed UART example
 =======================
 
-In this example, you can achieve 1Mbps baud rate. UART has 3 working mode: poll, interrupt and asynchronize. To achieve high speed UART, asyn mode must be used.  
+In this example, you can achieve 1Mbps baud rate. UART has 3 working mode: poll, interrupt and async. To achieve high speed UART, async mode must be used.  
 To test the reliability of 1Mbps UART, you can transfer a file from PC end to the device end. In this example, when PC sends some data to the device, the device 
 would send the same data back to the PC. In this way, you can verify the reliability of 1Mbps UART.
 
@@ -221,7 +334,7 @@ To make 1Mbps UART work, you need to change the default configurations.
 	CONFIG_RTT_CONSOLE=y
 	CONFIG_UART_CONSOLE=n
 
-Build the project and program it to the board.
+Build the project and program it to the board.  
 
 You can use ``Serial Debug Assistant`` to send a file to the board. The board would forward the same file back to the PC. Verify whether they are the same.
 
