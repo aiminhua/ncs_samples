@@ -1,6 +1,6 @@
 .. exFlash:
 
-nrf_dfu OTA example(external Secondary slot)
+nrf_dfu OTA example(external secondary slot)
 ############################################
 
 .. contents::

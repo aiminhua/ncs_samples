@@ -11,7 +11,7 @@ This repo contains many nRF Connect SDK(NCS) samples. All of them are desgined f
 This repo will follow nRF Connect SDK latest tag. That is, all samples should work out of box with the latest tag. In addition, it should work with other versions of NCS. 
 
 Refer to folder ``sdk_change`` for all tested NCS tags. ``sdk_change`` list all the changes of the related NCS tag to make the samples run on the specified NCS tag. 
-You can check the diff file for a quick overview of the changes. To make the samples build and run successfully, you can just overwrite the same files in the correspondent folders. 
+You can check the diff file for a quick overview of the changes. To make the samples build and run successfully, you can just overwrite the same files in the correspondent NCS folders. 
 
 Most samples can be put anywhere under NCS root folder. However, to build **ble_netcore** automatically, you must rename the repo's local folder name as ``sample``. 
 And put it at the same folder level as ``nrf`` or ``zephyr`` folder just like below.

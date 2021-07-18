@@ -1,6 +1,6 @@
 .. ap_inFlash_rpc:
 
-nrf_dfu OTA example(internal Secondary slot & RPC)
+nrf_dfu OTA example(internal secondary slot & RPC)
 ##################################################
 
 .. contents::
@@ -38,7 +38,7 @@ and close the configurations of other versions. Search **NCS** in **prj.conf** t
 Before building this sample, enter folder ``sdk_change/ncs_v1.6.0`` and overwrite the same files in the correspondent NCS ``v1.6.0`` folders. If you want to build this sample
 in NCS ``v1.5.1`` or ealier. Use folder ``sdk_change/ncs_v1.5.1`` instead. 
 
-The following development kits are tested for this sample. However, other nRF52 SoC should work too.
+The following development kits are tested for this sample. 
 
 +------------------------------------------------------------------+
 |Build target                                                      +

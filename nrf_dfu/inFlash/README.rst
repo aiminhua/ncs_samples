@@ -1,6 +1,6 @@
 .. inFlash:
 
-nrf_dfu OTA example(internal Secondary slot)
+nrf_dfu OTA example(internal secondary slot)
 ############################################
 
 .. contents::

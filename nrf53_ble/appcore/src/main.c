@@ -12,6 +12,7 @@
 #include <dk_buttons_and_leds.h>
 #include <nrf.h>
 #include <nrfx.h>
+#include <drivers/uart.h>
 #ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
 #include "img_mgmt/img_mgmt.h"
 #endif
@@ -95,7 +96,8 @@ void set_device_pm_state(void)
 			LOG_INF("## UART1 is actvie now ##");
 		}		
 	}
-	else{
+	else if (pm_state == DEVICE_PM_ACTIVE_STATE)
+	{
 		LOG_INF("UART1 is in active state. We suspend it");
 		err = device_set_power_state(devUart1,
 						DEVICE_PM_SUSPEND_STATE,
@@ -123,10 +125,11 @@ void set_device_pm_state(void)
 		}
 		else
 		{
-			LOG_INF("## UART0 is actvie now ##");
+			LOG_INF("## UART0 is active now ##");
 		}		
 	}
-	else{
+	else if (pm_state == DEVICE_PM_ACTIVE_STATE)
+	{
 		LOG_INF("UART0 is in active state. We suspend it");
 		//print out all the pending logging messages
 		while(log_process(false));
@@ -149,36 +152,42 @@ void set_device_pm_state(void)
 	int err;
 	uint32_t pm_state;
 
-	pm_device_state_get(devUart1, &pm_state);
-	if (pm_state == PM_DEVICE_STATE_SUSPEND)
+	if (devUart1)
 	{
-		LOG_INF("UART1 is in suspend state. We activate it");
-		err = pm_device_state_set(devUart1,
-						PM_DEVICE_STATE_ACTIVE,
-						NULL, NULL);
-		if (err) {
-			LOG_ERR("UART1 enable failed");			
-		}
-		else
+		pm_device_state_get(devUart1, &pm_state);
+		if (pm_state == PM_DEVICE_STATE_SUSPEND)
 		{
-			LOG_INF("## UART1 is actvie now ##");
-		}		
-	}
-	else{
-		LOG_INF("UART1 is in active state. We suspend it");
-		err = pm_device_state_set(devUart1,
-						PM_DEVICE_STATE_SUSPEND,
-						NULL, NULL);
-		if (err) {
-			LOG_ERR("UART1 disable failed");
+			LOG_INF("UART1 is in suspend state. We activate it");
+			err = pm_device_state_set(devUart1,
+							PM_DEVICE_STATE_ACTIVE,
+							NULL, NULL);
+			if (err) {
+				LOG_ERR("UART1 enable failed");			
+			}
+			else
+			{
+				LOG_INF("## UART1 is active now ##");
+			}		
 		}
-		else
+		else if (pm_state == PM_DEVICE_STATE_ACTIVE)
 		{
-			LOG_INF("## UART1 is suspended now ##");
-		}		
+			LOG_INF("UART1 is in active state. We suspend it");
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
+#endif			
+			err = pm_device_state_set(devUart1,
+							PM_DEVICE_STATE_SUSPEND,
+							NULL, NULL);
+			if (err) {
+				LOG_ERR("UART1 disable failed");
+			}
+			else
+			{
+				LOG_INF("## UART1 is suspended now ##");
+			}		
+		}
 	}
-
-
 
 	pm_device_state_get(devUart0, &pm_state);
 	if (pm_state == PM_DEVICE_STATE_SUSPEND)
@@ -192,13 +201,18 @@ void set_device_pm_state(void)
 		}
 		else
 		{
-			LOG_INF("## UART0 is actvie now ##");
+			LOG_INF("## UART0 is active now ##");
 		}		
 	}
-	else{
+	else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+	{
 		LOG_INF("UART0 is in active state. We suspend it");
 		//print out all the pending logging messages
 		while(log_process(false));
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
+#endif
 		err = pm_device_state_set(devUart0,
 						PM_DEVICE_STATE_SUSPEND,
 						NULL, NULL);
@@ -221,18 +235,18 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 	uint32_t buttons = button_state & has_changed;
 	
 	if (buttons & DK_BTN1_MSK) {
-		LOG_INF("button1 isr\n");
+		LOG_INF("button1 isr");
 		k_sem_give(&sem_rpc_tx);		
 	}
 
 	if (buttons & DK_BTN2_MSK) {
-		LOG_INF("button2 isr\n");
+		LOG_INF("button2 isr");
 		k_sem_give(&sem_spi_txrx);
 		k_sem_give(&sem_raw_nrfx_txrx);		
 	}
 
 	if (buttons & DK_BTN3_MSK) {
-		LOG_INF("button3 isr\n");
+		LOG_INF("button3 isr");
 #ifdef CONFIG_PM_DEVICE		
 		set_device_pm_state();
 #endif		
