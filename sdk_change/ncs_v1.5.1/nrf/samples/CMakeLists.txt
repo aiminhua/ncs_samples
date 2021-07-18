@@ -79,7 +79,7 @@ if (CONFIG_BT_RPMSG_NRF53 OR CONFIG_BLE_NETWORK_CORE)
     else()
       set(NETCORE_IMAGE "hci_rpmsg")
       if (CONFIG_BLE_NETWORK_CORE)
-        set(NETCORE_IMAGE_PATH "${ZEPHYR_BASE}/../nrf53_ble/ble_netcore")
+        set(NETCORE_IMAGE_PATH "${ZEPHYR_BASE}/../sample/nrf53_ble/ble_netcore")
         message("Adding 'ble_netcore' firmware as child image since "
         "CONFIG_BLE_NETWORK_CORE is set to 'y'")	  
       else()

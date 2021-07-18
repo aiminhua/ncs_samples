@@ -248,5 +248,6 @@ void pcd_lock_ram(void)
 
 	nrf_spu_ramregion_set(NRF_SPU, region, false, NRF_SPU_MEM_PERM_READ,
 			true);
+			
 }
 #endif /* CONFIG_SOC_NRF5340_CPUAPP && CONFIG_MCUBOOT */

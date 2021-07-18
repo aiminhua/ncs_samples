@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
-if (CONFIG_BT OR CONFIG_BT_RPC_CLIENT)
+if (CONFIG_BT)
   add_subdirectory(bluetooth)
 endif()
 
@@ -17,7 +17,6 @@ add_subdirectory_ifdef(CONFIG_SECURE_BOOT_STORAGE bootloader/bl_storage)
 add_subdirectory(net)
 add_subdirectory_ifdef(CONFIG_ESB		esb)
 add_subdirectory_ifdef(CONFIG_EVENT_MANAGER	event_manager)
-add_subdirectory_ifdef(CONFIG_CAF		caf)
 add_subdirectory_ifdef(CONFIG_PROFILER		profiler)
 add_subdirectory(dfu)
 add_subdirectory_ifdef(CONFIG_PCD 		pcd)
@@ -47,6 +46,5 @@ add_subdirectory(debug)
 add_subdirectory(partition_manager)
 
 add_subdirectory_ifdef(CONFIG_NRF_RPC nrf_rpc)
-
 add_subdirectory_ifdef(CONFIG_NRF_DFU nrf_dfu)
 add_subdirectory_ifdef(CONFIG_NRF_DFU_RPC_NET nrf_dfu)
