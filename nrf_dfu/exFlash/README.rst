@@ -17,6 +17,12 @@ Overview
 In this sample, the secondary slot is on the external Flash. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
 the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the BLE host is running on the application core in this sample(``zephyr/samples/bluetooth/hci_rpmsg`` runs on the netcore). 
 
+**note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
+
+.. code-block:: console
+
+	CONFIG_BOOT_SIGNATURE_KEY_FILE="my_mcuboot_private.pem"	
+	
 Build & Programming
 *******************
 

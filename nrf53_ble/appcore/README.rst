@@ -80,6 +80,12 @@ the same as that of nRF5 SDK. Perform the following steps for the test.
 
 Refer to https://github.com/aiminhua/ncs_sample/tree/master/nrf_dfu/ap_exFlash_rpc for a detailed description.
 
+**note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
+
+.. code-block:: console
+
+	CONFIG_BOOT_SIGNATURE_KEY_FILE="my_mcuboot_private.pem"	
+
 BLE NUS Service
 ===============
 

@@ -18,6 +18,12 @@ In this sample, the secondary slot is on the external Flash. That is, the new im
 the swap operation to finish the whole DFU process. This sample only supports ``nRF5340``, and both BLE host and controller run on the network core(``nrf53_ble/ble_netcore`` runs on the netcore).
 Applicatoin core and network core communicate with each other by ``nrf_rpc''.  
 
+**note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
+
+.. code-block:: console
+
+	CONFIG_BOOT_SIGNATURE_KEY_FILE="my_mcuboot_private.pem"	
+	
 Build & Programming
 *******************
 

@@ -47,7 +47,9 @@ A overview of the samples in this repo is shown below.
 |sample/nrf_dfu/ap_exFlash_rpc          |5340 appcore nrf dfu example with secondary slot on external Flash. Work with ble_netcore  |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 
-**note: see the README.rst in the individual sample folder for a detailed description of the sample**
+**note: see the README.rst in the individual sample folder for a detailed description of the sample**.
+
+**note: MCUBoot in all the examples uses the default signing key, which must be replaced with your own key before production.**
 
 Requirements
 ************
