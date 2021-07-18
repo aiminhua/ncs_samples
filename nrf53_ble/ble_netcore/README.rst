@@ -14,7 +14,7 @@ Overview
 ********
 
 This sample has NUS and OTA services. There are two kinds of OTA services: SMP and nrf_dfu. SMP is the out-of-box module of NCS, but its OTA speed is as low as 2kB/s. 
-nrf_dfu is ported from nRF5 SDK v17.0.2. Its OTA speed can hit 18kB/s or more.   
+nrf_dfu is ported from nRF5 SDK v17.0.2. Its OTA speed can hit 17kB/s or more.   
 
 Build
 *****
