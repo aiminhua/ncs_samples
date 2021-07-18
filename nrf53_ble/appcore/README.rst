@@ -100,6 +100,7 @@ Program the spis hex file to a nRF52832DK or nRF52840DK. Connect the spis relate
 After pressing **Button2**, this example can start to communicate with spis. The logging looks similar to the following output.
 
 .. code-block:: console
+
 	<inf> spi_thread: Received SPI data:
 			4e 6f 72 64 69 63 00
 
@@ -120,6 +121,7 @@ Program the twis hex file to a nRF52832DK or nRF52840DK. Connect the twis relate
 After P0.06 is pulled down, this example can start to communicate with twis. The logging looks like below.
 
 .. code-block:: console
+
 	<inf> i2c_thread: EEPROM:
 			f8 6f 32 5f e4 21 80 65 e3 a3 4b 3c 8d 91 03 7f
 	
@@ -130,6 +132,7 @@ ADC has 2 working modes: sync and async mode. And it can sample many channels si
 and work in both sync and async mode. If you change the voltage on P0.05, you would see a changing ADC value from the log.
 
 .. code-block:: console
+
 	<inf> adc_thread: ADC thread
 	<inf> adc_thread: Voltage0: 2988 mV / 3400
 	<inf> adc_thread: Voltage1: 259 mV / 295
@@ -147,11 +150,13 @@ After pressing **Button4**, network would send a message to the mobile app direc
 The logging of application core external interrupt example is like below.
 
 .. code-block:: console
+
 	<inf> i2c_thread: external interrupt occurs at 676640	
 
 The logging of network core external interrupt example is like below.
 
 .. code-block:: console
+
 	<inf> main: button4 pressed and going to send nus packet	
 
 Flash access example
@@ -165,6 +170,7 @@ of raw serialized data. All data is managed by key/value pair in Settings module
 In this example, we use both NVS API and Settings API to do the same thing: store a secret and reboot counter onto the internal Flash. The logging is like below.
 
 .. code-block:: console
+
 	<inf> flash_thread: Key value in NVS:
             ff fe fd fc fb fa f9 f8                                
 	<inf> flash_thread: *** Reboot counter in NVS: 6 ***
@@ -180,6 +186,7 @@ In this example, press **Button3** to turn on/off UART0/UART1 repeatedly. If the
 The logging is like below.
 
 .. code-block:: console
+
 	<inf> main: button3 isr
 	<inf> main: UART0 is in active state. We suspend it
 	<inf> main: button3 isr
@@ -201,11 +208,13 @@ To make 1Mbps UART work, you need to change the default configurations.
 * Change ``nrf5340dk_nrf5340_cpuapp.overlay`` to set the 1Mbps baud rate
 
 .. code-block:: console
+
 	current-speed = < 1000000 >;
  
 * Change ``prj.conf`` to change logging backend to RTT
 
 .. code-block:: console
+
 	CONFIG_LOG_BACKEND_UART=n
 	CONFIG_LOG_BACKEND_RTT=y
 	CONFIG_USE_SEGGER_RTT=y
@@ -226,6 +235,7 @@ have a back compatibility of his old projects. This example shows how to call SP
 * Change ``prj.conf`` before the building process.
 
 .. code-block:: console
+
 	## SPI master example ##
 	# CONFIG_EXAMPLE_SPIM=y
 	# CONFIG_SPI=y
@@ -239,15 +249,17 @@ have a back compatibility of his old projects. This example shows how to call SP
 * Change ``nrf5340dk_nrf5340_cpuapp.overlay`` to disable spi3
 
 .. code-block:: console
+
 	status = "disabled";
  
-Regarding SPI example, it serves the same function as :ref:`SPI master example`. See :ref:`SPI master example` for the testing steps. 
+Regarding SPI example, it serves the same function as `SPI master example`_. See `SPI master example`_ for the testing steps. 
 
 Regarding RTC example, it’s just the same function as nRF5_SDK\examples\peripheral\rtc: after 5 seconds, LED2 is turned on by RTC ISR. 
 
 The logging is like below.
 
 .. code-block:: console
+
 	<inf> raw_nrfx_thread: raw RTC cc0 evt
 	<inf> raw_nrfx_thread: raw spi master thread
 	<inf> raw_nrfx_thread: Transfer completed.	
