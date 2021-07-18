@@ -21,7 +21,7 @@ Applicatoin core and network core communicate with each other by ``nrf_rpc''.
 Build & Programming
 *******************
 
-Make sure nrf53_ble/ble_netcore is put in the following folder.
+Make sure ``nrf53_ble/ble_netcore`` is put in the following folder.
 
 ::
 
