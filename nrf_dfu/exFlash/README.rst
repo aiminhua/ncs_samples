@@ -17,8 +17,8 @@ Overview
 In this sample, the secondary slot is on the external Flash. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
 the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the BLE host is running on the application core in this sample(``zephyr/samples/bluetooth/hci_rpmsg`` runs on the netcore). 
 
-Build
-*****
+Build & Programming
+*******************
 
 By default, this sample works with NCS ``v1.6.0``. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
@@ -39,7 +39,12 @@ For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
 .. code-block:: console
 
    west build -b nrf5340dk_nrf5340_cpuapp -d build_nrf5340dk_nrf5340_cpuapp -p
-   
+
+To flash the images to the board, just double click ``program.bat``, or use the following command:
+
+.. code-block:: console
+
+   west flash -d build_nrf5340dk_nrf5340_cpuapp   
 
 Testing
 *******
@@ -49,7 +54,7 @@ After programming the sample to your development kit, test it by performing the 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
 #. Optionally, connect the RTT console to display logging messages.
-#. Reset the kit. It shall advertise ``nus_netcore``
+#. Reset the kit. It shall advertise ``Nordic_DFU``
 #. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex and net_core_app_signed.hex(this file is not present for nRF52) to folder ``update_zip``. Double click ``zip_generate.bat``.
 #. If you want to update net core image, use 53_netcore_extFlash_norpc.zip. if you want to update app core image, use 53_appcore_extFlash_norpc.zip
 #. Perform the DFU steps as nRF5 SDK do

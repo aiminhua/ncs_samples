@@ -18,8 +18,8 @@ In this sample, the secondary slot is on the internal Flash of ``nRF5340``. That
 the swap operation to finish the whole DFU process. This sample only supports ``nRF5340``, and both BLE host and controller run on the network core(``nrf53_ble/ble_netcore`` runs on the netcore).
 Applicatoin core and network core communicate with each other by ``nrf_rpc''.  
 
-Build
-*****
+Build & Programming
+*******************
 
 Make sure nrf53_ble/ble_netcore is put in the following folder.
 
@@ -51,6 +51,12 @@ For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
 .. code-block:: console
 
    west build -b nrf5340dk_nrf5340_cpuapp -d build_nrf5340dk_nrf5340_cpuapp -p
+
+To flash the images to the board, just double click ``program.bat``, or use the following command:
+
+.. code-block:: console
+
+   west flash -d build_nrf5340dk_nrf5340_cpuapp
    
 
 Testing
