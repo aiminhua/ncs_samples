@@ -28,7 +28,7 @@ in NCS ``v1.5.1`` or earlier. Use folder ``sdk_change/ncs_v1.5.1`` instead.
 Build & Programming
 *******************
 
-Make sure nrf53_ble/ble_netcore is put in the following folder.
+Make sure ``nrf53_ble/ble_netcore`` is put in the following folder.
 
 ::
 
@@ -87,12 +87,11 @@ Peform the following steps for the test.
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
-#. Optionally, connect the RTT console to display debug messages. See :ref:`peripheral_uart_debug`.
 #. Reset the kit.
-#. Connect to the device using nRF Connect for Mobile. Tap `Enable CCCDs`.
+#. Connect to the device using nRF Connect for Mobile. Tap **Enable CCCDs**.
 #. Select the UART RX characteristic value in nRF Connect.
    You can write to the UART RX and get the text displayed on the COM listener.
-#. Type '0123456789' and tap `Write`.
+#. Type '0123456789' and tap **Write**.
    Verify that the text "0123456789" is displayed on the COM listener.
 #. To send data from the device to your phone or tablet, enter any text, for example, "Hello", and press Enter to see it on the COM listener.
    Observe that a notification is sent to the peer.
@@ -110,8 +109,8 @@ You can also press **Button1** to let appcore send a message to netcore by ``nrf
 SPI master example
 ==================
 
-This example shows how to call Zephyr SPI APIs to communicate with a SPI slave. The SPI slave image can be directly obtained from nRF5_SDK\examples\peripheral\spis. 
-To facilitate the test, we put the spis images at nrf53_ble/resources/hex. The spis pin definitions are shown below.
+This example shows how to call Zephyr SPI APIs to communicate with a SPI slave. The SPI slave image can be directly obtained from ``nRF5_SDK/examples/peripheral/spis``. 
+To facilitate the test, we put the spis images at ``nrf53_ble/resources/hex``. The spis pin definitions are shown below.
 
 .. code-block:: console
 
@@ -120,7 +119,7 @@ To facilitate the test, we put the spis images at nrf53_ble/resources/hex. The s
    APP_SPIS_MOSI_PIN 29
    APP_SPIS_CS_PIN 31
    
-See your DTS file for SPI master pin definitions.
+**See your DTS file for SPI master pin definitions.**
  
 Program the spis hex file to a nRF52832DK or nRF52840DK. Connect the spis related pins to their counterparts in your board.
 After pressing **Button2**, this example can start to communicate with spis. The logging looks similar to the following output.
@@ -133,15 +132,15 @@ After pressing **Button2**, this example can start to communicate with spis. The
 I2C master example
 ==================
 
-This example shows how to use Zephyr I2C APIs to communicate with a I2C slave. The I2C slave image can be directly obtained from nRF5_SDK\examples\peripheral\twi_master_with_twis_slave.
-To facilitate the test, we put the twis images at nrf53_ble/resources/hex. The twis pin definitions are shown below.
+This example shows how to use Zephyr I2C APIs to communicate with a I2C slave. The I2C slave image can be directly obtained from ``nRF5_SDK/examples/peripheral/twi_master_with_twis_slave``.
+To facilitate the test, we put the twis images at ``nrf53_ble/resources/hex``. The twis pin definitions are shown below.
 
 .. code-block:: console
 
 	EEPROM_SIM_SCL_S         31   
 	EEPROM_SIM_SDA_S         30  
    
-See your DTS file for I2C master pin definitions.
+**See your DTS file for I2C master pin definitions.**
  
 Program the twis hex file to a nRF52832DK or nRF52840DK. Connect the twis related pins to their counterparts in your board.
 After P0.06 is pulled down, this example can start to communicate with twis. The logging looks like below.
@@ -266,18 +265,20 @@ We can also do OTA by SMP BT protocol which is an inherent module of NCS. Change
 Then build the project and program it to the board.
 
 To OTA application core application, follow the steps below.
-1. Copy ``build*\zephyr\app_update.bin`` to your mobile phone.
+
+1. Copy ``build*/zephyr/app_update.bin`` to your mobile phone.
 #. Open nRF connect for Mobile on your phone. 
 #. Connect the board. 
-#. Tap `DFU` button on the right top corner. 
+#. Tap **DFU** button on the right top corner. 
 #. Select **app_update.bin** in your phone.
 #. DFU complete 
 
 To OTA network core application, follow the steps below.
-1. Copy ``build*\zephyr\net_core_app_update.bin`` to your mobile phone
+
+1. Copy ``build*/zephyr/net_core_app_update.bin`` to your mobile phone
 #. Open nRF connect for Mobile on your phone. 
 #. Connect the board. 
-#. Tap `DFU` button on the right top corner. 
+#. Tap **DFU** button on the right top corner. 
 #. Select **net_core_app_update.bin** in your phone.
 #. DFU complete 
 
@@ -367,7 +368,7 @@ have a back compatibility of his old projects. This example shows how to call SP
  
 Regarding SPI example, it serves the same function as `SPI master example`_. See `SPI master example`_ for the testing steps. 
 
-Regarding RTC example, it’s just the same function as nRF5_SDK\examples\peripheral\rtc: after 5 seconds, LED2 is turned on by RTC ISR. 
+Regarding RTC example, it’s just the same function as ``nRF5_SDK/examples/peripheral/rtc``. After 5 seconds, LED2 is turned on by RTC ISR. 
 
 The logging is like below.
 
