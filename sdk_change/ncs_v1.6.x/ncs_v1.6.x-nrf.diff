@@ -115,6 +115,22 @@ index 34df8730f..e06388785 100644
  rsource "caf/Kconfig"
 +
 +rsource "nrf_dfu/Kconfig"
+diff --git a/subsys/partition_manager/flash_map_partition_manager.c b/subsys/partition_manager/flash_map_partition_manager.c
+index 7513dd3e9..12088e724 100644
+--- a/subsys/partition_manager/flash_map_partition_manager.c
++++ b/subsys/partition_manager/flash_map_partition_manager.c
+@@ -9,7 +9,11 @@
+ #include <pm_config.h>
+ #include <sys/util.h>
+ 
++#ifndef CONFIG_SOC_NRF5340_CPUNET
+ #define FLASH_MAP_OFFSET(i) UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _ADDRESS))
++#else
++#define FLASH_MAP_OFFSET(i) UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _ADDRESS)) >= 0x1000000 ? (UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _ADDRESS)) - 0x1000000) : UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _ADDRESS))
++#endif
+ #define FLASH_MAP_DEV(i)    UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _DEV_NAME))
+ #define FLASH_MAP_SIZE(i)   UTIL_CAT(PM_, UTIL_CAT(PM_##i##_LABEL, _SIZE))
+ #define FLASH_MAP_NUM       PM_NUM
 diff --git a/subsys/nrf_dfu/CMakeLists.txt b/subsys/nrf_dfu/CMakeLists.txt
 new file mode 100644
 index 000000000..eccf8476f
