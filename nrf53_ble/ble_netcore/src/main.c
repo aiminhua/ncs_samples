@@ -44,7 +44,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 static K_SEM_DEFINE(ble_conn_ok, 0, 1);
 
 struct bt_conn *current_conn;
-
+static struct bt_conn *auth_conn;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -99,6 +99,12 @@ static void connected(struct bt_conn *conn, uint8_t err)
 
 	k_sem_give(&ble_conn_ok);
 
+#ifdef CONFIG_BT_NUS_SECURITY_ENABLED
+	if (bt_conn_set_security(conn, BT_SECURITY_L2)) {
+		printk("Failed to set security\n");
+	}	
+#endif
+
 #ifdef CONFIG_RPC_REMOTE_API
 	err = net2app_send_conn_status(1);
 	if (err) {
@@ -138,10 +144,30 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
 }
 
+#ifdef CONFIG_BT_NUS_SECURITY_ENABLED
+static void security_changed(struct bt_conn *conn, bt_security_t level,
+			     enum bt_security_err err)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	if (!err) {
+		LOG_INF("Security changed: %s level %u", log_strdup(addr),
+			level);
+	} else {
+		LOG_WRN("Security failed: %s level %u err %d", log_strdup(addr),
+			level, err);
+	}
+}
+#endif
 
 static struct bt_conn_cb conn_callbacks = {
 	.connected    = connected,
 	.disconnected = disconnected,
+#ifdef CONFIG_BT_NUS_SECURITY_ENABLED
+	.security_changed = security_changed,
+#endif	
 };
 
 
@@ -208,23 +234,107 @@ void setup_ext_int(void)
 	}
 }
 
+#if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
+static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+}
+
+static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	auth_conn = bt_conn_ref(conn);
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+	LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
+}
+
+
+static void auth_cancel(struct bt_conn *conn)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	LOG_INF("Pairing cancelled: %s", log_strdup(addr));
+}
+
+
+static void pairing_confirm(struct bt_conn *conn)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	bt_conn_auth_pairing_confirm(conn);
+
+	LOG_INF("Pairing confirmed: %s", log_strdup(addr));
+}
+
+
+static void pairing_complete(struct bt_conn *conn, bool bonded)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	LOG_INF("Pairing completed: %s, bonded: %d", log_strdup(addr),
+		bonded);
+}
+
+
+static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	LOG_INF("Pairing failed conn: %s, reason %d", log_strdup(addr),
+		reason);
+}
+
+
+static struct bt_conn_auth_cb conn_auth_callbacks = {
+	.passkey_display = NULL, //auth_passkey_display,
+	.passkey_confirm = NULL, //auth_passkey_confirm,
+	.cancel = NULL, //auth_cancel,
+	.pairing_confirm = NULL, //pairing_confirm,
+	.pairing_complete = pairing_complete,
+	.pairing_failed = pairing_failed
+};
+#else
+static struct bt_conn_auth_cb conn_auth_callbacks;
+#endif
+
+
 void main(void)
 {
 	
 	int err = 0;
 	
-	LOG_INF("### netcore firmware compiled at %s %s\n", __TIME__, __DATE__);
-
+	printk("### netcore firmware compiled at %s %s\n", __TIME__, __DATE__);
+	
 	setup_ext_int();
-
+	
 	bt_conn_cb_register(&conn_callbacks);
-
+	
+	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED)) {
+		bt_conn_auth_cb_register(&conn_auth_callbacks);
+	}	
+	
 	err = bt_enable(NULL);
 	if (err) {
-		LOG_ERR("bt initialized error");
+		printk("bt enable error %d\n", err);		
 		return;
 	}
-
+	
 #ifdef CONFIG_RPC_SMP_BT
 	/* Initialize the Bluetooth mcumgr transport. */
 	smp_bt_register_rpc();
@@ -248,8 +358,8 @@ void main(void)
 		LOG_ERR("Advertising failed to start (err %d)", err);
 	}
 
-	LOG_INF("Started NUS example on netcore");
-
+	printk("Started NUS example on netcore\n");
+	
 #ifdef CONFIG_RPC_REMOTE_API
 	err = net2app_send_bt_addr();
 	if (err) {
