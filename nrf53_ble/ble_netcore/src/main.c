@@ -44,7 +44,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 static K_SEM_DEFINE(ble_conn_ok, 0, 1);
 
 struct bt_conn *current_conn;
-static struct bt_conn *auth_conn;
+// static struct bt_conn *auth_conn;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -248,7 +248,7 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
 
-	auth_conn = bt_conn_ref(conn);
+	// auth_conn = bt_conn_ref(conn);
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
@@ -309,8 +309,6 @@ static struct bt_conn_auth_cb conn_auth_callbacks = {
 	.pairing_complete = pairing_complete,
 	.pairing_failed = pairing_failed
 };
-#else
-static struct bt_conn_auth_cb conn_auth_callbacks;
 #endif
 
 
@@ -324,11 +322,11 @@ void main(void)
 	setup_ext_int();
 	
 	bt_conn_cb_register(&conn_callbacks);
-	
-	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED)) {
-		bt_conn_auth_cb_register(&conn_auth_callbacks);
-	}	
-	
+
+#ifdef 	CONFIG_BT_NUS_SECURITY_ENABLED
+	bt_conn_auth_cb_register(&conn_auth_callbacks);		
+#endif	
+
 	err = bt_enable(NULL);
 	if (err) {
 		printk("bt enable error %d\n", err);		
