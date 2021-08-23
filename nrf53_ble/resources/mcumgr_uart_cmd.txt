@@ -1,4 +1,4 @@
-mcumgr conn add myCOM type="serial" connstring="dev=COM40,baud=115200,mtu=256"
+mcumgr conn add myCOM type="serial" connstring="dev=COM27,baud=115200,mtu=256"
 
 mcumgr -c myCOM echo hello
 mcumgr -c myCOM image upload build_nrf5340dk_nrf5340_cpuapp/zephyr/net_core_app_update.bin

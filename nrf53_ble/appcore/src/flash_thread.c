@@ -28,23 +28,46 @@ void nvs_usage_init(void)
 	
 	uint8_t key[8];
 	uint32_t reboot_counter = 0U;
-	struct flash_pages_info info;
 
-	/* define the nvs file system by settings with:
-	 *	sector_size equal to the pagesize,
-	 *	3 sectors
-	 *	starting at FLASH_AREA_OFFSET(storage)
-	 */
-	fs.offset = FLASH_AREA_OFFSET(storage);
-	LOG_INF("NVS flash offset %x ", fs.offset);
-	rc = flash_get_page_info_by_offs(
-		device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL),
-		fs.offset, &info);
+	const struct flash_area *fa;
+	struct flash_sector hw_flash_sector;
+	uint32_t sector_cnt = 1;
+
+	rc = flash_area_open(FLASH_AREA_ID(storage), &fa);
 	if (rc) {
-		printk("Unable to get page info");
+		printk("storage area open failed %d", rc);
+		return rc;
 	}
-	fs.sector_size = info.size;
-	fs.sector_count = 3U;
+	
+	rc = flash_area_get_sectors(FLASH_AREA_ID(storage), &sector_cnt,
+				    &hw_flash_sector);
+	if (rc) {
+		printk("sector info retrive err %d", rc);
+		return rc;
+	} 
+
+	fs.sector_size = hw_flash_sector.fs_size;
+	fs.sector_count = sector_cnt;
+
+	printk("NVS sector size=%d sector count=%d\n", fs.sector_size, fs.sector_count);
+
+	// struct flash_pages_info info;
+
+	// /* define the nvs file system by settings with:
+	//  *	sector_size equal to the pagesize,
+	//  *	3 sectors
+	//  *	starting at FLASH_AREA_OFFSET(storage)
+	//  */
+	// fs.offset = FLASH_AREA_OFFSET(storage);
+	// LOG_INF("NVS flash offset %x ", fs.offset);
+	// rc = flash_get_page_info_by_offs(
+	// 	device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL),
+	// 	fs.offset, &info);
+	// if (rc) {
+	// 	printk("Unable to get page info");
+	// }
+	// fs.sector_size = info.size;
+	// fs.sector_count = 3U;
 
 	rc = nvs_init(&fs, DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL);
 	if (rc) {
