@@ -1,3 +1,4 @@
+git commit: 4c30134
 [00]<info> app: Inside main
 
 <debug> app: In nrf_bootloader_init
