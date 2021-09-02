@@ -21,7 +21,7 @@ To facilitate the test, we put the spis images at ``nrf53_ble/resources/hex``. T
    APP_SPIS_MOSI_PIN 29
    APP_SPIS_CS_PIN 31
    
-**See your DTS file for SPI master pin definitions.*
+**See your DTS file or overlay file for SPI master related pin definitions.**
 
 Build & Programming
 *******************
