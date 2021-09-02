@@ -282,6 +282,9 @@ static nrf_dfu_result_t update_data_addr_get(dfu_init_command_t const * p_init,
                                              uint32_t                 * p_addr)
 {    
     *p_addr = 0;
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+    *p_addr = nrf_dfu_bank1_start_addr();
+#endif    
     return NRF_DFU_RES_CODE_SUCCESS;
 }
 
@@ -298,9 +301,11 @@ nrf_dfu_result_t nrf_dfu_validation_init_cmd_execute(uint32_t * p_dst_data_addr,
          ret_val = NRF_DFU_RES_CODE_OPERATION_NOT_PERMITTED;
      }
      else if (m_valid_init_cmd_present)
-     {
-         //*p_dst_data_addr = nrf_dfu_bank1_start_addr();
+     {         
          *p_dst_data_addr = 0;
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+        *p_dst_data_addr = nrf_dfu_bank1_start_addr();
+#endif
          ret_val          = update_data_size_get(mp_init, p_data_len);
      }
      else if (stored_init_cmd_decode())

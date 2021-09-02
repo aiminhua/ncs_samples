@@ -44,7 +44,9 @@
 #include <string.h>
 #include "crc32.h"
 #include "sdk_config.h"
+#include "nrf_dfu_types.h"
 #include <logging/log.h>
+#include <nrfx_nvmc.h>
 
 #define LOG_MODULE_NAME dfu_settings
 LOG_MODULE_REGISTER(LOG_MODULE_NAME, CONFIG_NRF_DFU_LOG_LEVEL);
@@ -85,6 +87,11 @@ void nrf_dfu_settings_reinit(void)
     LOG_DBG("Resetting bootloader settings");
     memset(&s_dfu_settings, 0x00, sizeof(nrf_dfu_settings_t));
     s_dfu_settings.settings_version = NRF_DFU_SETTINGS_VERSION;
+
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+    memcpy(&s_dfu_settings, (void *)BOOTLOADER_SETTINGS_ADDRESS, sizeof(nrf_dfu_settings_t));
+    nrf_dfu_settings_progress_reset();
+#endif
     return;
 }
 
@@ -122,6 +129,25 @@ static uint32_t settings_write(void                   * p_dst,
     return NRF_SUCCESS;
 }
 
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+uint32_t nrf_dfu_bank1_start_addr(void)
+{
+    uint32_t bank0_addr = MBR_SIZE;
+    return ALIGN_TO_PAGE(bank0_addr + s_dfu_settings.bank_0.image_size);
+}
+
+void update_settings_dfu_mode(uint32_t data_addr, uint32_t data_len)
+{
+    s_dfu_settings.bank_current = NRF_DFU_CURRENT_BANK_1;
+    s_dfu_settings.bank_1.image_crc  = crc32_compute((uint8_t *)data_addr, data_len, NULL);
+    s_dfu_settings.bank_1.image_size = data_len;
+    s_dfu_settings.bank_1.bank_code = NRF_DFU_BANK_VALID_APP;
+    s_dfu_settings.progress.update_start_address = data_addr;
+
+    s_dfu_settings.crc = settings_crc_get(&s_dfu_settings);
+    s_dfu_settings.boot_validation_crc = boot_validation_crc(&s_dfu_settings);  
+}
+#endif
 
 uint32_t nrf_dfu_settings_write(nrf_dfu_flash_callback_t callback)
 {

@@ -13,7 +13,9 @@ This repo will follow nRF Connect SDK latest tag. That is, all samples should wo
 Refer to folder ``sdk_change`` for all tested NCS tags. ``sdk_change`` list all the changes of the related NCS tag to make the samples run on the specified NCS tag. 
 You can check the diff file for a quick overview of the changes. To make the samples build and run successfully, you can just overwrite the same files in the correspondent NCS folders. 
 
-Most samples can be put anywhere under NCS root folder. However, to build **ble_netcore** automatically, you must rename the repo's local folder name as ``sample``. 
+**Most samples can be put anywhere under NCS root folder.** 
+
+However, to build **ble_netcore** automatically, you must rename the repo's local folder name as ``sample``. 
 And put it at the same folder level as ``nrf`` or ``zephyr`` folder just like below.
 
 ::
@@ -38,13 +40,19 @@ A overview of the samples in this repo is shown below.
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |sample/nrf53_ble/ble_netcore           |the whole ble stack and services running on the netcore                                    |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
-|sample/nrf_dfu/inFlash                 |nrf dfu example with secondary slot on internal Flash                                      |
+|sample/nrf_dfu/inFlash                 |nrf dfu example with MCUBoot with secondary slot on internal Flash                         |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
-|sample/nrf_dfu/exFlash                 |nrf dfu example with secondary slot on external Flash                                      |
+|sample/nrf_dfu/exFlash                 |nrf dfu example with MCUBoot with secondary slot on external Flash                         |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |sample/nrf_dfu/ap_inFlash_rpc          |5340 appcore nrf dfu example with secondary slot on internal Flash. Work with ble_netcore  |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |sample/nrf_dfu/ap_exFlash_rpc          |5340 appcore nrf dfu example with secondary slot on external Flash. Work with ble_netcore  |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/nrf_dfu/inFlash_nrf5_bl         |nrf dfu example with nRF5 Bootloader                                                       |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/nrf_dfu/inFlash_nrf5_bl_mcuboot |nrf dfu example with both nRF5 Bootloader and MCUBoot loaded                               |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|sample/spim                            |SPI master example                               |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 
 **note: see the README.rst in the individual sample folder for a detailed description of the sample**.
@@ -70,4 +78,10 @@ The following development kits are tested. In principle, other nRF52 SoC should 
 |sample/nrf_dfu/ap_inFlash_rpc          |nrf5340dk_nrf5340_cpuapp                                          |
 +---------------------------------------+------------------------------------------------------------------+
 |sample/nrf_dfu/ap_exFlash_rpc          |nrf5340dk_nrf5340_cpuapp                                          |
++---------------------------------------+------------------------------------------------------------------+
+|sample/nrf_dfu/inFlash_nrf5_bl         |nrf52840dk_nrf52840                                               |
++---------------------------------------+------------------------------------------------------------------+
+|sample/nrf_dfu/inFlash_nrf5_bl_mcuboot |nrf52840dk_nrf52840                                               |
++---------------------------------------+------------------------------------------------------------------+
+|sample/spim                            |nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
 +---------------------------------------+------------------------------------------------------------------+

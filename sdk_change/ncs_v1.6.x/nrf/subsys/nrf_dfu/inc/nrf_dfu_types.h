@@ -66,6 +66,24 @@ typedef uint32_t ret_code_t;
 extern "C" {
 #endif
 
+/** @brief The size that must be reserved for the MBR when a SoftDevice is written to flash.
+This is the offset where the first byte of the SoftDevice hex file is written. */
+#define MBR_SIZE                (0x1000)
+
+/**@brief Macro for increasing a number to the nearest (larger) multiple of another number.
+ *
+ * @param[in]  alignment  The number to align to.
+ * @param[in]  number     The number to align (increase).
+ *
+ * @return The aligned (increased) @p number.
+ */
+#define ALIGN_NUM(alignment, number) (((number) - 1) + (alignment) - (((number) - 1) % (alignment)))
+
+/**
+ * Round up val to the next page boundary
+ */
+#define ALIGN_TO_PAGE(val) ALIGN_NUM((CODE_PAGE_SIZE), (val))
+
 
 #define INIT_COMMAND_MAX_SIZE      512 /**< Maximum size of the init command stored in dfu_settings. */
 #define INIT_COMMAND_MAX_SIZE_v1   256 /**< Maximum size of the init command in settings version 1. */
@@ -89,6 +107,27 @@ extern "C" {
 #else
     #define DATA_OBJECT_MAX_SIZE           (CODE_PAGE_SIZE)
 #endif
+
+/** @brief  Page location of the bootloader settings address.
+ */
+#if defined  (NRF51)
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0003FC00UL)
+#elif defined( CONFIG_SOC_NRF52805 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)    
+#elif defined( CONFIG_SOC_NRF52810 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)
+#elif defined( CONFIG_SOC_NRF52811 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)
+#elif defined( CONFIG_SOC_NRF52820 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0003F000UL)
+#elif defined( CONFIG_SOC_NRF52832 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
+#elif defined( CONFIG_SOC_NRF52833 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
+#elif defined(CONFIG_SOC_NRF52840)
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x000FF000UL)
+#endif
+
 
 #define NRF_DFU_CURRENT_BANK_0 0x00
 #define NRF_DFU_CURRENT_BANK_1 0x01

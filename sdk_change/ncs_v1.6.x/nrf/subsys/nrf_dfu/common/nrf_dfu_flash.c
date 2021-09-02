@@ -14,12 +14,15 @@
 #include <drivers/flash.h>
 #include <storage/stream_flash.h>
 #include <dfu/flash_img.h>
+#include "nrf_dfu_settings.h"
 
 LOG_MODULE_REGISTER(dfu_flash, CONFIG_NRF_DFU_LOG_LEVEL);
 
 const void * const dfu_flash_module;
 
-// #define DFU_STREAM 1
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+#define DFU_STREAM 1
+#endif
 
 
 #define FLASH_PAGE_SIZE_LOG2	12
@@ -49,9 +52,9 @@ const void * const dfu_flash_module;
  //#error Bootloader not supported.
 #endif
 
-
+#ifndef DFU_STREAM
 static const struct flash_area *flash_area;
-
+#endif
 
 #define DFU_UNLOCKED	0
 
@@ -73,6 +76,7 @@ void dfu_unlock(const void *module_id)
 	ARG_UNUSED(success);
 }
 
+#ifndef DFU_STREAM
 static uint8_t dfu_slot_id(void)
 {
 #if CONFIG_BOOTLOADER_MCUBOOT
@@ -117,11 +121,11 @@ static bool is_page_clean(const struct flash_area *fa, int off, size_t len)
 
 	return true;
 }
-
+#endif
 
 
 #ifndef DFU_STREAM
-int dfu_flash_start(uint32_t image_len)
+int dfu_flash_start(uint32_t image_start, uint32_t image_len)
 {
 	if (flash_area) {
 		LOG_WRN("DFU already in progress");
@@ -173,7 +177,7 @@ int dfu_flash_start(uint32_t image_len)
 	static struct flash_img_context ctx_data;
 #define ctx (&ctx_data)
 #endif
-int dfu_flash_start(uint32_t image_len)
+int dfu_flash_start(uint32_t image_start, uint32_t image_len)
 {
 	int rc = 0;
 
@@ -192,39 +196,13 @@ int dfu_flash_start(uint32_t image_len)
 	rc = flash_img_init(ctx);
 	if (rc)
 	{
-		LOG_ERR("flash_img_init err %d", rc);
-		return rc;
+		LOG_ERR("flash_img_init err %d", rc);		
 	}
 
-	int err = flash_area_open(dfu_slot_id(), &flash_area);
+	ctx->stream.offset = image_start;
 
-	if (err) {
-		LOG_ERR("Cannot open flash area (%d)", err);
-		flash_area = NULL;
-		dfu_unlock(dfu_flash_module);
+	return rc;
 
-		return err;
-	}	
-
-	// if (!is_page_clean(flash_area, 0, FLASH_PAGE_SIZE)) {
-	// 	uint32_t round_size = image_len/FLASH_PAGE_SIZE * 4096;
-	// 	if (image_len % FLASH_PAGE_SIZE) 
-	// 	{
-	// 		round_size += 4096;
-	// 	}
-	// 	err = flash_area_erase(flash_area, 0, round_size);
-	// 	if (err) {
-	// 		LOG_ERR("Cannot erase the whole image area", err);
-	// 		flash_area_close(flash_area);
-	// 		flash_area = NULL;			
-	// 	}
-	// 	else
-	// 	{
-	// 		LOG_INF("**the size=0x%x of Flash erased", image_len);
-	// 	}
-	// }
-
-	return err;	
 }
 #endif
 
@@ -245,20 +223,32 @@ void dfu_flash_finish(void)
 	flash_area = NULL;	
 }
 #else
+extern nrf_dfu_settings_t s_dfu_settings;
 void dfu_flash_finish(void)
-{	
-#ifdef CONFIG_BOOTLOADER_MCUBOOT
-	int err = boot_request_upgrade(false);
-	if (err) {
-		LOG_ERR("Cannot request the image upgrade (err:%d)", err);
+{
+	int rc;
+	
+	ctx->stream.offset = BOOTLOADER_SETTINGS_ADDRESS;
+	ctx->stream.buf_bytes = 0;
+	ctx->stream.bytes_written = 0;
+	ctx->stream.available = FLASH_PAGE_SIZE;	
+	rc = flash_img_buffered_write(ctx, (void *)&s_dfu_settings, sizeof(nrf_dfu_settings_t), true);
+	if(rc)
+	{
+		LOG_ERR("update settings err %d", rc);
 	}
-#endif
-	dfu_unlock(dfu_flash_module);	
+	else
+	{
+		LOG_INF("settings page update done");
+	}
+
+	dfu_unlock(dfu_flash_module);
+
 #if (CONFIG_HEAP_MEM_POOL_SIZE > 0)	
 	k_free(ctx);
 	ctx = NULL;	
 #endif
-	LOG_INF("image trailer written");	
+
 }
 #endif
 
@@ -288,6 +278,7 @@ int dfu_data_store(int off, const void *src,
 }
 #endif
 
+#ifndef DFU_STREAM
 int dfu_page_erase(int off, size_t len)
 {
 	int err = 0;
@@ -319,3 +310,9 @@ int dfu_page_erase(int off, size_t len)
         
 	return err;
 }
+#else
+int dfu_page_erase(int off, size_t len)
+{
+	return 0;
+}
+#endif

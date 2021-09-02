@@ -1,21 +1,31 @@
-.. inFlash:
+.. inFlash_nrf5_bl_mcuboot:
 
-nrf_dfu OTA example(internal secondary slot)
-############################################
+nrf_dfu and nrf5 bootloader/MCUBoot dfu example
+###############################################
 
 .. contents::
    :local:
    :depth: 2
 
-Use DFU module from nRF5 SDK v17.0.2 to do OTA in nRF Connect SDK. This DFU module is called nrf_dfu in this document. The OTA procedure is exactly the
-same as that of nRF5 SDK. See https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v17.0.2%2Fble_sdk_app_dfu_bootloader.html
+Use Bootloader and DFU module from nRF5 SDK v17.0.2 to do OTA in nRF Connect SDK. The bootloader is called nRF5 Bootloader. 
+The DFU module is called nrf_dfu in this document. The OTA procedure is exactly the same as that of nRF5 SDK. 
+See https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v17.0.2%2Fble_sdk_app_dfu_bootloader.html
 for a detailed description of nRF5 SDK DFU steps if you don't have too much knowledge of it.
 
 Overview
 ********
 
-In this sample, the secondary slot is on the internal Flash of nRF5 SoC. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
-the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the BLE host is running on the application core in this sample(``zephyr/samples/bluetooth/hci_rpmsg`` runs on the netcore). 
+To run this sample, you need to compile nRF5 bootloader in ''nRF5_SDK_17.0.2_d674dde/examples/dfu''. To make nRF5 bootloader work with
+this sample, you need to do the following changes.
+
+* #define NRF_BL_DFU_ALLOW_UPDATE_FROM_APP 1 in sdk_config.h
+* comment all nrf_bootloader_flash_protect invocation to avoid flash access blocking in app
+* in this sample, we take ''nRF5_SDK_17.0.2_d674dde/examples/dfu/secure_bootloader/pca10056_uart_debug'' as the example bootloader.
+
+**Note: you must replace priv.pem with your own keys before production.**
+
+In this sample, the secondary slot of MCUBoot is on the internal Flash of nRF5 SoC. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
+the swap operation to finish the whole DFU process.
 
 **note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
 
@@ -26,31 +36,26 @@ the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the B
 Build & Programming
 *******************
 
-By default, this sample works with NCS ``v1.6.0``. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
-and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
-	
-Before building this sample, enter folder ``sdk_change/ncs_v1.6.0`` and overwrite the same files in the correspondent NCS ``v1.6.0`` folders. If you want to build this sample
-in NCS ``v1.5.1`` or ealier. Use folder ``sdk_change/ncs_v1.5.1`` instead. 
-
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
+|nrf52840dk_nrf52840                                               |
 +------------------------------------------------------------------+
 
-For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
+For example, enter the following command to build ``nrf52840dk_nrf52840``.
 
 .. code-block:: console
 
-   west build -b nrf5340dk_nrf5340_cpuapp -d build_nrf5340dk_nrf5340_cpuapp -p
+   west build -b nrf52840dk_nrf52840 -d build_nrf52840dk_nrf52840 -p
 
 To flash the images to the board, just double click ``program.bat``, or use the following command:
 
 .. code-block:: console
 
-   west flash -d build_nrf5340dk_nrf5340_cpuapp     
+   west flash -d build_nrf52840dk_nrf52840     
+
 
 Testing
 *******

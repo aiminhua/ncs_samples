@@ -172,7 +172,7 @@ static void on_cmd_obj_execute_request(nrf_dfu_request_t const * p_req, nrf_dfu_
     nrf_dfu_result_t ret_val;
     ret_val = nrf_dfu_validation_init_cmd_execute(&m_firmware_start_addr, &m_firmware_size_req);
     p_res->result = ext_err_code_handle(ret_val);
-    LOG_INF("fw start=%x, fw size=%x ", m_firmware_start_addr, m_firmware_size_req);
+    LOG_INF("new fw start=%x, fw size=%x ", m_firmware_start_addr, m_firmware_size_req);
 
     if (p_res->result == NRF_DFU_RES_CODE_SUCCESS)
     {
@@ -186,7 +186,7 @@ static void on_cmd_obj_execute_request(nrf_dfu_request_t const * p_req, nrf_dfu_
             p_res->result = NRF_DFU_RES_CODE_OPERATION_FAILED;
         }
     }
-    int err = dfu_flash_start(m_firmware_size_req);
+    int err = dfu_flash_start(m_firmware_start_addr, m_firmware_size_req);
     if (err)
     {
         p_res->result = NRF_DFU_RES_CODE_OPERATION_FAILED;
@@ -370,9 +370,7 @@ static void on_data_obj_write_request(nrf_dfu_request_t * p_req, nrf_dfu_respons
     if ((s_dfu_settings.progress.firmware_image_offset + p_req->write.len) == m_firmware_size_req)
     {
         LOG_DBG("last image packet");
-        ret = dfu_data_store(write_addr, p_req->write.p_data, p_req->write.len, true);
-
-        //dfu_flash_finish();
+        ret = dfu_data_store(write_addr, p_req->write.p_data, p_req->write.len, true);        
     }
     else
     {
@@ -434,15 +432,18 @@ static void on_data_obj_execute_request_sched(void * p_evt, uint16_t event_lengt
 
     if (s_dfu_settings.progress.firmware_image_offset == m_firmware_size_req)
     {
-        LOG_DBG("Whole firmware image received.");
+        LOG_INF("Whole firmware image received.");
 
         res.result = NRF_DFU_RES_CODE_SUCCESS;
 
         res.result = ext_err_code_handle(res.result);
 
         /* Provide response to transport */
-        p_req->callback.response(&res, p_req->p_context);
+        p_req->callback.response(&res, p_req->p_context);        
 
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+        update_settings_dfu_mode(m_firmware_start_addr, m_firmware_size_req);
+#endif
         dfu_flash_finish();
 
         m_observer(NRF_DFU_EVT_DFU_COMPLETED);       
@@ -463,7 +464,7 @@ static void on_data_obj_execute_request_sched(void * p_evt, uint16_t event_lengt
         }
     }
 
-    LOG_DBG("Request handling complete. Result: 0x%x fw offset=0x%x", res.result, s_dfu_settings.progress.firmware_image_offset);
+    LOG_INF("Request handling complete. Result: 0x%x fw offset=0x%x", res.result, s_dfu_settings.progress.firmware_image_offset);
 }
 
 

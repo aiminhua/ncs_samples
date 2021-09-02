@@ -131,6 +131,10 @@ ret_code_t nrf_dfu_settings_additional_erase(void);
  */
 void nrf_dfu_settings_progress_reset(void);
 
+uint32_t nrf_dfu_bank1_start_addr(void);
+
+void update_settings_dfu_mode(uint32_t data_addr, uint32_t data_len);
+
 #ifdef __cplusplus
 }
 #endif
