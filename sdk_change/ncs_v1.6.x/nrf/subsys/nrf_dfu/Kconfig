@@ -31,6 +31,18 @@ config NRF_DFU_LOG_LEVEL
 	help
 	  Set the log level of nrf_dfu module
 
+config NRF_DFU_THREAD_STACK_SIZE
+	int "Set the stack size of DFU thread"
+	default 1536	
+	help
+	  Set the stack size of DFU thread
+
+config NRF_DFU_THREAD_PRIO
+	int "Set the priority of DFU thread"
+	default 8	
+	help
+	  Set the priority of DFU thread	  
+
 module = NRF_DFU
 module-str = NRF_DFU
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

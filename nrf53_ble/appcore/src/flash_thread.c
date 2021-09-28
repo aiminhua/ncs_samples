@@ -22,7 +22,7 @@ static struct nvs_fs fs;
 #define KEY_ID 1
 #define RBT_CNT_ID 2
 
-void nvs_usage_init(void)
+int nvs_usage_init(void)
 {
 	int rc;
 	
@@ -104,7 +104,9 @@ void nvs_usage_init(void)
 	LOG_INF("save new reboot counter by NVS API"); 
 	reboot_counter++;
 	(void)nvs_write(&fs, RBT_CNT_ID, &reboot_counter,
-			  sizeof(reboot_counter));	
+			  sizeof(reboot_counter));
+
+	return 0;	
 }
 
 

@@ -1,4 +1,4 @@
-.. spim:
+.. spi_master:
 
 SPI master example
 ##################

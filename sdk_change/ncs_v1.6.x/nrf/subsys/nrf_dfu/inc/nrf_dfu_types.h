@@ -126,6 +126,8 @@ This is the offset where the first byte of the SoftDevice hex file is written. *
     #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
 #elif defined(CONFIG_SOC_NRF52840)
     #define BOOTLOADER_SETTINGS_ADDRESS     (0x000FF000UL)
+#else
+    #warning No valid target set for BOOTLOADER_SETTINGS_ADDRESS.
 #endif
 
 

@@ -717,5 +717,5 @@ uint32_t nrf_dfu_req_handler_init(nrf_dfu_observer_t observer)
     return NRF_SUCCESS;
 }
 
-K_THREAD_DEFINE(req_handler_thread_id, 1024, req_handler_thread, NULL, NULL,
-		NULL, 8, 0, 0);
+K_THREAD_DEFINE(req_handler_thread_id, CONFIG_NRF_DFU_THREAD_STACK_SIZE, req_handler_thread, NULL, NULL,
+		NULL, CONFIG_NRF_DFU_THREAD_PRIO, 0, 0);

@@ -1,0 +1,12 @@
+/* overlay file */
+
+my_i2c: &i2c2 {
+	status = "okay";
+	compatible = "nordic,nrf-twim";
+	sda-pin = <4>;
+	scl-pin = <27>;
+};
+
+&spi2 {
+	status = "disabled";
+};

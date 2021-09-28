@@ -20,7 +20,7 @@ LOG_MODULE_REGISTER(dfu_flash, CONFIG_NRF_DFU_LOG_LEVEL);
 
 const void * const dfu_flash_module;
 
-#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+#if 1// CONFIG_BOARD_HAS_NRF5_BOOTLOADER
 #define DFU_STREAM 1
 #endif
 
@@ -196,11 +196,18 @@ int dfu_flash_start(uint32_t image_start, uint32_t image_len)
 	rc = flash_img_init(ctx);
 	if (rc)
 	{
+#if (CONFIG_HEAP_MEM_POOL_SIZE > 0)
+		k_free(ctx);
+		ctx = NULL;
+#endif		
 		LOG_ERR("flash_img_init err %d", rc);		
 	}
 
+#ifdef PM_MCUBOOT_SECONDARY_ADDRESS
+	ctx->stream.offset = PM_MCUBOOT_SECONDARY_ADDRESS + image_start;
+#else
 	ctx->stream.offset = image_start;
-
+#endif
 	return rc;
 
 }
@@ -223,6 +230,7 @@ void dfu_flash_finish(void)
 	flash_area = NULL;	
 }
 #else
+#ifdef CONFIG_BOARD_HAS_NRF5_BOOTLOADER
 extern nrf_dfu_settings_t s_dfu_settings;
 void dfu_flash_finish(void)
 {
@@ -250,7 +258,27 @@ void dfu_flash_finish(void)
 #endif
 
 }
+#else
+void dfu_flash_finish(void)
+{	
+#ifdef CONFIG_BOOTLOADER_MCUBOOT
+	int err = boot_request_upgrade(false);
+	if (err) {
+		LOG_ERR("Cannot request the image upgrade (err:%d)", err);
+	}
 #endif
+	dfu_unlock(dfu_flash_module);
+
+#if (CONFIG_HEAP_MEM_POOL_SIZE > 0)	
+	k_free(ctx);
+	ctx = NULL;	
+#endif
+
+	LOG_INF("image trailer written");
+
+}
+#endif //CONFIG_BOARD_HAS_NRF5_BOOTLOADER
+#endif //DFU_STREAM
 
 #ifndef DFU_STREAM
 int dfu_data_store(int off, const void *src,

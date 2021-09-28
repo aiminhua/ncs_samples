@@ -107,6 +107,11 @@ static void connected(struct bt_conn *conn, uint8_t err)
 
 	current_conn = bt_conn_ref(conn);
 
+#ifdef CONFIG_BT_NUS_SECURITY_ENABLED
+	if (bt_conn_set_security(conn, BT_SECURITY_L3)) {
+		printk("Failed to set security\n");
+	}	
+#endif
 #ifdef CONFIG_BT_GATT_CLIENT		
 	exchange_params.func = exchange_func;
 	err = bt_gatt_exchange_mtu(conn, &exchange_params);
@@ -276,7 +281,7 @@ void error(void)
 		k_sleep(K_MSEC(1000));
 	}
 }
-
+#if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
 static void num_comp_reply(bool accept)
 {
 	if (accept) {
@@ -305,16 +310,17 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 		}
 	}
 }
+#endif
 
 static void configure_gpio(void)
 {
 	int err;
-
+#if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
 	err = dk_buttons_init(button_changed);
 	if (err) {
 		LOG_ERR("Cannot init buttons (err: %d)", err);
 	}
-
+#endif
 	err = dk_leds_init();
 	if (err) {
 		LOG_ERR("Cannot init LEDs (err: %d)", err);
