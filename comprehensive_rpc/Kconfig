@@ -1,0 +1,71 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
+#
+
+source "Kconfig.zephyr"
+menu "nRF53 BLE custom"
+
+config BLE_NETWORK_CORE
+	bool "Both BLE host and controller run on network core"
+	help
+	  Enable the whole BLE stack running on network core
+
+config EXAMPLE_IIC
+	bool "load IIC example or not"
+	help
+		if yes, load IIC example
+		
+config EXAMPLE_SPIM
+	bool "load SPI master example or not"
+	help
+		if yes, load SPI master example		
+		
+config EXAMPLE_EXT_INT
+	bool "load external IO interrupt example or not"
+	help
+		if yes, load external IO interrupt example
+
+config EXAMPLE_ADC
+	bool "load ADC example or not"
+	help
+		if yes, load ADC example		
+
+config EXAMPLE_HS_UART
+	bool "load high speed UART example or not"
+	help
+		if yes, load high speed UART example	  
+
+config EXAMPLE_FLASH
+	bool "load Flash access usage example"
+	default n
+	help
+		if yes, load Flash access usage example
+
+config EXAMPLE_RAW_NRFX
+	bool "load raw nrfx driver(spim3 & rtc) usage example"
+	default n
+	help
+		if yes, load raw spim3 & rtc API usage example	
+
+config RPC_REMOTE_API
+	bool "app core and net core communicate by remote API. that is, app core can call net core API, and net core can also call app core API"
+	help
+	  enable the RPC api mode
+	  
+config RPC_SMP_BT
+	bool "(test purpose) load DFU example over BLE SMP"
+	help
+		if yes, load DFU example over BLE SMP		
+
+config NCS_V1_5_1
+	bool "use NCS v1.5.1 or earlier API"
+	help
+		use NCS v1.5.1 or earlier API
+		
+module = NRF53_EXAMPLES_CONFIG
+module-str = nrf53 specific examples configurations
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endmenu

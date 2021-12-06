@@ -1,0 +1,10 @@
+/* overlay file */
+
+my_spi: &spi1 {
+	status = "okay"; 
+	compatible = "nordic,nrf-spim";
+	sck-pin = < 31 >;
+	miso-pin = < 40 >;
+	mosi-pin = < 30 >;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+};

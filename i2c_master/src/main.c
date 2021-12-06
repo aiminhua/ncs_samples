@@ -7,22 +7,13 @@
 #include <zephyr.h>
 #include <device.h>
 #include <devicetree.h>
-#include <drivers/gpio.h>
 #include <drivers/i2c.h>
 #include <logging/log.h>
 
-#define LOG_MODULE_NAME i2c_thread
+#define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 const struct device *i2c_dev;
-const static struct device *gpio_dev;
-//static struct k_delayed_work read_eeprom;
-K_SEM_DEFINE(sem_iic_op, 0, 1);
-
-#define EXT_INT_IO	3  //p0.03
-#define EXT_INT_CONF	(GPIO_INPUT | GPIO_PULL_UP)
-
-static struct gpio_callback ext_int_cb_data;
 
 #define EEPROM_SIM_SIZE                   (320u) //!< Simulated EEPROM size.
 
@@ -74,58 +65,6 @@ static void eeprom_cmd_read(void)
     }
 }
 
-// static void eeprom_read_fn(struct k_work *work)
-// {
-//     printk("eeprom read in system workqueue\n");
-// 	eeprom_cmd_read();
-//     k_delayed_work_submit(&read_eeprom, K_SECONDS(2));
-// }
-bool is_give = false;
-void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
-{
-	LOG_INF("external interrupt occurs at %" PRIu32 "\n", k_cycle_get_32());
-    gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
-    if (!is_give)
-    {
-      is_give = true;
-      k_sem_give(&sem_iic_op);
-    }
-}
-
-
-void config_io_interrupt(void)
-{
-	int ret;
-
-	gpio_dev = device_get_binding(DT_LABEL(DT_NODELABEL(gpio0)));
-	if (!gpio_dev) {
-		LOG_ERR("Error: didn't find GPIO_0\n");
-		return;
-	}
-
-	ret = gpio_pin_configure(gpio_dev, EXT_INT_IO, EXT_INT_CONF);
-	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure pin %d\n",
-		       ret, EXT_INT_IO);
-		return;
-	}
-
-	ret = gpio_pin_interrupt_configure(gpio_dev,
-					   EXT_INT_IO,
-					   GPIO_INT_EDGE_TO_INACTIVE);
-	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure interrupt on pin %d\n",
-			ret, EXT_INT_IO);
-		return;
-	}
-
-	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(EXT_INT_IO));
-	gpio_add_callback(gpio_dev, &ext_int_cb_data);
-	LOG_INF("**External interrupt set at P0.%d\n", EXT_INT_IO);
-}
-
-
 void main(void)
 {	
 	
@@ -140,19 +79,11 @@ void main(void)
     if (i2c_configure(i2c_dev, i2c_cfg)) {
         LOG_ERR("I2C config failed");
         return;
-    }
+    }  
 
-    config_io_interrupt();    
-    
-	// k_delayed_work_init(&read_eeprom, eeprom_read_fn);
-    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	
-    
-
-	while (1) {        
-		k_sem_take(&sem_iic_op, K_FOREVER);
-		LOG_INF("i2c master thread");
-                is_give = false;
-        //eeprom_cmd_read();        
-        gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_EDGE_TO_INACTIVE);
+	while (1) {		
+		LOG_INF("i2c master thread"); 
+        eeprom_cmd_read();
+         k_sleep(K_SECONDS(2));        
 	}
 }

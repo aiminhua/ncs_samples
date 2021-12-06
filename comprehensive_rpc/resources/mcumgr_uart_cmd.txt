@@ -1,0 +1,18 @@
+mcumgr conn add myCOM type="serial" connstring="dev=COM27,baud=115200,mtu=256"
+
+mcumgr -c myCOM echo hello
+mcumgr -c myCOM image upload build_nrf5340dk_nrf5340_cpuapp/zephyr/net_core_app_update.bin
+mcumgr -c myCOM image upload hex/net_core_app_update.bin
+mcumgr -c myCOM image list
+mcumgr -c myCOM image test <hash of slot-1 image>
+mcumgr -c myCOM reset
+mcumgr -c myCOM image confirm
+mcumgr -c myCOM image confirm [hash]
+
+mcumgr --conntype serial --connstring dev=COM40,baud=115200,mtu=512 image list
+mcumgr -t 20 --conntype serial --connstring=COM40 image list
+mcumgr -c myCOM image upload build_nrf5340dk_nrf5340_cpuapp/zephyr/app_update.bin
+mcumgr -c myCOM -t 20 image list
+mcumgr -c myCOM -t 20 reset
+
+pause

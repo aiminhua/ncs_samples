@@ -11,18 +11,16 @@ I2C master example
 Overview
 ********
 
-This example shows how to call Zephyr SPI APIs to communicate with a SPI slave. The SPI slave image can be directly obtained from ``nRF5_SDK/examples/peripheral/spis``. 
-To facilitate the test, we put the spis images at ``nrf53_ble/resources/hex``. The spis pin definitions are shown below.
+This example shows how to use Zephyr I2C APIs to communicate with a I2C slave. The I2C slave image can be directly obtained from ``nRF5_SDK/examples/peripheral/twi_master_with_twis_slave``.
+To facilitate the test, we put the twis images at ``i2c_slave_hex``. The twis pin definitions are shown below.
 
 .. code-block:: console
 
-   APP_SPIS_SCK_PIN 26
-   APP_SPIS_MISO_PIN 30
-   APP_SPIS_MOSI_PIN 29
-   APP_SPIS_CS_PIN 31
+	EEPROM_SIM_SCL_S         31   
+	EEPROM_SIM_SDA_S         30  
    
-**See your DTS file or overlay file for SPI master related pin definitions.**
-
+**See your DTS file for I2C master pin definitions.**
+ 
 Build & Programming
 *******************
 
@@ -51,16 +49,20 @@ Testing
 
 After programming the sample to your development kit, test it by performing the following steps:
 
-1. Program the spis hex file to a nRF52832DK or nRF52840DK. 
-#. Connect the spis related pins to their counterparts in your board.
+1. Program the twis hex file to a nRF52832DK or nRF52840DK from ``i2c_slave_hex``. 
+#. Connect the twis related pins to their counterparts in your board.
 #. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
-#. After pressing **Button2**, this example can start to communicate with spis. 
+#. This example starts to communicate with twis automatically. 
 
-The logging looks similar to the following output.
+Once the communication is successful, the logging looks similar to the following output.
 
 .. code-block:: console
 
-	<inf> spi_thread: Received SPI data:
-			4e 6f 72 64 69 63 00
+	<inf> main: i2c master thread
+			15 e0 41 46 58 46 ff f7  ec f8 00 28 f4 d0 21 46
+	<inf> main: i2c master thread
+			58 46 01 f0 a1 fa 20 6a  b8 42 f2 d3 57 46 41 46
+	<inf> main: i2c master thread
+			28 68 ff f7 de f8 00 28  f9 d0 28 68 c7 60 c4 f8
 

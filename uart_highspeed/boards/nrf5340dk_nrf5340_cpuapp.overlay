@@ -1,0 +1,14 @@
+/* overlay file */
+my_uart:&uart1 {
+	status = "okay";
+	current-speed = < 1000000 >;
+	tx-pin = < 0x21 >;
+	rx-pin = < 0x20 >;	
+	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;
+};
+
+&i2c1 {
+	status = "disabled";
+};

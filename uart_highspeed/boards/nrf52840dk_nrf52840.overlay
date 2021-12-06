@@ -1,0 +1,9 @@
+/* overlay file */
+
+my_uart:&uart0 {
+	status = "okay";
+	current-speed = < 1000000 >;
+	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;
+};

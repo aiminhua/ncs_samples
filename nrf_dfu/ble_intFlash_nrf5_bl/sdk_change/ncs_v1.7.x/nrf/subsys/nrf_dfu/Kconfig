@@ -1,0 +1,50 @@
+# USB configuration options
+
+# Copyright (c) 2016 Wind River Systems, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+menu "nRF DFU module"
+
+menuconfig NRF_DFU
+	bool "DFU module ported from nRF5 SDK"
+	help
+	  "Enable Nordic DFU module"
+
+config NRF_DFU_BT
+	bool "Enable BLE transport"	
+	help
+	  "Transfer the new image by BLE transport"
+	  
+config NRF_DFU_RPC_APP
+	bool "transform BLE transport to RPC API on app core side"	
+	help
+	  "Can only be used on appcore. Transform BLE transport to RPC API on app core side"
+
+config NRF_DFU_RPC_NET
+	bool "transform BLE transport to RPC API on net core side"	
+	help
+	  "Can only be used on netcore. Transform BLE transport to RPC API on net core side"
+
+config NRF_DFU_LOG_LEVEL
+	int "Set the log level of nrf_dfu module"
+	default 2	
+	help
+	  Set the log level of nrf_dfu module
+
+config NRF_DFU_THREAD_STACK_SIZE
+	int "Set the stack size of DFU thread"
+	default 1536	
+	help
+	  Set the stack size of DFU thread
+
+config NRF_DFU_THREAD_PRIO
+	int "Set the priority of DFU thread"
+	default 8	
+	help
+	  Set the priority of DFU thread	  
+
+module = NRF_DFU
+module-str = NRF_DFU
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+	  
+endmenu
