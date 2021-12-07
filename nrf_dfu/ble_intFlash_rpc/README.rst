@@ -1,4 +1,4 @@
-.. ap_inFlash_rpc:
+.. ble_intFlash_rpc:
 
 nrf_dfu OTA example(internal secondary slot & RPC)
 ##################################################
@@ -14,9 +14,9 @@ for a detailed description of nRF5 SDK DFU steps if you don't have too much know
 Overview
 ********
 
-In this sample, the secondary slot is on the internal Flash of ``nRF5340``. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
-the swap operation to finish the whole DFU process. This sample only supports ``nRF5340``, and both BLE host and controller run on the network core(``nrf53_ble/ble_netcore`` runs on the netcore).
-Applicatoin core and network core communicate with each other by ``nrf_rpc''.  
+In this sample, the secondary slot is on the external Flash. That is, the new image will be stored in the secondary slot first. After that, MCUBoot would perform
+the swap operation to finish the whole DFU process. This sample only supports ``nRF5340``.Both BLE host and controller run on the network core(the network core source files can be found at ``ncs_samples/netcore_ble``).
+Application core and network core communicate with each other by ``nrf_rpc'' in this example.  
 
 **note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
 
@@ -27,16 +27,16 @@ Applicatoin core and network core communicate with each other by ``nrf_rpc''.
 Build & Programming
 *******************
 
-Make sure ``nrf53_ble/ble_netcore`` is put in the following folder.
+Make sure ``ncs_samples/netcore_ble`` is placed in the following folder structure.
 
 ::
 
     NCS root folder
     ├── nrf
     ├── zephyr
-    ├── sample          
-    │   ├── nrf53_ble
-    │       └── ble_netcore
+    ├── ncs_samples          
+    │   ├── netcore_ble
+
 
 By default, this sample works with the latest NCS tag. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
@@ -74,6 +74,6 @@ After programming the sample to your development kit, test it by performing the 
 #. |connect_terminal|
 #. Optionally, connect the RTT console to display logging messages.
 #. Reset the kit. It shall advertise ``nus_netcore``
-#. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex and net_core_app_signed.hex to folder ``update_zip``. Double click ``zip_generate.bat``.
-#. If you want to update net core image, use 53_netcore_inFlash_rpc.zip. if you want to update app core image, use 53_appcore_inFlash_rpc.zip
+#. Copy app_signed.hex(application core update image) and net_core_app_signed.hex(netcore update image) in folder ``build*/zephyr`` to folder ``update``.
+#. Double click ``zip_generate.bat`` in ``update``.You will get ble_intFlash_rpc.zip as the application core update image and ble_intFlash_rpc_netcore as the netcore update image.
 #. Perform the DFU steps as nRF5 SDK do

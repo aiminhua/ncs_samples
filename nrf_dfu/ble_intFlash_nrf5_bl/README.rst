@@ -1,4 +1,4 @@
-.. inFlash_nrf5_bl:
+.. ble_intFlash_nrf5_bl:
 
 nrf_dfu and nrf5 bootloader dfu example
 #######################################
@@ -64,8 +64,8 @@ Testing
 1. Connect the kit to the computer using a USB cable. 
 #. Compile nRF5 bootloader from nRF5 SDK v17.x.x
 #. Build this sample
-#. Copy ``zephyr.hex`` and ``nRF5 Bootloader`` to ``update_zip``. Double click ``program.bat`` to program the image to the kit
+#. Copy ``zephyr.hex`` and ``nRF5 Bootloader`` to ``update``. Double click ``program.bat`` to program the images to the kit
 #. Reset the kit. It shall advertise ``Nordic_DFU``
-#. Build this sample again with some modification. Rename ``zephyr.hex`` to ``app_new.hex``. Copy it to ``update_zip``. 
+#. Build this sample again with some modification. Rename ``zephyr.hex`` to ``app_new.hex``. Copy it to ``update``. 
    Double click ``zip_generate.bat``. Upload ``ncs_nrf5_bl.zip'' to your testing mobile phone. 
 #. Perform the DFU steps as nRF5 SDK do

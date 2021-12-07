@@ -1,4 +1,4 @@
-.. inFlash_nrf5_bl_mcuboot:
+.. ble_intFlash_nrf5_bl_mcuboot:
 
 nrf_dfu and nrf5 bootloader/MCUBoot dfu example
 ###############################################

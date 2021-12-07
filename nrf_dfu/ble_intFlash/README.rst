@@ -60,6 +60,6 @@ After programming the sample to your development kit, test it by performing the 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
 #. Reset the kit. It shall advertise ``Nordic_DFU``
-#. Enter ``zephyr folder`` of the ``build`` folder. Copy app_signed.hex(and net_core_app_signed.hex if you want to upgrade network core of nRF5340 too) to folder ``update_zip``.
-#. Double click ``zip_generate.bat`` in ``update_zip``.You will get inFlash_norpc.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
+#. Copy app_signed.hex in folder ``build*/zephyr``(and net_core_app_signed.hex if you want to upgrade network core of nRF5340) to folder ``update``.
+#. Double click ``zip_generate.bat`` in ``update``.You will get ble_intFlash.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
 #. Perform the DFU steps as nRF5 SDK do

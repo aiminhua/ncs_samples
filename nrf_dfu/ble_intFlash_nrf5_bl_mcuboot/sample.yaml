@@ -1,6 +1,6 @@
 sample:
-  name: BLE UART service
-  description: Bluetooth Low Energy UART service sample
+  name: BLE DFU example with nRF5 Bootloader and MCUboot
+  description: secondary slot on internal Flash
 tests:
   samples.bluetooth.peripheral_uart:
     build_only: true

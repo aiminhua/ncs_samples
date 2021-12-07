@@ -1,5 +1,5 @@
 sample:
-  name: BLE DFU example
+  name: BLE DFU example with nRF5 Bootloader
   description: secondary slot on internal Flash
 tests:
   samples.bluetooth.peripheral_uart:
