@@ -107,6 +107,6 @@ void rpc_dfu_req_handler_callback(nrf_dfu_response_t * p_res, void * p_context)
 	err = nrf_rpc_cbor_cmd(&rpc_dfu, RPC_CMD_DFU_REQ_HANDLER_CALLBACK, &ctx,
 			       rsp_error_code_handle, &result);
 	
-    LOG_INF("req callback err=%d, ret=%d", err, result);
+    LOG_DBG("req callback err=%d, ret=%d", err, result);
  
 }

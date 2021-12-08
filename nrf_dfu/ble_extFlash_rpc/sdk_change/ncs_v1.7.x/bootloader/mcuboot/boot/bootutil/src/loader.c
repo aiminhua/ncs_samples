@@ -884,7 +884,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
     if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") != 0)
     {        
         hdr = (struct image_header *)(secondary_fa->fa_off + 0x10000000); //0x10000000 is XIP base address
-        printk("external secondary slot %p \r",hdr);
+        BOOT_LOG_INF("external secondary slot %p \r",hdr);
     }   
     if (hdr->ih_magic == IMAGE_MAGIC) {
         vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;

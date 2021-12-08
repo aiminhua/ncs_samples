@@ -59,7 +59,7 @@ After programming the sample to your development kit, test it by performing the 
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. Reset the kit. It shall advertise ``Nordic_DFU``
-#. Copy app_signed.hex in folder ``build*/zephyr``(and net_core_app_signed.hex if you want to upgrade network core of nRF5340) to folder ``update``.
-#. Double click ``upload_app.bat``(change the COM port if needed) in folder ``update``.(If you want to update nRF5340 network core, edit ``upload_app.bat`` to uncomment the last 3 lines)
+#. Copy app_signed.hex in folder ``build*/zephyr`` (and net_core_app_signed.hex if you want to upgrade network core of nRF5340) to folder ``update``.
+#. Double click ``upload_app.bat`` (change the COM port if needed) in folder ``update``. (If you want to update nRF5340 network core, edit ``upload_app.bat`` to uncomment the last 3 lines)
 #. Waiting until the transfer is done. 
 #. DFU is completed. 
