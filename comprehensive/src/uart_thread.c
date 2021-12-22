@@ -11,13 +11,13 @@
 #include <stdio.h>
 #include <logging/log.h>
 #include <drivers/uart.h>
-#include "nrf_rpc_tr.h"
-#include "rpc_app_api.h"
+#include <drivers/gpio.h>
+#include <bluetooth/services/nus.h>
 
 #define LOG_MODULE_NAME uart_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(uart0))
+#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(uart1))
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
@@ -144,9 +144,10 @@ int my_uart_send(const uint8_t *buf, size_t len)
 
 void uart_thread(void)
 {    
-	static uint32_t uart_len;	
+	static uint32_t uart_len;
 
 	LOG_INF("**high speed UART example");
+
 	uart_init();
 
 	while (1) {
@@ -154,15 +155,8 @@ void uart_thread(void)
 		/* Send the UART data back to the peer. Wait indefinitely*/
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data,
 						     K_FOREVER);
-#ifdef CONFIG_RPC_REMOTE_API
-		if (is_ble_connected())
-		{
-			int err = app2net_send_nus(buf->data,buf->len);
-			if (err) {
-				LOG_WRN("app2net_send_nus err %d", err);			
-			}	
-		}
-#endif
+
+		bt_nus_send(NULL,buf->data, buf->len);
 
 		my_uart_send(buf->data,buf->len);
 

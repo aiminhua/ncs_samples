@@ -14,8 +14,6 @@
 #define LOG_MODULE_NAME spi_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define SPI_DEVICE_NAME         "SPI_3"
-#define PIN_SPIM_CS	12  //P1.12
 #define DELAY_SPI_CS_ACTIVE_US 2
 #define TEST_STRING "Nordic"
 
@@ -29,17 +27,17 @@ static int spi_data_exchange(void)
     struct spi_config spi_cfg = {0};
 
 	spi_cfg.frequency = 8000000U;
-	spi_cfg.operation = SPI_WORD_SET(8);	
+	spi_cfg.operation = SPI_WORD_SET(8);
 
-	cs_ctrl.gpio_dev =
-		device_get_binding("GPIO_1");
+	cs_ctrl.gpio_dev = device_get_binding(DT_GPIO_LABEL(DT_NODELABEL(my_spi), cs_gpios));
 	if (!cs_ctrl.gpio_dev) {
-        LOG_ERR("cannot find GPIO_1 device");
+        LOG_ERR("cannot find CS GPIO device");
 		return -ENODEV;
 	}
 
-	cs_ctrl.gpio_pin = PIN_SPIM_CS;
-	cs_ctrl.gpio_dt_flags = GPIO_ACTIVE_LOW;
+	cs_ctrl.gpio_pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
+	cs_ctrl.gpio_dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
+
 	cs_ctrl.delay = DELAY_SPI_CS_ACTIVE_US;
 
 	spi_cfg.cs = &cs_ctrl;
@@ -98,7 +96,7 @@ void spi_thread(void)
 	
 	LOG_INF("**SPI master example working with nRF5_SDK\\examples\\peripheral\\spis directly");	
 
-	spi_dev = device_get_binding(SPI_DEVICE_NAME);
+	spi_dev = device_get_binding(DT_LABEL(DT_NODELABEL(my_spi)));
 	if (!spi_dev) {
 		LOG_ERR("SPIM driver not found.\n");
 		return;
@@ -107,7 +105,7 @@ void spi_thread(void)
 	while (1) {                
         LOG_INF("spi master thread");
         spi_data_exchange();
-        k_sleep(K_MSEC(200)); 
+        k_sleep(K_MSEC(800)); 
 	}
 }
 

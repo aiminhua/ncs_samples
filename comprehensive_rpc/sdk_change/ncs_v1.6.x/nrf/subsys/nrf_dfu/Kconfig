@@ -11,9 +11,20 @@ menuconfig NRF_DFU
 	  "Enable Nordic DFU module"
 
 config NRF_DFU_BT
-	bool "Enable BLE transport"	
+	bool "Enable BLE transport"
+    select NRF_DFU_PROTOCOL_REDUCED  	
 	help
 	  "Transfer the new image by BLE transport"
+
+config NRF_DFU_UART
+	bool "Enable UART transport"	
+	help
+	  "Transfer the new image by UART interface"	  
+
+config NRF_DFU_PROTOCOL_REDUCED
+	bool "Reduced DFU protocol set"
+	help
+	  "Reduced DFU protocol set"
 	  
 config NRF_DFU_RPC_APP
 	bool "transform BLE transport to RPC API on app core side"	
@@ -27,7 +38,7 @@ config NRF_DFU_RPC_NET
 
 config NRF_DFU_LOG_LEVEL
 	int "Set the log level of nrf_dfu module"
-	default 2	
+	default 3	
 	help
 	  Set the log level of nrf_dfu module
 
@@ -41,7 +52,35 @@ config NRF_DFU_THREAD_PRIO
 	int "Set the priority of DFU thread"
 	default 8	
 	help
-	  Set the priority of DFU thread	  
+	  Set the priority of DFU thread
+
+config NRF_DFU_BLE_MIN_CONN_INTERVAL
+	int "Set the minimum BLE connection interval during DFU process"
+	default 8	
+	help
+	  Set the minimum BLE connection interval during DFU process
+
+config NRF_DFU_BLE_MAX_CONN_INTERVAL
+	int "Set the maximum BLE connection interval during DFU process"
+	default 15	
+	help
+	  Set the maximum BLE connection interval during DFU process
+
+config NRF_DFU_BLE_CONN_SUP_TIMEOUT
+	int "Set connection supervisory timeout during DFU process"
+	default 400	
+	help
+	  Set connection supervisory timeout during DFU process
+
+config NRF_DFU_UART_DEV_NAME
+	string
+	default "UART_0"
+
+config NRF_DFU_UART_BUF_SIZE
+	int "Set the size of the nrf_dfu UART buffer"
+	default 192	
+	help
+	  Set the size of the nrf_dfu UART buffer	
 
 module = NRF_DFU
 module-str = NRF_DFU

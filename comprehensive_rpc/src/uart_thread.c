@@ -11,13 +11,14 @@
 #include <stdio.h>
 #include <logging/log.h>
 #include <drivers/uart.h>
+#include <drivers/gpio.h>
 #include "nrf_rpc_tr.h"
 #include "rpc_app_api.h"
 
 #define LOG_MODULE_NAME uart_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(uart0))
+#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(uart1))
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
@@ -144,9 +145,10 @@ int my_uart_send(const uint8_t *buf, size_t len)
 
 void uart_thread(void)
 {    
-	static uint32_t uart_len;	
+	static uint32_t uart_len;
 
 	LOG_INF("**high speed UART example");
+
 	uart_init();
 
 	while (1) {

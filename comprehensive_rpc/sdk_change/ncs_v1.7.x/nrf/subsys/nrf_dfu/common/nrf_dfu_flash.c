@@ -16,7 +16,7 @@
 #include <dfu/flash_img.h>
 #include "nrf_dfu_settings.h"
 
-LOG_MODULE_REGISTER(dfu_flash, CONFIG_NRF_DFU_LOG_LEVEL);
+LOG_MODULE_REGISTER(nrf_dfu_flash, CONFIG_NRF_DFU_LOG_LEVEL);
 
 const void * const dfu_flash_module;
 

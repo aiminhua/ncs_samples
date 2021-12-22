@@ -52,9 +52,14 @@
 #include <logging/log.h>
 #include "nrf_dfu_flash.h"
 #include <logging/log_ctrl.h>
+#ifdef CONFIG_BOOTLOADER_MCUBOOT 
+#include "pm_config.h"
+#endif
 
-#define LOG_MODULE_NAME dfu_req
+#define LOG_MODULE_NAME nrf_dfu_req
 LOG_MODULE_REGISTER(LOG_MODULE_NAME, CONFIG_NRF_DFU_LOG_LEVEL);
+
+#define NRF_DFU_PROTOCOL_VERSION    (0x01)
 
 static uint32_t m_firmware_start_addr;          /**< Start address of the current firmware image. */
 static uint32_t m_firmware_size_req;            /**< The size of the entire firmware image. Defined by the init command. */
@@ -155,10 +160,10 @@ static void on_cmd_obj_write_request(nrf_dfu_request_t * p_req, nrf_dfu_response
     cmd_response_offset_and_crc_set(p_res);
 
     /* If a callback to free the request payload buffer was provided, invoke it now. */
-    if (p_req->callback.write)
-    {
-        p_req->callback.write((void*)p_req->write.p_data);
-    }
+    //if (p_req->callback.write)
+    //{
+    //    p_req->callback.write((void*)p_req->write.p_data);
+    //}
 }
 
 
@@ -464,7 +469,7 @@ static void on_data_obj_execute_request_sched(void * p_evt, uint16_t event_lengt
         }
     }
 
-    LOG_INF("Request handling complete. Result: 0x%x fw offset=0x%x", res.result, s_dfu_settings.progress.firmware_image_offset);
+    LOG_DBG("Request handling complete. Result: 0x%x fw offset=0x%x", res.result, s_dfu_settings.progress.firmware_image_offset);
 }
 
 
@@ -589,6 +594,117 @@ static bool nrf_dfu_obj_op(nrf_dfu_request_t * p_req, nrf_dfu_response_t * p_res
     return response_ready;
 }
 
+#ifndef CONFIG_NRF_DFU_PROTOCOL_REDUCED
+static void on_protocol_version_request(nrf_dfu_request_t const * p_req, nrf_dfu_response_t * p_res)
+{
+    UNUSED_PARAMETER(p_req);
+    LOG_DBG("Handle NRF_DFU_OP_PROTOCOL_VERSION");
+
+    if (NRF_DFU_PROTOCOL_VERSION_MSG)
+    {
+        p_res->protocol.version = NRF_DFU_PROTOCOL_VERSION;
+    }
+    else
+    {
+        LOG_DBG("NRF_DFU_OP_PROTOCOL_VERSION disabled.");
+        p_res->result = NRF_DFU_RES_CODE_OP_CODE_NOT_SUPPORTED;
+    }
+}
+
+
+static void on_hw_version_request(nrf_dfu_request_t const * p_req, nrf_dfu_response_t * p_res)
+{
+    LOG_DBG("Handle NRF_DFU_OP_HARDWARE_VERSION");
+
+    p_res->hardware.part    = NRF_FICR->INFO.PART;
+    p_res->hardware.variant = NRF_FICR->INFO.VARIANT;
+
+    /* FICR values are in Kilobytes, we report them in bytes. */
+    p_res->hardware.memory.ram_size      = NRF_FICR->INFO.RAM   * 1024;
+    p_res->hardware.memory.rom_size      = NRF_FICR->INFO.FLASH * 1024;
+#if defined(CONFIG_SOC_SERIES_NRF52X) || defined(CONFIG_SOC_SERIES_NRF51X)   
+    p_res->hardware.memory.rom_page_size = NRF_FICR->CODEPAGESIZE;
+#else
+    p_res->hardware.memory.rom_page_size = NRF_FICR->INFO.CODEPAGESIZE;
+#endif
+}
+
+
+static void on_fw_version_request(nrf_dfu_request_t const * p_req, nrf_dfu_response_t * p_res)
+{
+    LOG_DBG("Handle NRF_DFU_OP_FIRMWARE_VERSION");
+    LOG_DBG("Firmware image requested: %d", p_req->firmware.image_number);
+
+    if (NRF_DFU_PROTOCOL_FW_VERSION_MSG)
+    {
+        uint8_t fw_count = 1;
+
+        if (s_dfu_settings.bank_0.bank_code == NRF_DFU_BANK_VALID_APP)
+        {
+            fw_count++;
+        }
+
+        p_res->result = NRF_DFU_RES_CODE_SUCCESS;
+
+        if (p_req->firmware.image_number == 0)
+        {
+            /* Bootloader is always present and it is always image zero. */
+            p_res->firmware.type    = NRF_DFU_FIRMWARE_TYPE_BOOTLOADER;
+            p_res->firmware.version = s_dfu_settings.bootloader_version;
+        #ifdef CONFIG_BOOTLOADER_MCUBOOT    
+            p_res->firmware.addr    = PM_MCUBOOT_ADDRESS;
+            p_res->firmware.len     = PM_MCUBOOT_SIZE;
+        #else
+            p_res->firmware.addr    = BOOTLOADER_SETTINGS_ADDRESS;
+            p_res->firmware.len     = 0x8000;            
+        #endif    
+        }
+        else if ((p_req->firmware.image_number < fw_count))
+        {
+            /* Either there is no SoftDevice and the firmware image requested is one,
+             * or there is a SoftDevice and the firmware image requested is two.
+             */
+            p_res->firmware.type    = NRF_DFU_FIRMWARE_TYPE_APPLICATION;
+            p_res->firmware.version = s_dfu_settings.app_version;
+        #ifdef CONFIG_BOOTLOADER_MCUBOOT    
+            p_res->firmware.addr    = PM_MCUBOOT_END_ADDRESS;
+        #else
+            p_res->firmware.addr    = 0x1000;
+        #endif    
+            p_res->firmware.len     = s_dfu_settings.bank_0.image_size;
+        }
+        else
+        {
+            LOG_DBG("No such firmware image");
+            p_res->firmware.type    = NRF_DFU_FIRMWARE_TYPE_UNKNOWN;
+            p_res->firmware.version = 0x00;
+            p_res->firmware.addr    = 0x00;
+            p_res->firmware.len     = 0x00;
+        }
+    }
+    else
+    {
+        LOG_DBG("NRF_DFU_OP_FIRMWARE_VERSION disabled.");
+        p_res->result        = NRF_DFU_RES_CODE_OP_CODE_NOT_SUPPORTED;
+        p_res->firmware.type = NRF_DFU_FIRMWARE_TYPE_UNKNOWN;
+    }
+}
+
+
+static void on_ping_request(nrf_dfu_request_t * p_req, nrf_dfu_response_t * p_res)
+{
+    LOG_DBG("Handle NRF_DFU_OP_PING");
+    p_res->ping.id = p_req->ping.id;
+}
+
+
+static void on_mtu_get_request(nrf_dfu_request_t * p_req, nrf_dfu_response_t * p_res)
+{
+    LOG_DBG("Handle NRF_DFU_OP_MTU_GET");
+    p_res->mtu.size = p_req->mtu.size;
+}
+#endif // CONFIG_NRF_DFU_PROTOCOL_REDUCED
+
 
 static void nrf_dfu_req_handler_req_process(nrf_dfu_request_t * p_req)
 {
@@ -606,6 +722,32 @@ static void nrf_dfu_req_handler_req_process(nrf_dfu_request_t * p_req)
 
     switch (p_req->request)
     {
+#ifndef CONFIG_NRF_DFU_PROTOCOL_REDUCED
+        case NRF_DFU_OP_PROTOCOL_VERSION:
+        {
+            on_protocol_version_request(p_req, &response);
+        } break;
+
+        case NRF_DFU_OP_HARDWARE_VERSION:
+        {
+            on_hw_version_request(p_req, &response);
+        } break;
+
+        case NRF_DFU_OP_FIRMWARE_VERSION:
+        {
+            on_fw_version_request(p_req, &response);
+        } break;
+
+        case NRF_DFU_OP_PING:
+        {
+            on_ping_request(p_req, &response);
+        } break;
+
+        case NRF_DFU_OP_MTU_GET:
+        {
+            on_mtu_get_request(p_req, &response);
+        } break;
+#endif        
         case NRF_DFU_OP_RECEIPT_NOTIF_SET:
         {
             on_prn_set_request(p_req, &response);

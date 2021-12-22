@@ -51,11 +51,8 @@
 #include "app_util.h"
 #include <logging/log.h>
 
-#define MODULE dfu_ble
+#define MODULE nrf_dfu_ble
 LOG_MODULE_REGISTER(MODULE, CONFIG_NRF_DFU_LOG_LEVEL);
-
-#define CONN_INTERVAL_BLE_MIN 8
-#define CONN_INTERVAL_BLE_MAX 15
 
 #define GATT_HEADER_LEN                     3                                                       /**< GATT header length. */
 #define GATT_PAYLOAD(mtu)                   ((mtu) - GATT_HEADER_LEN)                               /**< Length of the ATT payload for a given ATT MTU. */
@@ -259,10 +256,10 @@ static ssize_t on_ctrl_pt_write(struct bt_conn *conn,
     {
         conn_updated = true;
 		struct bt_le_conn_param param = {
-			.interval_min = CONN_INTERVAL_BLE_MIN,
-			.interval_max = CONN_INTERVAL_BLE_MAX,
+			.interval_min = CONFIG_NRF_DFU_BLE_MIN_CONN_INTERVAL,
+			.interval_max = CONFIG_NRF_DFU_BLE_MAX_CONN_INTERVAL,
 			.latency = 0,
-			.timeout = 400,
+			.timeout = CONFIG_NRF_DFU_BLE_CONN_SUP_TIMEOUT,
 		};
         LOG_INF("Initiate conn update min=%d max=%d", param.interval_min, param.interval_max);
 		bt_conn_le_param_update(conn, &param);    

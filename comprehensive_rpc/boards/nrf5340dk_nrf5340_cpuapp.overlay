@@ -12,8 +12,8 @@
 };
 
 &uart1 {
-	status = "disabled";
-	current-speed = < 115200 >;
+	status = "okay";
+	current-speed = < 1000000 >;
 	tx-pin = < 26 >;
 	rx-pin = < 7 >;
 };

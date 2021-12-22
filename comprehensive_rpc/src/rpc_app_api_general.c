@@ -10,7 +10,7 @@
 
 #include <nrf_rpc_cbor.h>
 
-#include "../../common_ids.h"
+#include "common_ids.h"
 #include <logging/log.h>
 #include "rpc_app_api.h"
 

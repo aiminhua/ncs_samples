@@ -12,8 +12,8 @@
 };
 
 &uart1 {
-	status = "disabled";
-	current-speed = < 115200 >;
+	status = "okay";
+	current-speed = < 1000000 >;
 	tx-pin = < 26 >;
 	rx-pin = < 7 >;
 };
@@ -22,7 +22,7 @@
 	status = "disabled";
 };
 
-&i2c2 {
+my_i2c: &i2c2 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
 	sda-pin = <4>;
@@ -33,50 +33,21 @@
 	status = "disabled";
 };
 
-&spi3 {
+my_spi: &spi3 {
 	status = "okay"; 
 	compatible = "nordic,nrf-spim";
 	sck-pin = < 47 >;
 	miso-pin = < 46 >;
 	mosi-pin = < 45 >;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
 
-/* delete button4 to initialize the related pin for network core use */
+/* delete sw3 to reserve the related pin for GPIO use */
 / {
- aliases {  
-  /delete-property/ sw3;
- };
-};
-
-/delete-node/ &button3;
-
-/* adjust the RAM size of application image */
-&sram0_image{
-	reg = < 0x20000000 0x7A000 >;
-};
-
-&sram0_s{
-	reg = < 0x20000000 0x7A000 >;
-};
-
-/delete-node/ &sram0_shared;
-
-/ {
-	chosen {
-		/* shared memory reserved for the inter-processor communication */
-		zephyr,ipc_shm = &sram0_shared;
+	aliases {  
+	 /delete-property/ sw3;
 	};
-
-	reserved-memory {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges;	
-		sram0_shared: memory@0x2007A000 {
-			/* SRAM allocated to shared memory */
-			reg = <0x2007A000 0x4000>;
-		};
-	};
-};
+  };
 
 /delete-node/ &storage_partition;
 &flash0{

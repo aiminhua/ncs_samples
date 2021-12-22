@@ -61,7 +61,7 @@ static void rpc_nrf_dfu_req_handler_on_req(CborValue *packet, void *handler_data
     req.callback.response =  rpc_dfu_req_handler_callback;
     req.callback.write = NULL;   	
 		
-	LOG_INF("req_op %d req_type %d", req.request, req.select.object_type);
+	LOG_DBG("req_op %d req_type %d", req.request, req.select.object_type);
 	err = nrf_dfu_req_handler_on_req(&req);
 	
 	rsp_error_code_send(err);
@@ -107,6 +107,6 @@ void rpc_dfu_req_handler_callback(nrf_dfu_response_t * p_res, void * p_context)
 	err = nrf_rpc_cbor_cmd(&rpc_dfu, RPC_CMD_DFU_REQ_HANDLER_CALLBACK, &ctx,
 			       rsp_error_code_handle, &result);
 	
-    LOG_INF("req callback err=%d, ret=%d", err, result);
+    LOG_DBG("req callback err=%d, ret=%d", err, result);
  
 }

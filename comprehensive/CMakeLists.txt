@@ -9,7 +9,7 @@ project(comprensive_example)
 
 target_sources(app PRIVATE src/main.c)
 
-target_sources_ifdef(CONFIG_EXAMPLE_IIC app
+target_sources_ifdef(CONFIG_EXAMPLE_I2C app
                      PRIVATE src/iic_thread.c)
 					 
 target_sources_ifdef(CONFIG_EXAMPLE_SPIM app
@@ -21,19 +21,8 @@ target_sources_ifdef(CONFIG_EXAMPLE_HS_UART app
 target_sources_ifdef(CONFIG_EXAMPLE_ADC app
                      PRIVATE src/adc_thread.c)
 					 
-target_sources_ifdef(CONFIG_RPC_REMOTE_API app
-                     PRIVATE src/rpc_app_api_general.c src/rpc_app_api.c src/rpc_thread.c)
-				 
-
-target_sources_ifdef(CONFIG_RPC_SMP_BT app
-                     PRIVATE src/rpc_app_smp_bt.c)		
-
 target_sources_ifdef(CONFIG_EXAMPLE_FLASH app
                      PRIVATE src/flash_thread.c)
-
-target_sources_ifdef(CONFIG_EXAMPLE_RAW_NRFX app
-                      PRIVATE src/raw_nrfx_driver_thread.c)
-
 
 zephyr_library_include_directories(.)
 

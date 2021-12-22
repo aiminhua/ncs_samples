@@ -22,7 +22,7 @@ mcuboot_primary_app:
   span: *id002
   address: 0xc200
   size: 0xefe00
-storage:
+settings_storage:
   address: 0xfc000
   size: 0x4000
   region: flash_primary

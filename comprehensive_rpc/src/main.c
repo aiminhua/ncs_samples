@@ -44,7 +44,7 @@ static struct k_delayed_work blinky_work;
 
 K_SEM_DEFINE(sem_rpc_tx, 0, 1);
 K_SEM_DEFINE(sem_spi_txrx, 0, 1);
-K_SEM_DEFINE(sem_raw_nrfx_txrx, 0, 1);
+
 /* Stack definition for application workqueue */
 K_THREAD_STACK_DEFINE(application_stack_area,
 		      1024);
@@ -75,7 +75,7 @@ static void get_device_handle(void)
 	devUart0 = device_get_binding("UART_0");
     devUart1 = device_get_binding("UART_1");
 }
-#ifdef CONFIG_NCS_V1_5_1
+#if defined(CONFIG_NCS_V1_5_1)
 void set_device_pm_state(void)
 {
 	int err;
@@ -146,7 +146,7 @@ void set_device_pm_state(void)
 	}
 
 }
-#else
+#elif defined(CONFIG_NCS_V1_6_x)
 void set_device_pm_state(void)
 {
 	int err;
@@ -226,7 +226,79 @@ void set_device_pm_state(void)
 	}
 
 }
-#endif //CONFIG_NCS_V1_5_1
+#else
+void set_device_pm_state(void)
+{
+	int err;
+	enum pm_device_state pm_state;
+
+	if (devUart1)
+	{
+		pm_device_state_get(devUart1, &pm_state);
+		if (pm_state == PM_DEVICE_STATE_LOW_POWER)
+		{
+			LOG_INF("UART1 is in low power state. We activate it");
+			err = pm_device_state_set(devUart1,PM_DEVICE_STATE_ACTIVE);
+			if (err) {
+				LOG_ERR("UART1 enable failed");			
+			}
+			else
+			{
+				LOG_INF("## UART1 is active now ##");
+			}		
+		}
+		else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+		{
+			LOG_INF("UART1 is in active state. We suspend it");
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
+#endif			
+			err = pm_device_state_set(devUart1,	PM_DEVICE_STATE_LOW_POWER);
+			if (err) {
+				LOG_ERR("UART1 disable failed");
+			}
+			else
+			{
+				LOG_INF("## UART1 is suspended now ##");
+			}		
+		}
+	}
+
+	pm_device_state_get(devUart0, &pm_state);
+	if (pm_state == PM_DEVICE_STATE_LOW_POWER)
+	{
+		LOG_INF("UART0 is in low power state. We activate it");
+		err = pm_device_state_set(devUart0,	PM_DEVICE_STATE_ACTIVE);
+		if (err) {
+			LOG_ERR("UART0 enable failed");			
+		}
+		else
+		{
+			LOG_INF("## UART0 is active now ##");
+		}		
+	}
+	else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+	{
+		LOG_INF("UART0 is in active state. We suspend it");
+		//print out all the pending logging messages
+		while(log_process(false));
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
+#endif
+		err = pm_device_state_set(devUart0,	PM_DEVICE_STATE_LOW_POWER);
+		if (err) {
+			LOG_ERR("UART0 disable failed");
+		}
+		else
+		{
+			LOG_INF("## UART0 is suspended now ##");
+		}		
+	}
+
+}
+#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_1
 
 #endif //CONFIG_PM_DEVICE
 
@@ -242,7 +314,6 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 	if (buttons & DK_BTN2_MSK) {
 		LOG_INF("button2 isr");
 		k_sem_give(&sem_spi_txrx);
-		k_sem_give(&sem_raw_nrfx_txrx);		
 	}
 
 	if (buttons & DK_BTN3_MSK) {
@@ -342,7 +413,7 @@ void main(void)
 {
 	int err;	
 
-	LOG_INF("### comprensive examples @ appcore version v0.1 compiled at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### comprehensive example @ appcore version v0.2 compiled at %s %s\n", __TIME__, __DATE__);
 	assign_io_to_netcore();
 
 	ledDev = device_get_binding(LED0);

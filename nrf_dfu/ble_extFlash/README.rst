@@ -61,5 +61,5 @@ After programming the sample to your development kit, test it by performing the 
 #. |connect_terminal|
 #. Reset the kit. It shall advertise ``Nordic_DFU``
 #. Copy app_signed.hex in folder ``build*/zephyr`` (and net_core_app_signed.hex if you want to upgrade network core of nRF5340) to folder ``update``.
-#. Double click ``zip_generate.bat`` in ``update``.You will get ble_extFlash.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
+#. Double click ``zip_generate.bat`` in ``update``. You will get ble_extFlash.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
 #. Perform the DFU steps as nRF5 SDK do

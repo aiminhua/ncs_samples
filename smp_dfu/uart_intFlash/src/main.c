@@ -343,7 +343,6 @@ void main(void)
 		return;
 	}
 
-	smp_bt_register();
 	os_mgmt_register_group();
 	img_mgmt_register_group();
 

@@ -1,0 +1,62 @@
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	current-speed = < 115200 >;
+	tx-pin = < 34 >;
+	rx-pin = < 33 >;
+	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;
+};
+
+&uart1 {
+	status = "okay";
+	current-speed = < 1000000 >;
+	tx-pin = < 6 >;
+	rx-pin = < 8 >;
+};
+
+my_i2c: &i2c0 {
+	status = "okay";
+	compatible = "nordic,nrf-twim";
+	sda-pin = <26>;
+	scl-pin = <27>;
+};
+
+&spi0 {
+	status = "disabled";
+};
+
+my_spi: &spi1 {
+	status = "okay"; 
+	compatible = "nordic,nrf-spim";
+	sck-pin = < 31 >;
+	miso-pin = < 40 >;
+	mosi-pin = < 30 >;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+};
+
+&i2c1 {
+	status = "disabled";
+};
+
+/* delete sw3 to reserve the related pin for GPIO use */
+/ {
+	aliases {  
+	 /delete-property/ sw3;
+	};
+   };
+
+/delete-node/ &storage_partition;
+&flash0{
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = < 0x1 >;
+			#size-cells = < 0x1 >;
+
+			storage_partition: partition@fc000 {
+				label = "storage";
+				reg = < 0xfc000 0x4000 >;
+			};
+		};
+};

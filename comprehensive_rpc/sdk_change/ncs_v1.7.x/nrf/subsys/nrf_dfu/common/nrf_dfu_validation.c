@@ -200,6 +200,7 @@ nrf_dfu_result_t nrf_dfu_validation_init_cmd_create(uint32_t size)
 
         // Set the init command size.
         s_dfu_settings.progress.command_size = size;
+		
     }
     return ret_val;
 }
@@ -208,6 +209,7 @@ nrf_dfu_result_t nrf_dfu_validation_init_cmd_create(uint32_t size)
 nrf_dfu_result_t nrf_dfu_validation_init_cmd_append(uint8_t const * p_data, uint32_t length)
 {
     nrf_dfu_result_t ret_val = NRF_DFU_RES_CODE_SUCCESS;
+
     if ((length + s_dfu_settings.progress.command_offset) > s_dfu_settings.progress.command_size)
     {
         LOG_ERR("Init command larger than expected.");

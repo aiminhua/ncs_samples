@@ -77,7 +77,7 @@ uint32_t nrf_dfu_req_handler_on_req(nrf_dfu_request_t * p_req)
 	len = sizeof(nrf_dfu_request_t);
 	memcpy(buf, p_req, len);	
 
-	LOG_INF("req_op %d req_type %x len %d", p_req->request, p_req->select.object_type, p_req->write.len);
+	LOG_DBG("req_op %d req_type %x len %d", p_req->request, p_req->select.object_type, p_req->write.len);
 	
 	if(p_req->request == NRF_DFU_OP_OBJECT_WRITE)
 	{		

@@ -5,17 +5,17 @@
 #
 
 source "Kconfig.zephyr"
-menu "nRF53 BLE custom"
+menu "comprehensive_rpc example"
 
 config BLE_NETWORK_CORE
 	bool "Both BLE host and controller run on network core"
 	help
 	  Enable the whole BLE stack running on network core
 
-config EXAMPLE_IIC
-	bool "load IIC example or not"
+config EXAMPLE_I2C
+	bool "load I2C example or not"
 	help
-		if yes, load IIC example
+		if yes, load I2C example
 		
 config EXAMPLE_SPIM
 	bool "load SPI master example or not"
@@ -43,19 +43,13 @@ config EXAMPLE_FLASH
 	help
 		if yes, load Flash access usage example
 
-config EXAMPLE_RAW_NRFX
-	bool "load raw nrfx driver(spim3 & rtc) usage example"
-	default n
-	help
-		if yes, load raw spim3 & rtc API usage example	
-
 config RPC_REMOTE_API
 	bool "app core and net core communicate by remote API. that is, app core can call net core API, and net core can also call app core API"
 	help
 	  enable the RPC api mode
 	  
 config RPC_SMP_BT
-	bool "(test purpose) load DFU example over BLE SMP"
+	bool "load DFU example over BLE SMP"
 	help
 		if yes, load DFU example over BLE SMP		
 
@@ -63,9 +57,14 @@ config NCS_V1_5_1
 	bool "use NCS v1.5.1 or earlier API"
 	help
 		use NCS v1.5.1 or earlier API
+
+config NCS_V1_6_x
+	bool "use NCS v1.6.x dedicated APIs"
+	help
+		use NCS v1.6.x dedicated APIs		
 		
-module = NRF53_EXAMPLES_CONFIG
-module-str = nrf53 specific examples configurations
+module = COMPREHENSIVE_RPC_EXAMPLE_CONFIG
+module-str = comprehensive_rpc example configurations
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
 
 endmenu

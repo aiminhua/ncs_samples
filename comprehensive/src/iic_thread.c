@@ -14,14 +14,15 @@
 #define LOG_MODULE_NAME i2c_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define I2C_DEVICE_NAME         "I2C_2"
 const struct device *i2c_dev;
 const static struct device *gpio_dev;
 //static struct k_delayed_work read_eeprom;
 K_SEM_DEFINE(sem_iic_op, 0, 1);
 
-#define EXT_INT_IO	6  //p0.06
-#define EXT_INT_CONF	(GPIO_INPUT | GPIO_PULL_UP)
+#define INT0_NODE DT_NODELABEL(button3)
+#define INT0	DT_GPIO_LABEL(INT0_NODE, gpios)
+#define INT0_PIN	DT_GPIO_PIN(INT0_NODE, gpios)
+#define INT0_FLAGS	DT_GPIO_FLAGS(INT0_NODE, gpios)
 
 static struct gpio_callback ext_int_cb_data;
 
@@ -85,8 +86,8 @@ static void eeprom_cmd_read(void)
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	LOG_INF("external interrupt occurs at %" PRIu32 "\n", k_cycle_get_32());
-    gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
+	LOG_INF("external interrupt occurs at %d", k_uptime_get_32());
+    gpio_pin_interrupt_configure(gpio_dev,  INT0_PIN,  GPIO_INT_DISABLE);
     k_sem_give(&sem_iic_op);    
 }
 
@@ -95,31 +96,28 @@ void config_io_interrupt(void)
 {
 	int ret;
 
-	gpio_dev = device_get_binding(DT_LABEL(DT_NODELABEL(gpio0)));
+	gpio_dev = device_get_binding(INT0);
 	if (!gpio_dev) {
-		LOG_ERR("Error: didn't find GPIO_0\n");
-		return;
+		LOG_ERR("INT0 dev null");		
 	}
 
-	ret = gpio_pin_configure(gpio_dev, EXT_INT_IO, EXT_INT_CONF);
+	ret = gpio_pin_configure(gpio_dev, INT0_PIN, (GPIO_INPUT | GPIO_PULL_UP));
 	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure pin %d\n",
-		       ret, EXT_INT_IO);
-		return;
+		LOG_ERR("Error %d: failed to configure pin %d",
+		       ret, INT0_PIN);		
 	}
 
 	ret = gpio_pin_interrupt_configure(gpio_dev,
-					   EXT_INT_IO,
-					   GPIO_INT_EDGE_TO_INACTIVE);
+					   INT0_PIN,
+					   GPIO_INT_ENABLE | GPIO_INT_LOW_0);
 	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure interrupt on pin %d\n",
-			ret, EXT_INT_IO);
-		return;
+		LOG_ERR("Error %d: failed to configure interrupt on pin %d",
+			ret, INT0_PIN);		
 	}
 
-	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(EXT_INT_IO));
+	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(INT0_PIN));
 	gpio_add_callback(gpio_dev, &ext_int_cb_data);
-	LOG_INF("**External interrupt example at P0.%d\n", EXT_INT_IO);
+	LOG_INF("External interrupt example at Pin:%d", INT0_PIN);
 }
 #endif //CONFIG_EXAMPLE_EXT_INT
 
@@ -128,7 +126,7 @@ void iic_thread(void)
 	
 	LOG_INF("**I2C master example working with nRF5_SDK\\examples\\peripheral\\twi_master_with_twis_slave directly");	
 
-	i2c_dev = device_get_binding(I2C_DEVICE_NAME);
+	i2c_dev = device_get_binding(DT_LABEL(DT_NODELABEL(my_i2c)));
 	if (!i2c_dev) {
 		LOG_ERR("I2C Device driver not found");
 		return;
@@ -143,14 +141,15 @@ void iic_thread(void)
 #endif
     
 	// k_delayed_work_init(&read_eeprom, eeprom_read_fn);
-    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	
-    k_sem_take(&sem_iic_op, K_FOREVER);
+    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	    
 
-	while (1) {        
+	while (1) {
+        k_sem_take(&sem_iic_op, K_FOREVER);        
         LOG_INF("i2c master thread");
         eeprom_cmd_read();
-        k_sleep(K_MSEC(500)); 
-        gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_EDGE_TO_INACTIVE);
+        k_sleep(K_SECONDS(2));        
+        gpio_pin_interrupt_configure(gpio_dev,  INT0_PIN,
+					   GPIO_INT_ENABLE | GPIO_INT_LOW_0);
 	}
 }
 

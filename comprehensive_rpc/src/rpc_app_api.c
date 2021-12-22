@@ -13,7 +13,7 @@
 #include "nrf_rpc_tr.h"
 #include <logging/log.h>
 #include <drivers/uart.h>
-#include "../../common_ids.h"
+#include "common_ids.h"
 
 #define LOG_MODULE_NAME rpc_app_api
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

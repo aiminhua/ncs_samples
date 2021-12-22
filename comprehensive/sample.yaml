@@ -1,10 +1,10 @@
 sample:
-  name: Blinky Sample
+  name: Comprehensive example
+  description: secondary slot on external QSPI flash
 tests:
-  sample.basic.blinky:
-    tags: LED gpio
-    filter: dt_compat_enabled_with_alias("gpio-leds", "led0")
-    depends_on: gpio
-    harness: led
-    integration_platforms:
-      - frdm_k64f
+  samples.bluetooth.peripheral_uart:
+    build_only: true
+    build_on_all: true
+    platform_allow: nrf51dk_nrf51422 nrf52dk_nrf52832 nrf52840dk_nrf52840
+      nrf5340dk_nrf5340_cpuapp nrf5340dk_nrf5340_cpuappns
+    tags: bluetooth ci_build
