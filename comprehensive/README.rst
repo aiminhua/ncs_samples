@@ -247,18 +247,6 @@ We can also do OTA by BT SMP protocol which is an inherent module of NCS. Change
 	CONFIG_MGMT_CBORATTR_MAX_SIZE=512
 	CONFIG_RPC_SMP_BT=y
 
-* Change ``netcore_ble/prj.conf``. 
-
-.. code-block:: console
-
-	## Open the following config to run SMP OTA ##
-	CONFIG_RPC_SMP_BT=y
-
-	## Open the following config to run nrf_dfu OTA ##
-	# CONFIG_NRF_DFU_BT=y
-	# CONFIG_NRF_DFU_RPC_NET=y
-	# CONFIG_BT_RX_STACK_SIZE=4096
-
 Then build the project and program it to the board. Perform the following steps to test SMP DFU.
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
