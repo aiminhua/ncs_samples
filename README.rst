@@ -10,7 +10,7 @@ This repo contains many nRF Connect SDK(NCS) samples. All of them are desgined f
 
 This repo will follow nRF Connect SDK latest tag. That is, all samples should work out of box with the latest tag. In addition, it should work with other versions of NCS. 
 
-Refer to folder ``sdk_change`` for all tested NCS tags. ``sdk_change`` list all the changes of the related NCS tag to make the samples run on the specified NCS tag. 
+Refer to folder ``sdk_change`` in each example for all tested NCS tags. ``sdk_change`` list all the changes of the related NCS tag to make the samples run on the specified NCS tag. 
 To make the samples build and run successfully, you can just overwrite the same files in the correspondent NCS folders. 
 
 A overview of the samples in this repo is shown below.
@@ -18,7 +18,9 @@ A overview of the samples in this repo is shown below.
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |Sample                                 |Brief                                                                                      +
 +=======================================+===========================================================================================+
-|comprehensive_rpc                      |a comprehensive example containing rpc, dfu, spi, uart, etc. Work with ``netcore_ble``     |
+|comprehensive                          |a comprehensive example containing nus, dfu, spi, uart, etc.                               |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|comprehensive_rpc                      |a comprehensive example containing rpc, nus, dfu, spi, uart, etc. Work with ``netcore_ble``|
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |netcore_ble                            |the whole ble stack and services run on the netcore                                        |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
