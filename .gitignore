@@ -14,8 +14,8 @@ cscope.*
 venv
 .venv
 *.hex
-!resources/*.*
-!resource/*.*
+!resources/*.hex
+!resource/*.hex
 *.bin
 *.zip
 *.rar
