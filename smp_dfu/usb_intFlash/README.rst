@@ -62,7 +62,8 @@ After programming the sample to your development kit, test it by performing the 
 
 .. code-block:: console
 
-   mcumgr conn add myCOM type="serial" connstring="dev=COM13,baud=115200,mtu=256"     (Note: change the COM if needed)
+   mcumgr conn add myCOM type="serial" connstring="dev=COM10,baud=115200,mtu=256"     (Note: change the COM if needed)
+   mcumgr -c myCOM echo hello
    mcumgr -c myCOM image upload app_update.bin
    mcumgr -c myCOM image list
    mcumgr -c myCOM image test <hash of slot-1 image>

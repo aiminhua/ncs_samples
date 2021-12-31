@@ -35,4 +35,4 @@ A overview of the samples in this repo is shown below.
 |uart_highspeed                         |high speed UART example                                                                    |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 
-**note: see the README.rst in the individual sample folder for a detailed description of the samples**.
+**Note: see the README.rst in the individual sample folder for a detailed description of the samples**.

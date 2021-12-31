@@ -12,7 +12,7 @@ Overview
 ********
 
 This example shows how to use Zephyr I2C APIs to communicate with a I2C slave. The I2C slave image can be directly obtained from ``nRF5_SDK/examples/peripheral/twi_master_with_twis_slave``.
-To facilitate the test, we put the twis images at ``i2c_slave_hex``. The twis pin definitions are shown below.
+To facilitate the test, we put the twis images at ``resources``. The twis pin definitions are shown below.
 
 .. code-block:: console
 
@@ -49,7 +49,7 @@ Testing
 
 After programming the sample to your development kit, test it by performing the following steps:
 
-1. Program the twis hex file to a nRF52832DK or nRF52840DK from ``i2c_slave_hex``. 
+1. Program the twis hex file to a nRF52832DK or nRF52840DK from ``resources``. 
 #. Connect the twis related pins to their counterparts in your board.
 #. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
