@@ -45,7 +45,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define KEY_PASSKEY_REJECT DK_BTN2_MSK
 
 #define ERASE_DELAY_AFTER_BOOT 30   //unit: s
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 static struct k_work_delayable blinky_work;
 #else
 static struct k_delayed_work blinky_work;
@@ -91,7 +91,7 @@ static void get_device_handles(void)
 	devUart0 = device_get_binding("UART_0");
     devUart1 = device_get_binding("UART_1");
 }
-#if defined(CONFIG_NCS_V1_5_1)
+#if defined(CONFIG_NCS_V1_5_x)
 void set_device_pm_state(void)
 {
 	int err;
@@ -314,7 +314,7 @@ void set_device_pm_state(void)
 	}
 
 }
-#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_1
+#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_x
 
 #endif //CONFIG_PM_DEVICE
 
@@ -324,7 +324,7 @@ static void blinky_work_fn(struct k_work *work)
 	gpio_pin_set(runLED, LED0_PIN, (int)led_is_on);
 	led_is_on = !led_is_on;
 
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
 					   	K_SECONDS(2));
 #else
@@ -335,11 +335,11 @@ static void blinky_work_fn(struct k_work *work)
 
 }
 
-// #ifdef CONFIG_NCS_V1_5_1
+// #ifdef CONFIG_NCS_V1_5_x
 // static struct k_delayed_work erase_slot_work;
 // #else
 // static struct k_work_delayable erase_slot_work;
-// #endif //CONFIG_NCS_V1_5_1
+// #endif //CONFIG_NCS_V1_5_x
 // static void erase_work_fn(struct k_work *work)
 // {   	
 //    	img_mgmt_impl_erase_slot();
@@ -527,19 +527,6 @@ static void auth_cancel(struct bt_conn *conn)
 	LOG_INF("Pairing cancelled: %s", log_strdup(addr));
 }
 
-
-static void pairing_confirm(struct bt_conn *conn)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	bt_conn_auth_pairing_confirm(conn);
-
-	LOG_INF("Pairing confirmed: %s", log_strdup(addr));
-}
-
-
 static void pairing_complete(struct bt_conn *conn, bool bonded)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
@@ -565,8 +552,7 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 static struct bt_conn_auth_cb conn_auth_callbacks = {
 	.passkey_display = auth_passkey_display,
 	.passkey_confirm = auth_passkey_confirm,
-	.cancel = auth_cancel,
-	.pairing_confirm = pairing_confirm,
+	.cancel = auth_cancel,	
 	.pairing_complete = pairing_complete,
 	.pairing_failed = pairing_failed
 };
@@ -683,7 +669,7 @@ void main(void)
 	get_device_handles();
 #endif	
 
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 	k_work_queue_start(&application_work_q, application_stack_area,
 			   K_THREAD_STACK_SIZEOF(application_stack_area), 10,
 			   NULL);
@@ -736,7 +722,7 @@ void main(void)
 	}
 #endif //CONFIG_NRF_DFU
 
-// #ifdef CONFIG_NCS_V1_5_1
+// #ifdef CONFIG_NCS_V1_5_x
 // 	k_delayed_work_init(&erase_slot_work, erase_work_fn);
 // 	k_delayed_work_submit(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
 // #else

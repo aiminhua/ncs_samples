@@ -44,8 +44,6 @@
 #include "bootutil/security_cnt.h"
 #include "bootutil/boot_record.h"
 #include "bootutil/fault_injection_hardening.h"
-#include <storage/flash_map.h>
-#include <drivers/flash.h>
 
 #ifdef CONFIG_SOC_NRF5340_CPUAPP
 #include <dfu/pcd.h> 
@@ -58,13 +56,6 @@
 #include "mcuboot_config/mcuboot_config.h"
 
 MCUBOOT_LOG_MODULE_DECLARE(mcuboot);
-
-#ifdef PM_MCUBOOT_SECONDARY_ADDRESS
-#define SECONDARY_OFFSET_ADDRESS PM_MCUBOOT_SECONDARY_ADDRESS
-#else
-#define SECONDARY_OFFSET_ADDRESS 
-#endif
-
 
 static struct boot_loader_state boot_data;
 
@@ -770,35 +761,12 @@ boot_validated_swap_type(struct boot_loader_state *state,
     bool upgrade_valid = false;
 
 #if defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP)
-    const struct flash_area *secondary_fa;
-    struct image_header *hdr;
+    const struct flash_area *secondary_fa =
+        BOOT_IMG_AREA(state, BOOT_SECONDARY_SLOT);
+    struct image_header *hdr = (struct image_header *)secondary_fa->fa_off;
     uint32_t vtable_addr = 0;
     uint32_t *vtable = 0;
     uint32_t reset_addr = 0;
-    bool secondary_in_internal_flash;
-
-    secondary_fa = BOOT_IMG_AREA(state, BOOT_SECONDARY_SLOT);
-
-     if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") == 0)
-    {
-        printk("=secondary slot in internal Flash=");
-        secondary_in_internal_flash = true;
-    }
-    else
-    {
-        printk("secondary slot in External Flash %x\n\r", secondary_fa->fa_off);
-        secondary_in_internal_flash = false;
-    }   
-    
-    if (secondary_in_internal_flash)
-    {
-        hdr = (struct image_header *)secondary_fa->fa_off;
-    }
-    else
-    {
-        hdr = boot_img_hdr(state, BOOT_SECONDARY_SLOT);
-    }
-   
     /* Patch needed for NCS. Since image 0 (the app) and image 1 (the other
      * B1 slot S0 or S1) share the same secondary slot, we need to check
      * whether the update candidate in the secondary slot is intended for
@@ -806,25 +774,28 @@ boot_validated_swap_type(struct boot_loader_state *state,
      * vector. Note that there are good reasons for not using img_num from
      * the swap info.
      */
+    
+    if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") != 0)
+    {        
+        hdr = (struct image_header *)(secondary_fa->fa_off + 0x10000000); //0x10000000 is XIP base address
+        BOOT_LOG_INF("external secondary slot %p",hdr);
+    }
 
     if (hdr->ih_magic == IMAGE_MAGIC) {
-        if (secondary_in_internal_flash)
-        {        
+        vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
+        vtable = (uint32_t *)(vtable_addr);
+        reset_addr = vtable[1];
+#if defined(PM_CPUNET_B0N_ADDRESS)
+        if (reset_addr > PM_CPUNET_B0N_ADDRESS) {
+            static uint32_t buffer[(256 * 1024) / sizeof(uint32_t)];
+            memcpy(buffer, hdr, sizeof(buffer));
+            hdr = (struct image_header *)buffer;
             vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
             vtable = (uint32_t *)(vtable_addr);
-            reset_addr = vtable[1];
-            printk(" In vtable %x, reset addr %x ", vtable_addr, reset_addr); 
+            reset_addr = vtable[1];             
+            BOOT_LOG_INF("Vector table address moved to %p",vtable);           
         }
-        else
-        {                       
-            vtable_addr = hdr->ih_hdr_size;
-            int rc = flash_area_read(secondary_fa, vtable_addr+4, &reset_addr, sizeof(reset_addr));
-            if (rc != 0) {
-                return BOOT_SWAP_TYPE_FAIL;
-            }
-            vtable = (uint32_t *) (0x10000000 + SECONDARY_OFFSET_ADDRESS + vtable_addr); //0x10000000 is XIP base address
-            printk(" Ext vtable %x, reset addr %x \n\r", (uint32_t)vtable, reset_addr);             
-        }
+#endif
 #ifdef PM_S1_ADDRESS
         const struct flash_area *primary_fa;
         int rc = flash_area_open(flash_area_id_from_multi_image_slot(
@@ -876,14 +847,9 @@ boot_validated_swap_type(struct boot_loader_state *state,
             if (rc != 0) {
                 swap_type = BOOT_SWAP_TYPE_FAIL;
             } else {
-                BOOT_LOG_INF("Done updating network core");       
-                
+                BOOT_LOG_INF("Done updating network core");
                 rc = swap_erase_trailer_sectors(state,
                         secondary_fa);
-                if (rc != 0) {
-                    printk("erasing image trailer err=%d\n\r", rc);
-                }
-
                 swap_type = BOOT_SWAP_TYPE_NONE;
             }
         }
@@ -1690,8 +1656,7 @@ boot_prepare_image_for_update(struct boot_loader_state *state,
                      " - too small?", BOOT_MAX_IMG_SECTORS);
         /* Unable to determine sector layout, continue with next image
          * if there is one.
-         */   
-
+         */
         BOOT_SWAP_TYPE(state) = BOOT_SWAP_TYPE_NONE;
         (void) boot_read_image_header(state, BOOT_PRIMARY_SLOT,
 				      boot_img_hdr(state, BOOT_PRIMARY_SLOT),

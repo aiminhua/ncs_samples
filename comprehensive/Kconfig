@@ -45,10 +45,10 @@ config BT_NUS_SECURITY_ENABLED
 	help
 	  "Enable BLE security for the UART service"
 
-config NCS_V1_5_1
-	bool "use NCS v1.5.1 or earlier API"
+config NCS_V1_5_x
+	bool "use NCS v1.5.x or earlier API"
 	help
-		use NCS v1.5.1 or earlier API
+		use NCS v1.5.x or earlier API
 
 config NCS_V1_6_x
 	bool "use NCS v1.6.x dedicated APIs"

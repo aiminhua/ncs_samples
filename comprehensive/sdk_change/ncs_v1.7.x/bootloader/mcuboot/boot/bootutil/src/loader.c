@@ -884,12 +884,24 @@ boot_validated_swap_type(struct boot_loader_state *state,
     if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") != 0)
     {        
         hdr = (struct image_header *)(secondary_fa->fa_off + 0x10000000); //0x10000000 is XIP base address
-        BOOT_LOG_INF("external secondary slot %p \r",hdr);
-    }   
+        BOOT_LOG_INF("external secondary slot %p",hdr);
+    }
+
     if (hdr->ih_magic == IMAGE_MAGIC) {
         vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
         vtable = (uint32_t *)(vtable_addr);
         reset_addr = vtable[1];
+#if defined(PM_CPUNET_B0N_ADDRESS)
+        if (reset_addr > PM_CPUNET_B0N_ADDRESS) {
+            static uint32_t buffer[(256 * 1024) / sizeof(uint32_t)];
+            memcpy(buffer, hdr, sizeof(buffer));
+            hdr = (struct image_header *)buffer;
+            vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
+            vtable = (uint32_t *)(vtable_addr);
+            reset_addr = vtable[1];             
+            BOOT_LOG_INF("Vector table address moved to %p",vtable);           
+        }
+#endif
 #ifdef PM_S1_ADDRESS
         const struct flash_area *primary_fa;
         int rc = flash_area_open(flash_area_id_from_multi_image_slot(

@@ -17,7 +17,8 @@
 #define LOG_MODULE_NAME uart_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(uart1))
+#define MY_UARTE			DT_NODELABEL(uart1)
+#define UART_DEVICE_NAME         DT_LABEL(MY_UARTE)
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
@@ -113,6 +114,18 @@ static int uart_init(void)
 		return -ENXIO;
 	}
 
+	err = gpio_pin_configure(device_get_binding(DT_LABEL(DT_NODELABEL(gpio0))), DT_PROP(MY_UARTE, rx_pin), (GPIO_INPUT | GPIO_PULL_UP));
+	if (err != 0) {
+		LOG_ERR("Error %d: failed to configure pin %d",
+		       err, DT_PROP(MY_UARTE, rx_pin));		
+	}
+
+	err = gpio_pin_configure(device_get_binding(DT_LABEL(DT_NODELABEL(gpio0))), DT_PROP(MY_UARTE, tx_pin), (GPIO_INPUT | GPIO_PULL_UP));
+	if (err != 0) {
+		LOG_ERR("Error %d: failed to configure pin %d",
+		       err, DT_PROP(MY_UARTE, tx_pin));		
+	}
+	
 	err = uart_callback_set(uart, uart_cb, NULL);
 	if (err) {
 		return err;

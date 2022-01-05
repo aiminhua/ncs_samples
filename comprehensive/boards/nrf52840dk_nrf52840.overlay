@@ -1,3 +1,10 @@
+/* Open this config for NCS v1.8.0 or newer */
+/ {
+	chosen {
+		nordic,pm-ext-flash = &mx25r64;
+	};
+};
+
 &uart0 {
 	compatible = "nordic,nrf-uarte";
 	status = "okay";

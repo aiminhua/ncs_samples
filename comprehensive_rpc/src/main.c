@@ -36,7 +36,7 @@
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define ERASE_DELAY_AFTER_BOOT 30   //unit: s
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 static struct k_work_delayable blinky_work;
 #else
 static struct k_delayed_work blinky_work;
@@ -75,7 +75,7 @@ static void get_device_handle(void)
 	devUart0 = device_get_binding("UART_0");
     devUart1 = device_get_binding("UART_1");
 }
-#if defined(CONFIG_NCS_V1_5_1)
+#if defined(CONFIG_NCS_V1_5_x)
 void set_device_pm_state(void)
 {
 	int err;
@@ -298,7 +298,7 @@ void set_device_pm_state(void)
 	}
 
 }
-#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_1
+#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_x
 
 #endif //CONFIG_PM_DEVICE
 
@@ -333,7 +333,7 @@ static void blinky_work_fn(struct k_work *work)
 	gpio_pin_set(ledDev, LED0_PIN, (int)led_is_on);
 	led_is_on = !led_is_on;
 
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
 					   	K_SECONDS(2));
 #else
@@ -350,11 +350,11 @@ static void assign_io_to_netcore(void)
 					GPIO_PIN_CNF_MCUSEL_Pos);
 }
 
-// #ifdef CONFIG_NCS_V1_5_1
+// #ifdef CONFIG_NCS_V1_5_x
 // static struct k_delayed_work erase_slot_work;
 // #else
 // static struct k_work_delayable erase_slot_work;
-// #endif //CONFIG_NCS_V1_5_1
+// #endif //CONFIG_NCS_V1_5_x
 // static void erase_work_fn(struct k_work *work)
 // {   	
 //    	img_mgmt_impl_erase_slot();
@@ -436,7 +436,7 @@ void main(void)
 		printk("Cannot init buttons (err: %d)", err);
 	}
 
-#ifndef CONFIG_NCS_V1_5_1
+#ifndef CONFIG_NCS_V1_5_x
 	k_work_queue_start(&application_work_q, application_stack_area,
 			   K_THREAD_STACK_SIZEOF(application_stack_area), 10,
 			   NULL);
@@ -461,7 +461,7 @@ void main(void)
 #ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
 	img_mgmt_register_group();
 #endif //CONFIG_MCUMGR_CMD_IMG_MGMT
-// #ifdef CONFIG_NCS_V1_5_1
+// #ifdef CONFIG_NCS_V1_5_x
 // 	k_delayed_work_init(&erase_slot_work, erase_work_fn);
 // 	k_delayed_work_submit(&erase_slot_work, K_SECONDS(ERASE_DELAY_AFTER_BOOT));
 // #else

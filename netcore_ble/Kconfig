@@ -47,9 +47,9 @@ config RPC_SMP_BT
 	help
 		if yes, load DFU example over BLE SMP
 
-config NCS_V1_5_1
-	bool "use NCS v1.5.1 or earlier API"
+config NCS_V1_5_x
+	bool "use NCS v1.5.x or earlier API"
 	help
-		use NCS v1.5.1 or earlier API
+		use NCS v1.5.x or earlier API
 		
 endmenu	  
