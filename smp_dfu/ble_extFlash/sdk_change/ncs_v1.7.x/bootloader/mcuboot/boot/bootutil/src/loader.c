@@ -885,7 +885,8 @@ boot_validated_swap_type(struct boot_loader_state *state,
     {        
         hdr = (struct image_header *)(secondary_fa->fa_off + 0x10000000); //0x10000000 is XIP base address
         BOOT_LOG_INF("external secondary slot %p",hdr);
-    }   
+    }
+
     if (hdr->ih_magic == IMAGE_MAGIC) {
         vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
         vtable = (uint32_t *)(vtable_addr);
@@ -900,7 +901,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
             reset_addr = vtable[1];             
             BOOT_LOG_INF("Vector table address moved to %p",vtable);           
         }
-#endif		
+#endif
 #ifdef PM_S1_ADDRESS
         const struct flash_area *primary_fa;
         int rc = flash_area_open(flash_area_id_from_multi_image_slot(
