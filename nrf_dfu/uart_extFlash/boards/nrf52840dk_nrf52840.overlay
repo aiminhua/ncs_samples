@@ -1,5 +1,0 @@
-&uart0 {
-	compatible = "nordic,nrf-uarte";
-	status = "okay";
-	current-speed = < 115200 >;
-};

@@ -1,5 +1,11 @@
 /* overlay file for app core */
 
+/ {
+	chosen {
+		nordic,pm-ext-flash = &mx25r64;
+	};
+};
+
 /* adjust the RAM size of application image */
 &sram0_image{
 	reg = < 0x20000000 0x7A000 >;

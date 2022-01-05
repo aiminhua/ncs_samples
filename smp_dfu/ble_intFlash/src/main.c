@@ -379,7 +379,7 @@ void main(void)
 	int blink_status = 0;
 	int err = 0;
 
-	LOG_INF("### nRF5 SDK DFU example %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### SMP DFU example %s %s\n", __TIME__, __DATE__);
 
 	configure_gpio();
 
