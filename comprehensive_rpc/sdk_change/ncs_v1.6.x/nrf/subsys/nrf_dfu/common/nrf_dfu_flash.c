@@ -13,7 +13,9 @@
 #include "nrf_dfu_flash.h"
 #include <drivers/flash.h>
 #include <storage/stream_flash.h>
+#ifndef CONFIG_SECURE_BOOT
 #include <dfu/flash_img.h>
+#endif
 #include "nrf_dfu_settings.h"
 
 LOG_MODULE_REGISTER(nrf_dfu_flash, CONFIG_NRF_DFU_LOG_LEVEL);
@@ -52,6 +54,81 @@ const void * const dfu_flash_module;
 
 static atomic_t dfu_locked = ATOMIC_INIT(DFU_UNLOCKED);
 
+#if CONFIG_SECURE_BOOT
+
+#define CONFIG_IMG_BLOCK_BUF_SIZE 4096
+
+struct flash_img_context {
+	uint8_t buf[CONFIG_IMG_BLOCK_BUF_SIZE];
+	const struct flash_area *flash_area;
+	struct stream_flash_ctx stream;
+};
+
+
+static uint32_t b0_dfu_addr(void)
+{
+	BUILD_ASSERT(IMAGE0_ADDRESS < IMAGE1_ADDRESS);
+	if ((uint32_t)(uintptr_t)b0_dfu_addr < IMAGE1_ADDRESS) {
+		return IMAGE1_ADDRESS;
+	}
+	return IMAGE0_ADDRESS;
+}
+
+static uint8_t dfu_slot_id(void)
+{
+	BUILD_ASSERT(IMAGE0_ADDRESS < IMAGE1_ADDRESS);
+	if ((uint32_t)(uintptr_t)dfu_slot_id < IMAGE1_ADDRESS) {
+		return IMAGE1_ID;
+	}
+
+	return IMAGE0_ID;
+
+}
+
+static int flash_img_buffered_write(struct flash_img_context *ctx, const uint8_t *data,
+			     size_t len, bool flush)
+{
+	int rc;
+
+	rc = stream_flash_buffered_write(&ctx->stream, data, len, flush);
+	if (!flush) {
+		return rc;
+	}
+
+#ifdef CONFIG_IMG_ERASE_PROGRESSIVELY
+	rc = stream_flash_erase_page(&ctx->stream,
+				ctx->flash_area->fa_off +
+				BOOT_TRAILER_IMG_STATUS_OFFS(ctx->flash_area));
+	if (rc) {
+		return rc;
+	}
+#endif
+
+	flash_area_close(ctx->flash_area);
+	ctx->flash_area = NULL;
+
+	return rc;
+}
+
+static int flash_img_init(struct flash_img_context *ctx)
+{
+	int rc;
+	const struct device *flash_dev;
+
+	rc = flash_area_open(dfu_slot_id(),
+			       (const struct flash_area **)&(ctx->flash_area));
+	if (rc) {
+		return rc;
+	}
+
+	flash_dev = flash_area_get_device(ctx->flash_area);
+
+	return stream_flash_init(&ctx->stream, flash_dev, ctx->buf,
+			CONFIG_IMG_BLOCK_BUF_SIZE, ctx->flash_area->fa_off,
+			ctx->flash_area->fa_size, NULL);
+}
+
+#endif
 
 bool dfu_lock(const void *module_id)
 {
@@ -103,6 +180,8 @@ int dfu_flash_start(uint32_t image_start, uint32_t image_len)
 	{
 #ifdef PM_MCUBOOT_SECONDARY_ADDRESS
 		ctx->stream.offset = PM_MCUBOOT_SECONDARY_ADDRESS + image_start;
+#elif CONFIG_SECURE_BOOT
+		ctx->stream.offset = b0_dfu_addr() + image_start;
 #else
 		ctx->stream.offset = image_start;
 #endif
