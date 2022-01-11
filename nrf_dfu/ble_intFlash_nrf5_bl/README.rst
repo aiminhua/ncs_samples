@@ -27,11 +27,19 @@ this sample, you need to do the following changes.
 Build & Programming
 *******************
 
-By default, this sample works with the latest NCS tag. To work with other versions of NCS, read **prj.conf** carefully. Open the configurations relating to the specified version
+The following NCS tags are tested for this sample. By default, NCS ``v1.8.0`` is used.
+
++------------------------------------------------------------------+
+|NCS tags                                                          +
++==================================================================+
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x                                       |
++------------------------------------------------------------------+
+
+To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
 and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
 	
-This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, enter folder ``sdk_change/ncs_v1.7.x`` 
-and overwrite the same files in the correspondent NCS ``v1.7.1`` folders. 
+This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, 
+enter folder ``sdk_change/ncs_v1.7.x`` and overwrite the same files in the correspondent NCS ``v1.7.1`` folders. 
 
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
