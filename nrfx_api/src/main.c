@@ -73,6 +73,8 @@ static void nrfx_spi_example_init(void)
 	nrfx_err_t rc;
 
 	LOG_INF("*** nrfx SPIM usage example ***");
+	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\spi");
+	LOG_INF("The related spis example is from nRF5_SDK\\examples\\peripheral\\spis");	
 	
 	//use Zephyr's method to setup ISR
 	IRQ_CONNECT(NRFX_IRQ_NUMBER_GET(NRF_SPIM1), 1,

@@ -85,7 +85,7 @@ static uint8_t dfu_slot_id(void)
 
 }
 
-int flash_img_buffered_write(struct flash_img_context *ctx, const uint8_t *data,
+static int flash_img_buffered_write(struct flash_img_context *ctx, const uint8_t *data,
 			     size_t len, bool flush)
 {
 	int rc;
@@ -110,7 +110,7 @@ int flash_img_buffered_write(struct flash_img_context *ctx, const uint8_t *data,
 	return rc;
 }
 
-int flash_img_init(struct flash_img_context *ctx)
+static int flash_img_init(struct flash_img_context *ctx)
 {
 	int rc;
 	const struct device *flash_dev;

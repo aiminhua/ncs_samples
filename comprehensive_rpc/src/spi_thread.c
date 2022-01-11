@@ -96,7 +96,9 @@ static int spi_data_exchange(void)
 void spi_thread(void)
 {	
 	
-	LOG_INF("**SPI master example working with nRF5_SDK\\examples\\peripheral\\spis directly");	
+	LOG_INF("** SPI master example **");
+	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\spi");
+	LOG_INF("The related spis example is from nRF5_SDK\\examples\\peripheral\\spis");	
 
 	spi_dev = device_get_binding(SPI_DEVICE_NAME);
 	if (!spi_dev) {
