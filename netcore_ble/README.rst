@@ -19,16 +19,15 @@ nrf_dfu is ported from nRF5 SDK v17.0.2. Its OTA speed can hit 17kB/s or more.
 Build
 *****
 
-To work with other parent projects automatically, make sure nrf53_ble/ble_netcore is put in the following folder.
+To work with other parent projects automatically, make sure this project is put in the following folder.
 
 ::
 
     NCS root folder
     ├── nrf
     ├── zephyr
-    ├── sample          
-    │   ├── nrf53_ble
-    │       └── ble_netcore
+    ├── ncs_samples          
+    │   ├── netcore_ble
 
 
 The following NCS tags are tested for this sample. By default, NCS ``v1.8.0`` is used.
