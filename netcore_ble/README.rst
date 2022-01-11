@@ -1,4 +1,4 @@
-.. ble_netcore:
+.. netcore_ble:
 
 NUS and OTA BLE services on nRF5340 netcore
 ###########################################
@@ -7,19 +7,19 @@ NUS and OTA BLE services on nRF5340 netcore
    :local:
    :depth: 2
 
-This sample works with ``nrf53_ble/appcore``, ``nrf_dfu/ap_inFlash_rpc`` and ``nrf_dfu/ap_exFlash_rpc``. It serves as a child image of other samples. That is, it would
-be built automatically by the system without your awareness. In addition, you can compile this sample separately too once you disable some default configurations.
+This sample works with ``ncs_samples/comprehensive_rpc``, ``ncs_samples/nrf_dfu/ble_extFlash_rpc`` and ``ncs_samples/nrf_dfu/ble_intFlash_rpc``.
+It serves as a child image of those samples. That is, it would be built automatically by the system when you build those samples.
 
 Overview
 ********
 
-This sample has NUS and OTA services. There are two kinds of OTA services: SMP and nrf_dfu. SMP is the out-of-box module of NCS, but its OTA speed is as low as 2kB/s. 
-nrf_dfu is ported from nRF5 SDK v17.0.2. Its OTA speed can hit 17kB/s or more.   
+This sample has NUS and OTA services. There are two kinds of OTA services: SMP and nrf_dfu. SMP is the out-of-box module of NCS. 
+nrf_dfu is ported from nRF5 SDK v17.0.2.  
 
 Build
 *****
 
-To work with other parent projects automatically, make sure this project is put in the following folder.
+To work with the parent projects automatically, make sure this project is put in the following folder.
 
 ::
 
