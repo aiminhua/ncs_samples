@@ -879,18 +879,20 @@ boot_validated_swap_type(struct boot_loader_state *state,
      * vector. Note that there are good reasons for not using img_num from
      * the swap info.
      */
-    
+
+#if !(defined(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP) || defined(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP_NS))    
     if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") != 0)
     {        
         hdr = (struct image_header *)(secondary_fa->fa_off + 0x10000000); //0x10000000 is XIP base address
         BOOT_LOG_INF("external secondary slot %p",hdr);
     }
+#endif    
 
     if (hdr->ih_magic == IMAGE_MAGIC) {
         vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
         vtable = (uint32_t *)(vtable_addr);
         reset_addr = vtable[1];
-#if defined(PM_CPUNET_B0N_ADDRESS)
+#if defined(PM_CPUNET_B0N_ADDRESS) && !(defined(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP) || defined(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP_NS))
         if (reset_addr > PM_CPUNET_B0N_ADDRESS) {
             static uint32_t buffer[(256 * 1024) / sizeof(uint32_t)];
             memcpy(buffer, hdr, sizeof(buffer));
