@@ -55,12 +55,6 @@ For example, enter the following command to build ``nrf52840dk_nrf52840``.
 
    west build -b nrf52840dk_nrf52840 -d build_nrf52840dk_nrf52840 -p
 
-To flash the images to the board, just double click ``program.bat``, or use the following command:
-
-.. code-block:: console
-
-   west flash -d build_nrf52840dk_nrf52840     
-
 If you intend to build this sample on other nRF52 SoC, the following configs should be modified. 
 
 *  overlay file in ``boards`` folder. Make sure that the end of storage_partition is the starting address of the nRF5 bootloader.

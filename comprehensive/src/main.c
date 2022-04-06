@@ -29,12 +29,17 @@
 #ifdef CONFIG_NRF_DFU
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
+#if CONFIG_NCS_V1_5_x | CONFIG_NCS_V1_6_x | CONFIG_NCS_V1_7_1_8
 #include "power/reboot.h"
+#else
+#include "sys/reboot.h"
+#endif
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #endif
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
+#include <pm/device.h>
 
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -242,7 +247,7 @@ void set_device_pm_state(void)
 	}
 
 }
-#else
+#elif defined(CONFIG_NCS_V1_7_1_8)
 void set_device_pm_state(void)
 {
 	int err;
@@ -251,7 +256,7 @@ void set_device_pm_state(void)
 	if (devUart1)
 	{
 		pm_device_state_get(devUart1, &pm_state);
-		if (pm_state == PM_DEVICE_STATE_LOW_POWER)
+		if (pm_state == PM_DEVICE_STATE_SUSPENDED)
 		{
 			LOG_INF("UART1 is in low power state. We activate it");
 			err = pm_device_state_set(devUart1,PM_DEVICE_STATE_ACTIVE);
@@ -270,7 +275,7 @@ void set_device_pm_state(void)
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
 #endif			
-			err = pm_device_state_set(devUart1,	PM_DEVICE_STATE_LOW_POWER);
+			err = pm_device_state_set(devUart1,	PM_DEVICE_STATE_SUSPENDED);
 			if (err) {
 				LOG_ERR("UART1 disable failed");
 			}
@@ -282,7 +287,7 @@ void set_device_pm_state(void)
 	}
 
 	pm_device_state_get(devUart0, &pm_state);
-	if (pm_state == PM_DEVICE_STATE_LOW_POWER)
+	if (pm_state == PM_DEVICE_STATE_SUSPENDED)
 	{
 		LOG_INF("UART0 is in low power state. We activate it");
 		err = pm_device_state_set(devUart0,	PM_DEVICE_STATE_ACTIVE);
@@ -303,7 +308,7 @@ void set_device_pm_state(void)
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
 #endif
-		err = pm_device_state_set(devUart0,	PM_DEVICE_STATE_LOW_POWER);
+		err = pm_device_state_set(devUart0,	PM_DEVICE_STATE_SUSPENDED);
 		if (err) {
 			LOG_ERR("UART0 disable failed");
 		}
@@ -314,7 +319,79 @@ void set_device_pm_state(void)
 	}
 
 }
-#endif //CONFIG_NCS_V1_6_x & CONFIG_NCS_V1_5_x
+#else
+void set_device_pm_state(void)
+{
+	int err;
+	enum pm_device_state pm_state;
+
+	if (devUart1)
+	{
+		pm_device_state_get(devUart1, &pm_state);
+		if (pm_state == PM_DEVICE_STATE_SUSPENDED)
+		{
+			LOG_INF("UART1 is in low power state. We activate it");
+			err = pm_device_action_run(devUart1,PM_DEVICE_ACTION_RESUME);
+			if (err) {
+				LOG_ERR("UART1 enable failed");			
+			}
+			else
+			{
+				LOG_INF("## UART1 is active now ##");
+			}		
+		}
+		else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+		{
+			LOG_INF("UART1 is in active state. We suspend it");
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
+#endif			
+			err = pm_device_action_run(devUart1,	PM_DEVICE_ACTION_SUSPEND);
+			if (err) {
+				LOG_ERR("UART1 disable failed");
+			}
+			else
+			{
+				LOG_INF("## UART1 is suspended now ##");
+			}		
+		}
+	}
+
+	pm_device_state_get(devUart0, &pm_state);
+	if (pm_state == PM_DEVICE_STATE_SUSPENDED)
+	{
+		LOG_INF("UART0 is in low power state. We activate it");
+		err = pm_device_action_run(devUart0,	PM_DEVICE_ACTION_RESUME);
+		if (err) {
+			LOG_ERR("UART0 enable failed");			
+		}
+		else
+		{
+			LOG_INF("## UART0 is active now ##");
+		}		
+	}
+	else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+	{
+		LOG_INF("UART0 is in active state. We suspend it");
+		//print out all the pending logging messages
+		while(log_process(false));
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
+		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
+#endif
+		err = pm_device_action_run(devUart0,	PM_DEVICE_ACTION_SUSPEND);
+		if (err) {
+			LOG_ERR("UART0 disable failed");
+		}
+		else
+		{
+			LOG_INF("## UART0 is suspended now ##");
+		}		
+	}
+
+}
+#endif
 
 #endif //CONFIG_PM_DEVICE
 
