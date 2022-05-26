@@ -69,3 +69,8 @@ my_spi: &spi3 {
 			};
 		};
 };
+
+&gpio0 {
+	/* pin9 sense for edge */
+	sense-edge-mask = <0x200>;
+};

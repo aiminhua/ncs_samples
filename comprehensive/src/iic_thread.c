@@ -17,7 +17,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 const struct device *i2c_dev;
 const static struct device *gpio_dev;
 //static struct k_delayed_work read_eeprom;
+#ifdef CONFIG_EXAMPLE_EXT_INT
 K_SEM_DEFINE(sem_iic_op, 0, 1);
+#endif
 
 #define INT0_NODE DT_NODELABEL(button3)
 #define INT0	DT_GPIO_LABEL(INT0_NODE, gpios)
@@ -83,15 +85,14 @@ static void eeprom_cmd_read(void)
 //     k_delayed_work_submit(&read_eeprom, K_SECONDS(2));
 // }
 
+#ifdef CONFIG_EXAMPLE_EXT_INT
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	LOG_INF("external interrupt occurs at %d", k_uptime_get_32());
-    gpio_pin_interrupt_configure(gpio_dev,  INT0_PIN,  GPIO_INT_DISABLE);
+	LOG_INF("external interrupt occurs at %d", k_uptime_get_32());   
     k_sem_give(&sem_iic_op);    
 }
 
-#ifdef CONFIG_EXAMPLE_EXT_INT
 void config_io_interrupt(void)
 {
 	int ret;
@@ -109,7 +110,7 @@ void config_io_interrupt(void)
 
 	ret = gpio_pin_interrupt_configure(gpio_dev,
 					   INT0_PIN,
-					   GPIO_INT_ENABLE | GPIO_INT_LOW_0);
+					   GPIO_INT_EDGE_FALLING);	                       
 	if (ret != 0) {
 		LOG_ERR("Error %d: failed to configure interrupt on pin %d",
 			ret, INT0_PIN);		
@@ -146,12 +147,12 @@ void iic_thread(void)
     // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	    
 
 	while (1) {
-        k_sem_take(&sem_iic_op, K_FOREVER);        
+#ifdef CONFIG_EXAMPLE_EXT_INT        
+        k_sem_take(&sem_iic_op, K_FOREVER);
+#endif                
         LOG_INF("i2c master thread");
         eeprom_cmd_read();
-        k_sleep(K_SECONDS(2));        
-        gpio_pin_interrupt_configure(gpio_dev,  INT0_PIN,
-					   GPIO_INT_ENABLE | GPIO_INT_LOW_0);
+        k_sleep(K_SECONDS(2));
 	}
 }
 
