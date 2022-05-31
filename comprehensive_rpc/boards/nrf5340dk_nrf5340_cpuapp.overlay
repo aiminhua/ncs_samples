@@ -29,7 +29,7 @@
 	status = "disabled";
 };
 
-&i2c2 {
+my_i2c: &i2c2 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
 	sda-pin = <4>;
@@ -40,12 +40,13 @@
 	status = "disabled";
 };
 
-&spi3 {
+my_spi: &spi3 {
 	status = "okay"; 
 	compatible = "nordic,nrf-spim";
 	sck-pin = < 47 >;
 	miso-pin = < 46 >;
 	mosi-pin = < 45 >;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
 
 /* delete button4 to initialize the related pin for network core use */
@@ -97,4 +98,9 @@
 				reg = < 0xfc000 0x4000 >;
 			};
 		};
+};
+
+&gpio0 {
+	/* pin9 sense for edge */
+	sense-edge-mask = <0x200>;
 };

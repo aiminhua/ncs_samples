@@ -14,7 +14,6 @@
 #define LOG_MODULE_NAME i2c_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define I2C_DEVICE_NAME         "I2C_2"
 const struct device *i2c_dev;
 const static struct device *gpio_dev;
 //static struct k_delayed_work read_eeprom;
@@ -85,8 +84,7 @@ static void eeprom_cmd_read(void)
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	LOG_INF("external interrupt occurs at %" PRIu32 "\n", k_cycle_get_32());
-    gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
+	LOG_INF("external interrupt occurs at %x", pins);   
     k_sem_give(&sem_iic_op);    
 }
 
@@ -105,16 +103,14 @@ void config_io_interrupt(void)
 	if (ret != 0) {
 		LOG_ERR("Error %d: failed to configure pin %d\n",
 		       ret, EXT_INT_IO);
-		return;
 	}
 
 	ret = gpio_pin_interrupt_configure(gpio_dev,
 					   EXT_INT_IO,
-					   GPIO_INT_EDGE_TO_INACTIVE);
+					   GPIO_INT_EDGE_FALLING);
 	if (ret != 0) {
 		LOG_ERR("Error %d: failed to configure interrupt on pin %d\n",
 			ret, EXT_INT_IO);
-		return;
 	}
 
 	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(EXT_INT_IO));
@@ -129,8 +125,8 @@ void iic_thread(void)
 	LOG_INF("** I2C master example **");
 	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\twi_master_with_twis_slave");
 	LOG_INF("The related twis example is from nRF5_SDK\\examples\\peripheral\\twi_master_with_twis_slave");	
-
-	i2c_dev = device_get_binding(I2C_DEVICE_NAME);
+	
+	i2c_dev = device_get_binding(DT_LABEL(DT_NODELABEL(my_i2c)));
 	if (!i2c_dev) {
 		LOG_ERR("I2C Device driver not found");
 		return;
@@ -145,14 +141,13 @@ void iic_thread(void)
 #endif
     
 	// k_delayed_work_init(&read_eeprom, eeprom_read_fn);
-    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	
-    k_sem_take(&sem_iic_op, K_FOREVER);
+    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	    
 
 	while (1) {        
+        k_sem_take(&sem_iic_op, K_FOREVER);
         LOG_INF("i2c master thread");
         eeprom_cmd_read();
-        k_sleep(K_MSEC(500)); 
-        gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_EDGE_TO_INACTIVE);
+        k_sleep(K_SECONDS(2));
 	}
 }
 

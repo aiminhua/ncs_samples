@@ -126,7 +126,7 @@ static int uart_init(void)
 		LOG_ERR("Error %d: failed to configure pin %d",
 		       err, DT_PROP(MY_UARTE, tx_pin));		
 	}
-
+	
 	err = uart_callback_set(uart, uart_cb, NULL);
 	if (err) {
 		return err;

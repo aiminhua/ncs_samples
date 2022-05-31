@@ -89,7 +89,7 @@ static void eeprom_cmd_read(void)
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	LOG_INF("external interrupt occurs at %d", k_uptime_get_32());   
+	LOG_INF("external interrupt occurs at %x", pins);   
     k_sem_give(&sem_iic_op);    
 }
 
