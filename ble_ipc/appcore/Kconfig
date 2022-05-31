@@ -1,0 +1,21 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+config NRFX_DPPI
+	default HAS_HW_NRF_DPPIC
+
+config NRFX_PPI
+	default HAS_HW_NRF_PPI
+
+config BLE_NETWORK_CORE
+	bool "Both BLE host and controller run on network core"
+	help
+	  Enable the whole BLE stack running on network core
+	  
+config IPC_CUSTOM
+	bool "Custom IPC is used for the dual core communication"
+	help
+	  Custom IPC is used for the dual core communication
+
+
+source "Kconfig.zephyr"
