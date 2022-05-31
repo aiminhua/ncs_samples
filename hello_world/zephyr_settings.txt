@@ -1,2 +1,0 @@
-"BOARD_ROOT":"C:/Nordic/NCS/SDK/Master/nrf"
-"DTS_ROOT":"C:/Nordic/NCS/SDK/Master/nrf"
