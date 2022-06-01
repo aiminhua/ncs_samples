@@ -31,6 +31,9 @@ After that, MCUBoot would perform the swap operation to finish the whole DFU pro
 Build & Programming
 *******************
 
+This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.9.1, 
+enter folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files in the correspondent NCS ``v1.9.1`` folders.
+
 The following development kits are tested for this sample.
 
 +------------------------------------------------------------------+

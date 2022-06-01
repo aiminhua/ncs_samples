@@ -29,12 +29,12 @@ to simulate the DFU process in this sample.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.8.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x                                       |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                |
 +------------------------------------------------------------------+
 
 To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
@@ -48,7 +48,7 @@ The following development kits are tested for this sample. However, other nRF52 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf52840dk_nrf52840                                               |
+|nrf52840dk_nrf52840/nrf5340dk_nrf5340_cpuapp                      |
 +------------------------------------------------------------------+
 
 For example, enter the following command to build ``nrf52840dk_nrf52840``.
@@ -71,7 +71,7 @@ After programming the sample to your development kit, test it by performing the 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
 #. Reset the kit. It shall advertise ``Nordic_DFU``
-#. Copy signed_by_b0_s1_image.hex and signed_by_b0_s0_image.hex in folder ``build*/zephyr`` to folder ``update``.
+#. Change CONFIG_FW_INFO_FIRMWARE_VERSION to 2 and build the example again. Copy signed_by_b0_s1_image.hex and signed_by_b0_s0_image.hex in folder ``build*/zephyr`` to folder ``update``.
 #. Double click ``zip_generate.bat`` in ``update``.You will get ble_intFlash_b0_s0.zip or ble_intFlash_b0_s1.zip as the new image bundle. 
 #. Observe the logging of the firmware, select the right zip file for the DFU process.
 #. Perform the DFU steps as nRF5 SDK do

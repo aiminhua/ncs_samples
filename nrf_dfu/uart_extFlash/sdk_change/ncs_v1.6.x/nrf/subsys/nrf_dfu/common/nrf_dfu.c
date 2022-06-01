@@ -42,6 +42,9 @@
 #include "nrf_dfu_req_handler.h"
 #include <sys/printk.h>
 #include <dfu/mcuboot.h>
+#if CONFIG_SECURE_BOOT
+#include <fw_info.h>
+#endif
 
 static nrf_dfu_observer_t m_user_observer;                          //<! Observer callback set by the user.
 
@@ -77,9 +80,21 @@ uint32_t nrf_dfu_init(nrf_dfu_observer_t observer)
 
     m_user_observer = observer;
 
-    printk("initialize nrf_dfu \n\r");
+    printk("initialize nrf_dfu\n");
 
+#ifdef CONFIG_BOOTLOADER_MCUBOOT
     boot_write_img_confirmed();
+#endif
+
+#if CONFIG_SECURE_BOOT
+	if ((uint32_t)(uintptr_t)nrf_dfu_init < PM_S1_IMAGE_ADDRESS) {
+		printk("*** S0 image is running. Please upload S1 image for DFU ***\n");
+	}
+    else
+    {
+        printk("** S1 image is running. Please upload S0 image for DFU ***\n");
+    }    
+#endif
 
     dfu_observer(NRF_DFU_EVT_DFU_INITIALIZED);
 

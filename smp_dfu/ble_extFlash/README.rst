@@ -24,12 +24,12 @@ the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the B
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.8.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x                                       |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                |
 +------------------------------------------------------------------+
 
 To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
