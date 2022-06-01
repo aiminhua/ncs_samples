@@ -44,26 +44,6 @@ config BT_NUS_SECURITY_ENABLED
 	select BT_SMP
 	help
 	  "Enable BLE security for the UART service"
-
-config NCS_V1_5_x
-	bool "use NCS v1.5.x or earlier API"
-	help
-		use NCS v1.5.x or earlier API
-
-config NCS_V1_6_x
-	bool "use NCS v1.6.x dedicated APIs"
-	help
-		use NCS v1.6.x dedicated APIs
-
-config NCS_V1_7_1_8
-	bool "use NCS v1.7.x or v1.8.x dedicated APIs"
-	help
-		use v1.7.x or v1.8.x dedicated APIs
-
-config NCS_V1_9_x
-	bool "use NCS v1.9.x dedicated APIs"
-	help
-		use NCS v1.9.x dedicated APIs		
 		
 module = COMPREHENSIVE_EXAMPLE_CONFIG
 module-str = comprehensive example configurations

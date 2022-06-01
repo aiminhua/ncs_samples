@@ -41,7 +41,7 @@
 #endif
 
 #include "uart_hs.h"
-#include "power/reboot.h"
+#include "sys/reboot.h"
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
 

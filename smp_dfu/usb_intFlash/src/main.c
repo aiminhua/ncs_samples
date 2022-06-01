@@ -24,7 +24,7 @@
 #include "os_mgmt/os_mgmt.h"
 #include <img_mgmt/img_mgmt_impl.h>
 #include <usb/usb_device.h>
-#include "power/reboot.h"
+#include "sys/reboot.h"
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
 
@@ -34,7 +34,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define STACKSIZE CONFIG_BT_NUS_THREAD_STACK_SIZE
 #define PRIORITY 7
 
-#define DEVICE_NAME "new_dfu"//CONFIG_BT_DEVICE_NAME
+#define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN	(sizeof(DEVICE_NAME) - 1)
 
 #define RUN_STATUS_LED DK_LED1

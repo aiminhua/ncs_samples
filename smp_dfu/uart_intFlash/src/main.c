@@ -24,7 +24,7 @@
 #include "os_mgmt/os_mgmt.h"
 #include <img_mgmt/img_mgmt_impl.h>
 #include <mgmt/mcumgr/smp_bt.h>
-#include "power/reboot.h"
+#include "sys/reboot.h"
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
 

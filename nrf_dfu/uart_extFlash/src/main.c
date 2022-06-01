@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
-#include "power/reboot.h"
+#include "sys/reboot.h"
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #include <drivers/nrfx_errors.h>
