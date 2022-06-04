@@ -5,11 +5,7 @@
  */
 #include <errno.h>
 #include <init.h>
-
-#include <tinycbor/cbor.h>
-
 #include <nrf_rpc_cbor.h>
-
 #include "common_ids.h"
 #include "rpc_net_api.h"
 #include <bluetooth/services/nus.h>
@@ -20,81 +16,66 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define CBOR_BUF_SIZE 16
 
-
 NRF_RPC_GROUP_DEFINE(rpc_api, "rpc_api", NULL, NULL, NULL);
 
-static void rpc_app2net_send(CborValue *packet, void *handler_data)
+static void rsp_error_code_send(int err_code)
 {
-	CborError cbor_err;
-	int err;
+	struct nrf_rpc_cbor_ctx ctx;
+
+	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
+	zcbor_int32_put(ctx.zs, err_code);
+
+	nrf_rpc_cbor_rsp_no_err(&ctx);
+}
+
+static void rpc_app2net_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+{
+	struct zcbor_string zst;
+	int err = -NRF_EINVAL;
 	size_t length;
 	uint8_t buf[256];
 	int type;
 
-	err = cbor_value_get_int(packet, &type);
-	if (err != CborNoError) {
+	if (!zcbor_int32_decode(ctx->zs, &type)) {
 		goto cbor_error_exit;
 	}
 
-	err = cbor_value_advance(packet);
-	if (err != CborNoError) {
+	if (!zcbor_int32_decode(ctx->zs, &length) || length > ARRAY_SIZE(buf)) {
 		goto cbor_error_exit;
 	}
-
-	err = cbor_value_get_int(packet, &length);
-	if (err != CborNoError) {
+	
+	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len > ARRAY_SIZE(buf)) {
 		goto cbor_error_exit;
 	}
-
-	err = cbor_value_advance(packet);
-	if (err != CborNoError) {
-		goto cbor_error_exit;
-	}	
-
-	length = 256;
-	cbor_err = cbor_value_copy_byte_string(packet, buf, &length,
-					       NULL);
-	if (cbor_err != CborNoError || length < 0 || length > sizeof(buf)) {
-		goto cbor_error_exit;	
-	}
-
-	nrf_rpc_cbor_decoding_done(packet);
+	length = zst.len;
+	memcpy(buf, zst.value, zst.len);
 
 	switch (type)
 	{
 		case APP2NET_BT_NUS_SEND:
+			LOG_HEXDUMP_INF(buf, length, "nus data to send:");
 			err = bt_nus_send(NULL, buf, length);
-			break;
-		case APP2NET_BT_SMP_SEND:
-			
 			break;
 		default:
 			break;
 	}
-	struct nrf_rpc_cbor_ctx ctx;
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
-	cbor_encode_int(&ctx.encoder, err);	
-	nrf_rpc_cbor_rsp_no_err(&ctx);
-	return;
 
 cbor_error_exit:
-	nrf_rpc_cbor_decoding_done(packet);
+	nrf_rpc_cbor_decoding_done(ctx);
+	rsp_error_code_send(err);
 }
 
 NRF_RPC_CBOR_CMD_DECODER(rpc_api, rpc_app2net_send_name,
 			 RPC_COMMAND_APP_SEND,
 			 rpc_app2net_send, NULL);
 
-static void rsp_error_code_handle(CborValue *value, void *handler_data)
+static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
-	CborError cbor_err;
+	int32_t val;
 
-	if (!cbor_value_is_integer(value)) {
-		*(int *)handler_data = -NRF_EINVAL;
-	}
-
-	cbor_err = cbor_value_get_int(value, (int *)handler_data);
-	if (cbor_err != CborNoError) {
+	if (zcbor_int32_decode(ctx->zs, &val)) {
+		*(int *)handler_data = (int)val;
+	} else {
 		*(int *)handler_data = -NRF_EINVAL;
 	}
 }
@@ -110,17 +91,13 @@ int rpc_net2app_send(int type, uint8_t *buffer, size_t length)
 	}	
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
-
-	
-	cbor_encode_int(&ctx.encoder, type);
-
-	cbor_encode_int(&ctx.encoder, length);
-
-	cbor_encode_byte_string(&ctx.encoder, buffer, length);	
+	zcbor_int32_put(ctx.zs, type);
+	zcbor_int32_put(ctx.zs, length);
+	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);	
 
 	err = nrf_rpc_cbor_cmd(&rpc_api, RPC_COMMAND_NET_SEND, &ctx,
 			       rsp_error_code_handle, &result);
-	if (err < 0) {
+	if (err) {
 		return err;
 	}
 
@@ -142,11 +119,14 @@ static int serialization_init(const struct device *dev)
 
 	int err;
 
+	printk("Init begin\n");
+
 	err = nrf_rpc_init(err_handler);
 	if (err) {
 		return -NRF_EINVAL;
 	}
-	printk("netcore handshake done");
+
+	printk("Init done\n");
 
 	return 0;
 }

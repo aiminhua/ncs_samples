@@ -1,18 +1,93 @@
 /* overlay file for app core */
 
-/* Open this config for NCS v1.8.0 or newer */
 / {
 	chosen {
 		nordic,pm-ext-flash = &mx25r64;
 	};
 };
 
+&pinctrl {
+	uart0_default: uart0_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 20)>,
+				<NRF_PSEL(UART_RTS, 0, 19)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 0, 22)>,
+				<NRF_PSEL(UART_CTS, 0, 21)>;
+			bias-pull-up;
+		};
+	};
+
+	uart0_sleep: uart0_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 20)>,
+				<NRF_PSEL(UART_RX, 0, 22)>,
+				<NRF_PSEL(UART_RTS, 0, 19)>,
+				<NRF_PSEL(UART_CTS, 0, 21)>;
+			low-power-enable;
+		};
+	};
+
+	uart1_default: uart1_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 26)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 0, 7)>;
+			bias-pull-up;
+		};
+	};
+
+	uart1_sleep: uart1_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 26)>,
+				<NRF_PSEL(UART_RX, 0, 7)>;
+			low-power-enable;
+		};
+	};
+
+	i2c2_default: i2c2_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+		};
+	};
+
+	i2c2_sleep: i2c2_sleep {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			low-power-enable;
+		};
+	};	
+
+	spi3_default_alt: spi3_default_alt {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 13)>,
+				<NRF_PSEL(SPIM_MISO, 1, 14)>;
+		};
+	};
+
+	spi3_sleep_alt: spi3_sleep_alt {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 13)>,
+				<NRF_PSEL(SPIM_MISO, 1, 14)>;
+			low-power-enable;
+		};
+	};
+};
+
+
 &uart0 {
 	compatible = "nordic,nrf-uarte";
 	status = "okay";
-	current-speed = < 115200 >;	
-	tx-pin = < 0x14 >;
-	rx-pin = < 0x16 >;
+	current-speed = < 115200 >;
+	pinctrl-0 = < &uart0_default >;
+	pinctrl-1 = < &uart0_sleep >;
+	pinctrl-names = "default", "sleep";	
 	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
 	/delete-property/ rts-pin;
 	/delete-property/ cts-pin;
@@ -21,8 +96,9 @@
 &uart1 {
 	status = "okay";
 	current-speed = < 1000000 >;
-	tx-pin = < 26 >;
-	rx-pin = < 7 >;
+	pinctrl-0 = < &uart1_default >;
+	pinctrl-1 = < &uart1_sleep >;
+	pinctrl-names = "default", "sleep";	
 };
 
 &i2c1 {
@@ -32,8 +108,9 @@
 my_i2c: &i2c2 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
-	sda-pin = <4>;
-	scl-pin = <27>;
+	pinctrl-0 = < &i2c2_default >;
+	pinctrl-1 = < &i2c2_sleep >;
+	pinctrl-names = "default", "sleep";	
 };
 
 &spi2 {
@@ -43,9 +120,9 @@ my_i2c: &i2c2 {
 my_spi: &spi3 {
 	status = "okay"; 
 	compatible = "nordic,nrf-spim";
-	sck-pin = < 47 >;
-	miso-pin = < 46 >;
-	mosi-pin = < 45 >;
+	pinctrl-0 = <&spi3_default_alt>;
+	pinctrl-1 = <&spi3_sleep_alt>;
+	pinctrl-names = "default", "sleep";	
 	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
 
@@ -79,7 +156,7 @@ my_spi: &spi3 {
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;	
-		sram0_shared: memory@0x2007A000 {
+		sram0_shared: memory@2007A000 {
 			/* SRAM allocated to shared memory */
 			reg = <0x2007A000 0x4000>;
 		};
@@ -101,6 +178,6 @@ my_spi: &spi3 {
 };
 
 &gpio0 {
-	/* pin9 sense for edge */
-	sense-edge-mask = <0x200>;
+	/* pin6 sense for edge */
+	sense-edge-mask = <0x40>;
 };

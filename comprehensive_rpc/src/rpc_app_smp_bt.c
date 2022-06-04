@@ -5,15 +5,17 @@
  */
 #include <errno.h>
 #include <init.h>
-#include <tinycbor/cbor.h>
 #include <nrf_rpc_cbor.h>
-#include "../../common_ids.h"
+#include <zcbor_common.h>
+#include <zcbor_decode.h>
+#include <zcbor_encode.h>
+#include "common_ids.h"
 #include <mgmt/mcumgr/buf.h>
 #include <mgmt/mcumgr/smp.h>
 #include <net/buf.h>
 #include <logging/log.h>
 
-LOG_MODULE_REGISTER(rpc_app_smp, 2);
+LOG_MODULE_REGISTER(rpc_app_smp, 3);
 
 #define CBOR_BUF_SIZE 16
 static struct zephyr_smp_transport smp_rpc_transport;
@@ -25,8 +27,7 @@ static void rsp_error_code_send(int err_code)
 	struct nrf_rpc_cbor_ctx ctx;
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
-
-	cbor_encode_int(&ctx.encoder, err_code);
+	zcbor_int32_put(ctx.zs, err_code);
 
 	nrf_rpc_cbor_rsp_no_err(&ctx);
 }
@@ -35,7 +36,7 @@ static int smp_receive_data(const void *buf, uint16_t len)
 {
 	struct net_buf *nb;
 
-	LOG_HEXDUMP_INF(buf, len, "rpc app smp rx:");
+	LOG_HEXDUMP_DBG(buf, len, "rpc app smp rx:");
 	nb = mcumgr_buf_alloc();
 	if (!nb)
 	{
@@ -45,31 +46,27 @@ static int smp_receive_data(const void *buf, uint16_t len)
 	net_buf_add_mem(nb, buf, len);
 	zephyr_smp_rx_req(&smp_rpc_transport, nb);	
 
-	return len;
+	return 0;
 }
 
-static void rpc_app_bt_smp_receive_cb(CborValue *value, void *handler_data)
+static void rpc_app_bt_smp_receive_cb(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {	
-	CborError cbor_err;
-	int err;
-	size_t length;
+	struct zcbor_string zst;
+	int err;	
 	uint8_t buf[270];
 
 	LOG_INF("rpc rx data");
-	err = 0;
-	length = sizeof(buf);
-	cbor_err = cbor_value_copy_byte_string(value, buf, &length, NULL);
-
-	if (cbor_err != CborNoError || length < 0 || length > sizeof(buf)) {
+	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len > sizeof(buf)) {
 		err = -NRF_EBADMSG;
-		LOG_ERR("cbor copy err in smp rx");		
+		LOG_ERR("cbor decode err in smp rx");		
 	}
 	else
-	{		
-		err = smp_receive_data(buf, length);
+	{	
+		memcpy(buf, zst.value, zst.len);	
+		err = smp_receive_data(buf, zst.len);
 	}
 
-	nrf_rpc_cbor_decoding_done(value);
+	nrf_rpc_cbor_decoding_done(ctx);
 
 	rsp_error_code_send(err);
 }
@@ -78,50 +75,14 @@ NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_app_bt_smp_receive,
 			 RPC_COMMAND_NET_BT_SMP_RECEIVE_CB,
 			 rpc_app_bt_smp_receive_cb, NULL);
 
-/*
 
-static uint16_t m_rpc_mtu = 23;
-
-static uint16_t smp_rpc_get_mtu(const struct net_buf *nb)
+static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
-	return m_rpc_mtu;
-}
+	int32_t val;
 
-static void rpc_app_bt_mtu_size_cb(CborValue *value, void *handler_data)
-{	
-	CborError cbor_err;
-	int err;
-	uint16_t mtu;
-
-	err = 0;
-	cbor_err = cbor_value_get_int(value, &mtu);
-	if (cbor_err != CborNoError) {
-		err = -NRF_EBADMSG;
-	}
-
-	m_rpc_mtu = mtu;
-
-	nrf_rpc_cbor_decoding_done(value);
-
-	rsp_error_code_send(err);
-}
-
-NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_app_bt_mtu_size,
-			 RPC_COMMAND_NET_BT_MTU_SIZE_CB,
-			 rpc_app_bt_mtu_size_cb, NULL);
-
-*/
-
-static void rsp_error_code_handle(CborValue *value, void *handler_data)
-{
-	CborError cbor_err;
-
-	if (!cbor_value_is_integer(value)) {
-		*(int *)handler_data = -NRF_EINVAL;
-	}
-
-	cbor_err = cbor_value_get_int(value, (int *)handler_data);
-	if (cbor_err != CborNoError) {
+	if (zcbor_int32_decode(ctx->zs, &val)) {
+		*(int *)handler_data = (int)val;
+	} else {
 		*(int *)handler_data = -NRF_EINVAL;
 	}
 }
@@ -139,11 +100,11 @@ int rpc_app_bt_smp_send(uint8_t *buffer, uint16_t length)
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
 	
-	cbor_encode_byte_string(&ctx.encoder, buffer, length);	
+	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);	
 
 	err = nrf_rpc_cbor_cmd(&rpc_smp, RPC_COMMAND_APP_BT_SMP_SEND, &ctx,
 			       rsp_error_code_handle, &result);
-	if (err < 0) {
+	if (err) {
 		return err;
 	}
 

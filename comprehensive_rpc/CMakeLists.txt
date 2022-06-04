@@ -9,7 +9,7 @@ project(comprensive_example)
 
 target_sources(app PRIVATE src/main.c)
 
-target_sources_ifdef(CONFIG_EXAMPLE_IIC app
+target_sources_ifdef(CONFIG_EXAMPLE_I2C app
                      PRIVATE src/iic_thread.c)
 					 
 target_sources_ifdef(CONFIG_EXAMPLE_SPIM app

@@ -86,6 +86,7 @@ int net2app_receive(int type, uint8_t *data, size_t len)
 			err = net2app_receive_conn_status(data, len);
 			break;			
 		default:
+			LOG_INF("undefined command or cbor error");
 			break;
 	}
 

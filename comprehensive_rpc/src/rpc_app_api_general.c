@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 #include <errno.h>
-#include <init.h>
-
-#include <tinycbor/cbor.h>
-
+#include <zephyr/init.h>
+#include <string.h>
 #include <nrf_rpc_cbor.h>
-
+#include <zcbor_common.h>
+#include <zcbor_decode.h>
+#include <zcbor_encode.h>
 #include "common_ids.h"
 #include <logging/log.h>
 #include "rpc_app_api.h"
@@ -23,101 +23,87 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 NRF_RPC_GROUP_DEFINE(rpc_api, "rpc_api", NULL, NULL, NULL);
 
-static void rsp_error_code_handle(CborValue *value, void *handler_data)
+static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
-	CborError cbor_err;
+	int32_t val;
 
-	if (!cbor_value_is_integer(value)) {
-		*(int *)handler_data = -NRF_EINVAL;
-	}
-
-	cbor_err = cbor_value_get_int(value, (int *)handler_data);
-	if (cbor_err != CborNoError) {
+	if (zcbor_int32_decode(ctx->zs, &val)) {
+		*(int *)handler_data = (int)val;
+	} else {
 		*(int *)handler_data = -NRF_EINVAL;
 	}
 }
 
-int rpc_app2net_send(int type, uint8_t *buffer, size_t length)
+static void rsp_error_code_send(int err_code)
 {
-	int err;
-	int result;
 	struct nrf_rpc_cbor_ctx ctx;
 
+	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
+	zcbor_int32_put(ctx.zs, err_code);
+
+	nrf_rpc_cbor_rsp_no_err(&ctx);
+}
+
+int rpc_app2net_send(int32_t type, uint8_t *buffer, int32_t length)
+{
+	int err;
+	int32_t result = 0;
+	struct nrf_rpc_cbor_ctx ctx;
+
+	printk("buf:%p, len:%d \r", buffer, length);
 	if (!buffer || length < 1) {
 		return -NRF_EINVAL;
 	}	
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
-
 	
-	cbor_encode_int(&ctx.encoder, type);
-
-	cbor_encode_int(&ctx.encoder, length);
-
-	cbor_encode_byte_string(&ctx.encoder, buffer, length);	
+	zcbor_int32_put(ctx.zs, type);
+	zcbor_int32_put(ctx.zs, length);
+	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);	
 
 	err = nrf_rpc_cbor_cmd(&rpc_api, RPC_COMMAND_APP_SEND, &ctx,
 			       rsp_error_code_handle, &result);
-	if (err < 0) {
+	printk("err %d result %d\r", err, result);
+	if (err) {
 		return err;
 	}
 
 	return result;
 }
 
-static void rpc_net2app_send(CborValue *packet, void *handler_data)
+static void rpc_net2app_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {	
-	CborError cbor_err;
-	int err;
+	struct zcbor_string zst;
+	int err_code = -NRF_EINVAL;
 	size_t length;
 	uint8_t buf[256];
 	int type;
-
-	err = cbor_value_get_int(packet, &type);
-	if (err != CborNoError) {
-		goto cbor_error_exit;
-	}
-
-	err = cbor_value_advance(packet);
-	if (err != CborNoError) {
-		goto cbor_error_exit;
-	}
-
-	err = cbor_value_get_int(packet, &length);
-	if (err != CborNoError) {
-		goto cbor_error_exit;
-	}
-
-	err = cbor_value_advance(packet);
-	if (err != CborNoError) {
-		goto cbor_error_exit;
-	}	
-
-	length = 256;
-	cbor_err = cbor_value_copy_byte_string(packet, buf, &length,
-					       NULL);
-	if (cbor_err != CborNoError || length < 0 || length > sizeof(buf)) {
-		goto cbor_error_exit;	
-	}
-
-	nrf_rpc_cbor_decoding_done(packet);
-
-	err = net2app_receive(type, buf, length);
 	
-	struct nrf_rpc_cbor_ctx ctx;
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
-	cbor_encode_int(&ctx.encoder, err);	
-	nrf_rpc_cbor_rsp_no_err(&ctx);
-	return;
+
+	if (!zcbor_int32_decode(ctx->zs, &type)) {
+		goto cbor_error_exit;
+	}
+
+	if (!zcbor_int32_decode(ctx->zs, &length) || length > ARRAY_SIZE(buf)) {
+		goto cbor_error_exit;
+	}
+	
+	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len != length) {
+		goto cbor_error_exit;
+	}
+	memcpy(buf, zst.value, zst.len);
+	err_code = net2app_receive(type, buf, length);
 
 cbor_error_exit:
-	nrf_rpc_cbor_decoding_done(packet);	
+	nrf_rpc_cbor_decoding_done(ctx);
+	rsp_error_code_send(err_code);
 }
 
 
 NRF_RPC_CBOR_CMD_DECODER(rpc_api, rpc_net2app_send_name,
 			 RPC_COMMAND_NET_SEND,
 			 rpc_net2app_send, NULL);
+
 
 static void err_handler(const struct nrf_rpc_err_report *report)
 {
@@ -131,12 +117,16 @@ static int serialization_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
-	int err;	
+	int err;
+
+	printk("Init begin\n");
 
 	err = nrf_rpc_init(err_handler);
 	if (err) {
 		return -NRF_EINVAL;
 	}
+
+	printk("Init done\n");
 
 	return 0;
 }

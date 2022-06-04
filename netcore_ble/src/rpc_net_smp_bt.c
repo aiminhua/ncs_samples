@@ -15,12 +15,14 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
-#include <tinycbor/cbor.h>
+#include <zcbor_common.h>
+#include <zcbor_decode.h>
+#include <zcbor_encode.h>
 #include <nrf_rpc_cbor.h>
 #include "common_ids.h"
 #include <logging/log.h>
 
-LOG_MODULE_REGISTER(rpc_smp_bt, 2);
+LOG_MODULE_REGISTER(rpc_smp_bt, 3);
 
 extern struct bt_conn *current_conn;
 
@@ -48,21 +50,18 @@ static void rsp_error_code_send(int err_code)
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
 
-	cbor_encode_int(&ctx.encoder, err_code);
+	zcbor_int32_put(ctx.zs, err_code);
 
 	nrf_rpc_cbor_rsp_no_err(&ctx);
 }
 
-static void rsp_error_code_handle(CborValue *value, void *handler_data)
+static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
-	CborError cbor_err;
+	int32_t val;
 
-	if (!cbor_value_is_integer(value)) {
-		*(int *)handler_data = -NRF_EINVAL;
-	}
-
-	cbor_err = cbor_value_get_int(value, (int *)handler_data);
-	if (cbor_err != CborNoError) {
+	if (zcbor_int32_decode(ctx->zs, &val)) {
+		*(int *)handler_data = (int)val;
+	} else {
 		*(int *)handler_data = -NRF_EINVAL;
 	}
 }
@@ -79,12 +78,11 @@ int rpc_net_bt_smp_receive_cb(const uint8_t *buffer, uint16_t length)
 	}	
 
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
-	
-	cbor_encode_byte_string(&ctx.encoder, buffer, length);	
+	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);
 
 	err = nrf_rpc_cbor_cmd(&rpc_smp, RPC_COMMAND_NET_BT_SMP_RECEIVE_CB, &ctx,
 			       rsp_error_code_handle, &result);
-	if (err < 0) {
+	if (err) {
 		LOG_ERR("net rpc cbor cmd err %d", err);
 		return err;
 	}
@@ -100,7 +98,7 @@ static ssize_t smp_bt_chr_write(struct bt_conn *conn,
 				const void *buf, uint16_t len, uint16_t offset,
 				uint8_t flags)
 {
-	LOG_HEXDUMP_INF(buf, len, "rpc smp bt rx:");
+	LOG_HEXDUMP_DBG(buf, len, "rpc smp bt rx:");
 	rpc_net_bt_smp_receive_cb(buf, len);
 	return len;
 }
@@ -136,31 +134,29 @@ static struct bt_gatt_service smp_bt_svc = BT_GATT_SERVICE(smp_bt_attrs);
 /**
  * Transmits an SMP response over the specified Bluetooth connection.
  */
-static void rpc_net_bt_smp_send(CborValue *packet, void *handler_data)
+static void rpc_net_bt_smp_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
-	CborError cbor_err;
+	struct zcbor_string zst;
 	int err;
-	size_t length;
+
 #ifdef CONFIG_BT_L2CAP_TX_MTU	
 	uint8_t buf[CONFIG_BT_L2CAP_TX_MTU];
 #else
 	uint8_t buf[260];
 #endif
 
-	length = sizeof(buf);
-	cbor_err = cbor_value_copy_byte_string(packet, buf, &length,
-					       NULL);
-	if (cbor_err != CborNoError || length < 0 || length > sizeof(buf)) {
+	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len > sizeof(buf)) {
 		LOG_ERR("net rpc send len err");
-		err = -EBADMSG;		
+		err = -EBADMSG;
 	}
 	else
 	{
-		LOG_HEXDUMP_INF(buf, length, "rpc smp bt tx rsp:");
-		err = bt_gatt_notify(current_conn, smp_bt_attrs + 2, buf, length);
+		memcpy(buf, zst.value, zst.len);
+		LOG_HEXDUMP_INF(buf, zst.len, "rpc smp bt tx rsp:");
+		err = bt_gatt_notify(current_conn, smp_bt_attrs + 2, buf, zst.len);		
 	}
-
-	nrf_rpc_cbor_decoding_done(packet);
+	
+	nrf_rpc_cbor_decoding_done(ctx);
 
 	rsp_error_code_send(err);
 
@@ -170,24 +166,25 @@ NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_net_bt_smp_send_xx,
 			 RPC_COMMAND_APP_BT_SMP_SEND,
 			 rpc_net_bt_smp_send, NULL);
 
-static void rpc_net_bt_smp_get_mtu(CborValue *packet, void *handler_data)
+static void rpc_net_bt_smp_get_mtu(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
 	uint16_t mtu;
 
-	nrf_rpc_cbor_decoding_done(packet);
+	nrf_rpc_cbor_decoding_done(ctx);
 
 	mtu = bt_gatt_get_mtu(current_conn) - 3;
+	LOG_INF("smp MTU:%d", mtu);
 
 	rsp_error_code_send(mtu);
 }
 
-NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_net_bt_smp_get_mtu_xx,
+NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_net_bt_smp_get_mtu_name,
 			 RPC_COMMAND_APP_BT_SMP_GET_MTU,
 			 rpc_net_bt_smp_get_mtu, NULL);
 
 int smp_bt_register_rpc(void)
 {
-	LOG_INF("register smp bt");
+	printk("register smp bt\r");
 	return bt_gatt_service_register(&smp_bt_svc);
 }
 

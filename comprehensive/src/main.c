@@ -20,12 +20,13 @@
 #include <bluetooth/services/nus.h>
 #include <settings/settings.h>
 
-#ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
+#ifdef CONFIG_MCUMGR
 #include "img_mgmt/img_mgmt.h"
-#endif
-#ifdef CONFIG_MCUMGR_CMD_OS_MGMT
 #include "os_mgmt/os_mgmt.h"
+#include <img_mgmt/img_mgmt_impl.h>
+#include <mgmt/mcumgr/smp_bt.h>
 #endif
+
 #ifdef CONFIG_NRF_DFU
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
@@ -464,7 +465,7 @@ void main(void)
 {
 	int err;	
 
-	LOG_INF("### comprehensive example v0.3 compiled at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### comprehensive example v0.4 compiled at %s %s\n", __TIME__, __DATE__);
 
 	runLED = device_get_binding(LED0);
 	if (runLED == NULL) {
@@ -550,7 +551,5 @@ void main(void)
 		k_sleep(K_SECONDS(20));
 		LOG_INF("main thread\n");
 	}
-	// //since we don't put any work in main thread, exit directly
-	// LOG_WRN("exit main thread\n");
 
 }

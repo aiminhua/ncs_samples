@@ -293,6 +293,4 @@ void main(void)
 		k_sleep(K_SECONDS(20));
 		LOG_INF("main thread\n");
 	}
-	//since we don't put any work in main thread, exit directly
-	LOG_WRN("exit main thread\n");
 }

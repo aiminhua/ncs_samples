@@ -16,6 +16,7 @@
 #define LOG_MODULE_NAME flash_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
+#define STORAGE_NODE_LABEL storage
 static struct nvs_fs fs;
 
 #define KEY_ID 1
@@ -25,27 +26,26 @@ int nvs_usage_init(void)
 {
 	int rc;
 	uint8_t key[8];
-	uint32_t reboot_counter = 0U;
-	const struct device *flash_dev;
+	uint32_t reboot_counter = 0U;	
 	struct flash_pages_info info;
 
-	flash_dev = device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL);
-	if (!device_is_ready(flash_dev)) {
-		LOG_ERR("Flash device %s is not ready", flash_dev->name);
+	fs.flash_device = FLASH_AREA_DEVICE(STORAGE_NODE_LABEL);
+	if (!device_is_ready(fs.flash_device)) {
+		printk("Flash device %s is not ready\n", fs.flash_device->name);
 		return -EINVAL;
 	}
 	fs.offset = FLASH_AREA_OFFSET(storage);
-	rc = flash_get_page_info_by_offs(flash_dev, fs.offset, &info);
+	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
 	if (rc) {
-		LOG_ERR("Unable to get page info");
+		printk("Unable to get page info\n");
 		return -EINVAL;
 	}
 	fs.sector_size = info.size;
 	fs.sector_count = CONFIG_PM_PARTITION_SIZE_SETTINGS_STORAGE / info.size;
 
 	LOG_INF("NVS sector size=%d sector count=%d\n", fs.sector_size, fs.sector_count);
-
-	rc = nvs_init(&fs, DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL);
+	
+	rc = nvs_mount(&fs);
 	if (rc)
 	{
 		LOG_ERR("Flash Init failed %d", rc);
@@ -188,6 +188,7 @@ void settings_usage_init(void)
 	{
 		LOG_ERR("boot_cnt save err %d ", rc);
 	}
+
 }
 void flash_thread(void)
 {

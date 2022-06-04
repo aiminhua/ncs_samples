@@ -23,7 +23,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
-#define UART_WAIT_FOR_RX 50
+#define UART_WAIT_FOR_RX 10000
 
 static const struct device *uart;
 
@@ -115,18 +115,6 @@ static int uart_init(void)
 		return -ENXIO;
 	}
 
-	err = gpio_pin_configure(device_get_binding(DT_LABEL(DT_NODELABEL(gpio0))), DT_PROP(MY_UARTE, rx_pin), (GPIO_INPUT | GPIO_PULL_UP));
-	if (err != 0) {
-		LOG_ERR("Error %d: failed to configure pin %d",
-		       err, DT_PROP(MY_UARTE, rx_pin));		
-	}
-
-	err = gpio_pin_configure(device_get_binding(DT_LABEL(DT_NODELABEL(gpio0))), DT_PROP(MY_UARTE, tx_pin), (GPIO_INPUT | GPIO_PULL_UP));
-	if (err != 0) {
-		LOG_ERR("Error %d: failed to configure pin %d",
-		       err, DT_PROP(MY_UARTE, tx_pin));		
-	}
-	
 	err = uart_callback_set(uart, uart_cb, NULL);
 	if (err) {
 		return err;
@@ -180,9 +168,8 @@ void uart_thread(void)
 #endif
 
 		my_uart_send(buf->data,buf->len);
-
-		uart_len += buf->len;
-		LOG_INF("uart rx total len %d and %d", uart_len, buf->len);
+		
+		LOG_HEXDUMP_INF(buf->data, buf->len, "uart received:");
 		k_free(buf);					
 	}
 }

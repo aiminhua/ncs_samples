@@ -10,7 +10,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;	
-		sram0_shared: memory@0x2007A000 {
+		sram0_shared: memory@2007A000 {
 			/* SRAM allocated to shared memory */
 			reg = <0x2007A000 0x4000>;
 		};

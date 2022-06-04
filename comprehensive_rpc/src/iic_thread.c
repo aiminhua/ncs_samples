@@ -74,12 +74,6 @@ static void eeprom_cmd_read(void)
     }
 }
 
-// static void eeprom_read_fn(struct k_work *work)
-// {
-//     printk("eeprom read in system workqueue\n");
-// 	eeprom_cmd_read();
-//     k_delayed_work_submit(&read_eeprom, K_SECONDS(2));
-// }
 
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
