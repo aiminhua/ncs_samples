@@ -25,8 +25,8 @@ target_sources_ifdef(CONFIG_RPC_REMOTE_API app
                      PRIVATE src/rpc_app_api_general.c src/rpc_app_api.c src/rpc_thread.c)				 
 
 target_sources_ifdef(CONFIG_RPC_SMP_BT app
-                     PRIVATE src/rpc_app_smp_bt.c)		
-
+                     PRIVATE src/rpc_app_smp_bt.c)
+					 
 target_sources_ifdef(CONFIG_EXAMPLE_FLASH app
                      PRIVATE src/flash_thread.c)
 

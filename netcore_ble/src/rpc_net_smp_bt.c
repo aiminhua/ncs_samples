@@ -76,10 +76,10 @@ int rpc_net_bt_smp_receive_cb(const uint8_t *buffer, uint16_t length)
 		LOG_ERR("net rpc rx len error");
 		return -NRF_EINVAL;
 	}	
-
+	printk("smp rec len %x\r", length);
 	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
 	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);
-
+	
 	err = nrf_rpc_cbor_cmd(&rpc_smp, RPC_COMMAND_NET_BT_SMP_RECEIVE_CB, &ctx,
 			       rsp_error_code_handle, &result);
 	if (err) {
@@ -142,17 +142,17 @@ static void rpc_net_bt_smp_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data
 #ifdef CONFIG_BT_L2CAP_TX_MTU	
 	uint8_t buf[CONFIG_BT_L2CAP_TX_MTU];
 #else
-	uint8_t buf[260];
+	uint8_t buf[256];
 #endif
 
 	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len > sizeof(buf)) {
-		LOG_ERR("net rpc send len err");
+		LOG_ERR("net rpc send len err %d", zst.len);
 		err = -EBADMSG;
 	}
 	else
 	{
 		memcpy(buf, zst.value, zst.len);
-		LOG_HEXDUMP_INF(buf, zst.len, "rpc smp bt tx rsp:");
+		LOG_HEXDUMP_DBG(buf, zst.len, "rpc smp bt tx rsp:");
 		err = bt_gatt_notify(current_conn, smp_bt_attrs + 2, buf, zst.len);		
 	}
 	

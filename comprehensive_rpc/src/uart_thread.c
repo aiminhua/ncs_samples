@@ -146,8 +146,6 @@ int my_uart_send(const uint8_t *buf, size_t len)
 
 void uart_thread(void)
 {    
-	static uint32_t uart_len;
-
 	LOG_INF("**high speed UART example");
 
 	uart_init();

@@ -12,6 +12,7 @@
 #include "common_ids.h"
 #include <mgmt/mcumgr/buf.h>
 #include <mgmt/mcumgr/smp.h>
+#include "smp_reassembly.h"
 #include <net/buf.h>
 #include <logging/log.h>
 
@@ -34,9 +35,38 @@ static void rsp_error_code_send(int err_code)
 
 static int smp_receive_data(const void *buf, uint16_t len)
 {
-	struct net_buf *nb;
-
 	LOG_HEXDUMP_DBG(buf, len, "rpc app smp rx:");
+
+#ifdef CONFIG_RPC_REASSEMBLY_BT
+	int ret;
+	bool started;
+
+	started = (zephyr_smp_reassembly_expected(&smp_rpc_transport) >= 0);
+	ret = zephyr_smp_reassembly_collect(&smp_rpc_transport, buf, len);
+
+	LOG_DBG("collect = %d", ret);
+
+	/*
+	 * Collection can fail only due to failing to allocate memory or by receiving
+	 * more data than expected.
+	 */
+	if (ret == -ENOMEM) {
+		/* Failed to collect the buffer */
+		return -ENOMEM;
+	} else if (ret < 0) {
+		zephyr_smp_reassembly_drop(&smp_rpc_transport);
+		return ret;
+	}
+
+	/* No more bytes are expected for this packet */
+	if (ret == 0) {
+		zephyr_smp_reassembly_complete(&smp_rpc_transport, false);
+	}
+
+	return 0;
+#else
+	struct net_buf *nb;	
+
 	nb = mcumgr_buf_alloc();
 	if (!nb)
 	{
@@ -47,21 +77,22 @@ static int smp_receive_data(const void *buf, uint16_t len)
 	zephyr_smp_rx_req(&smp_rpc_transport, nb);	
 
 	return 0;
+#endif	
 }
 
 static void rpc_app_bt_smp_receive_cb(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {	
-	struct zcbor_string zst;
+	struct zcbor_string zst = {0};
 	int err;	
-	uint8_t buf[270];
+	uint8_t buf[512];
 
-	LOG_INF("rpc rx data");
 	if (!zcbor_bstr_decode(ctx->zs, &zst) || zst.len > sizeof(buf)) {
 		err = -NRF_EBADMSG;
-		LOG_ERR("cbor decode err in smp rx");		
+		LOG_ERR("cbor decode err len %x", zst.len);		
 	}
 	else
 	{	
+		LOG_DBG("decoded done len %x", zst.len);
 		memcpy(buf, zst.value, zst.len);	
 		err = smp_receive_data(buf, zst.len);
 	}
@@ -116,7 +147,7 @@ int rpc_app_bt_smp_send(uint8_t *buffer, uint16_t length)
 static int smp_rpc_tx_pkt(struct zephyr_smp_transport *zst, struct net_buf *nb)
 {	
 	int rc;
-	LOG_HEXDUMP_INF(nb->data, nb->len, "rpc app send");
+	LOG_HEXDUMP_DBG(nb->data, nb->len, "rpc app send");
 	rc = rpc_app_bt_smp_send(nb->data, nb->len);
 	mcumgr_buf_free(nb);
 	return rc;

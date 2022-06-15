@@ -51,7 +51,13 @@ config RPC_REMOTE_API
 config RPC_SMP_BT
 	bool "load DFU example over BLE SMP"
 	help
-		if yes, load DFU example over BLE SMP		
+		if yes, load DFU example over BLE SMP
+
+config RPC_REASSEMBLY_BT
+	bool "enable reassembly of BT packets"
+	select MCUMGR_SMP_REASSEMBLY
+	help
+		if yes, enable reassembly of BT packets
 		
 module = COMPREHENSIVE_RPC_EXAMPLE_CONFIG
 module-str = comprehensive_rpc example configurations
