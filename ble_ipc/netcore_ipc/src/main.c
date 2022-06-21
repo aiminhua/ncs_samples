@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <logging/log.h>
 #include <drivers/gpio.h>
+#ifdef CONFIG_IPC_SMP_BT
+#include "ipc_net_smp_bt.h"
+#endif
 #include "ipc_net_api.h"
 #include "ipc_lib.h"
 
@@ -53,12 +56,13 @@ static const struct bt_data sd[] = {
 };
 */
 
-// K_SEM_DEFINE(sem_nus_op, 0, 1);
 
-// const struct device *gpio_dev;
-// #define EXT_INT_IO	9  //p0.09
-// #define EXT_INT_CONF	(GPIO_INPUT | GPIO_PULL_UP)
-// static struct gpio_callback ext_int_cb_data;
+K_SEM_DEFINE(sem_nus_op, 0, 1);
+
+const struct device *gpio_dev;
+#define EXT_INT_IO	9  //p0.09
+#define EXT_INT_CONF	(GPIO_INPUT | GPIO_PULL_UP)
+static struct gpio_callback ext_int_cb_data;
 
 #ifdef CONFIG_BT_GATT_CLIENT
 static struct bt_gatt_exchange_params exchange_params;
@@ -72,7 +76,7 @@ static void exchange_func(struct bt_conn *conn, uint8_t att_err,
 	}
 	else
 	{
-		LOG_INF("MTU updated to %d", bt_gatt_get_mtu(conn)); 
+		LOG_INF("MTU updated to %d", bt_gatt_get_mtu(conn));		
 	}
 	
 }
@@ -184,44 +188,44 @@ static struct bt_nus_cb nus_cb = {
 	.received = bt_nus_receive_cb,
 };
 
-// void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
-// 		    uint32_t pins)
-// {
-// 	gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
-// 	LOG_INF("button4 pressed and going to send nus packet");
-//     k_sem_give(&sem_nus_op);    
-// }
+void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+	gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
+	LOG_INF("button4 pressed and going to send nus packet\n");
+    k_sem_give(&sem_nus_op);    
+}
 
-// void setup_ext_int(void)
-// {
-// 	int err;
+void setup_ext_int(void)
+{
+	int err;
 
-// 	gpio_dev = device_get_binding("GPIO_0");
-// 	if (gpio_dev == NULL) {
-// 		LOG_INF("GPIO_0 bind error");
-// 		return;
-// 	}
-// 	err = gpio_pin_configure(gpio_dev, EXT_INT_IO,
-// 				EXT_INT_CONF);
-// 	if (err) {
-// 		LOG_INF("GPIO_0 config error: %d", err);
-// 		return;
-// 	}
+	gpio_dev = device_get_binding("GPIO_0");
+	if (gpio_dev == NULL) {
+		printk("GPIO_0 bind error");
+		return;
+	}
+	err = gpio_pin_configure(gpio_dev, EXT_INT_IO,
+				EXT_INT_CONF);
+	if (err) {
+		printk("GPIO_0 config error: %d", err);
+		return;
+	}
 
-// 	err = gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO,
-// 					   GPIO_INT_EDGE_TO_INACTIVE);
-// 	if (err) {
-// 		LOG_INF("GPIO_0 enable callback error: %d", err);
-// 	}
+	err = gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO,
+					   GPIO_INT_EDGE_TO_INACTIVE);
+	if (err) {
+		printk("GPIO_0 enable callback error: %d", err);
+	}
 
-// 	gpio_init_callback(&ext_int_cb_data, ext_int_isr,
-// 			BIT(EXT_INT_IO));
-// 	err = gpio_add_callback(gpio_dev, &ext_int_cb_data);
-// 	if (err) {
-// 		LOG_INF("GPIO_0 add callback error: %d", err);
-// 		return;
-// 	}
-// }
+	gpio_init_callback(&ext_int_cb_data, ext_int_isr,
+			BIT(EXT_INT_IO));
+	err = gpio_add_callback(gpio_dev, &ext_int_cb_data);
+	if (err) {
+		printk("GPIO_0 add callback error: %d", err);
+		return;
+	}
+}
 
 #if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
 static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
@@ -287,10 +291,26 @@ static struct bt_conn_auth_cb conn_auth_callbacks = {
 };
 #endif
 
-static void ipc_rx_cb(uint8_t *data, uint16_t len)
-{
-	LOG_HEXDUMP_INF(data, len, "Received: ");
+static int send_to_app(void)
+{	
+	int ret;
+	static uint8_t cnt;
+	char test_str[20];
+
+	snprintf(test_str, 16, "I am from NET %c", cnt++);
+	ret = net2app_test(test_str, 15);
+	if (ret)
+	{
+		LOG_ERR("ipc test error %d", ret);
+	}
+	else
+	{
+		LOG_DBG("ipc test done %x", cnt-1);
+	}
+
+	return ret;	
 }
+
 void main(void)
 {
 	
@@ -298,7 +318,7 @@ void main(void)
 	
 	LOG_INF("### netcore firmware compiled at %s %s", __TIME__, __DATE__);
 	
-	init_ipc(ipc_rx_cb);	
+	setup_ext_int();	
 
 #ifdef 	CONFIG_BT_NUS_SECURITY_ENABLED
 	bt_conn_auth_cb_register(&conn_auth_callbacks);		
@@ -309,6 +329,11 @@ void main(void)
 		LOG_INF("bt enable error %d", err);		
 		return;
 	}
+	
+#ifdef CONFIG_IPC_SMP_BT
+	/* Initialize the Bluetooth mcumgr transport. */
+	smp_bt_register_ipc();
+#endif
 
 	LOG_INF("Bluetooth initialized");	
 
@@ -328,17 +353,12 @@ void main(void)
 		LOG_ERR("Advertising failed to start (err %d)", err);
 	}
 
-	LOG_INF("Started NUS example on netcore");		
-
-	err = net2app_send_bt_addr();
-	if (err) {
-		LOG_ERR("BT dev addr sent err %d", err);
-	}
-		
+	LOG_INF("Started NUS example on netcore");
 
 	for (;;) {		
-		k_sleep(K_SECONDS(3));
-		LOG_INF("netcore main");	
+		k_sleep(K_SECONDS(5));
+		LOG_INF("netcore main");
+		send_to_app();	
 	}
 }
 
@@ -353,14 +373,14 @@ void ble_write_thread(void)
 	cnt = 0;
 
 	for (;;) {
-		// k_sem_take(&sem_nus_op, K_FOREVER);		
+		k_sem_take(&sem_nus_op, K_FOREVER);		
 		snprintf(data, 12, "HelloNet%d", cnt++);		
 		data[11] = 0;		
 		err = bt_nus_send(NULL, data, 12);
 		if (err) {
 			LOG_WRN("bt_nus_send err %d", err);
 		}
-		k_sleep(K_SECONDS(2));		
+			
 	}
 }
 

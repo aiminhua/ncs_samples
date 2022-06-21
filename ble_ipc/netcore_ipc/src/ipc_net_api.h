@@ -24,6 +24,9 @@ extern "C" {
 int net2app_send_bt_addr(void);
 int net2app_send_nus(uint8_t *data, uint16_t len);
 int net2app_send_conn_status(uint8_t connected);
+int net2app_send_bt_mtu(void);
+int net2app_bt_smp_send(uint8_t *data, uint16_t len);
+int net2app_test(uint8_t *data, uint16_t len);
 
 #ifdef __cplusplus
 }

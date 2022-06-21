@@ -1,0 +1,9 @@
+sample:
+  name: Comprehensive rpc example
+  description: secondary slot on external QSPI flash. Both BT host and controller run on network core.
+tests:
+  samples.bluetooth.peripheral_uart:
+    build_only: true
+    build_on_all: true
+    platform_allow: nrf5340dk_nrf5340_cpuapp nrf5340dk_nrf5340_cpuappns
+    tags: bluetooth ci_build

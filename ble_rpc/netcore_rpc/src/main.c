@@ -353,8 +353,8 @@ void main(void)
 #endif		
 
 	for (;;) {		
-		k_sleep(K_SECONDS(2));
-		printk("netcore main\n");	
+		k_sleep(K_SECONDS(5));
+		printk("netcore main\r");	
 	}
 }
 
@@ -376,9 +376,7 @@ void ble_write_thread(void)
 		if (err) {
 			LOG_WRN("bt_nus_send err %d", err);
 		}
-		k_msleep(100);
-		//debouce button press
-		gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_EDGE_TO_INACTIVE);				
+	
 	}
 }
 

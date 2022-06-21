@@ -103,7 +103,7 @@ int nrfx_ipc_send(const void *data, int size)
 	return 0;
 }
 
-void send_to_net(void)
+static void send_to_net(void)
 {
 	int ret;
 	static uint8_t cnt;

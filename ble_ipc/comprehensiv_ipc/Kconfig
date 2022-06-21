@@ -1,0 +1,66 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
+#
+
+source "Kconfig.zephyr"
+menu "comprehensive_ipc example"
+
+config BLE_NETWORK_CORE
+	bool "Both BLE host and controller run on network core"
+	help
+	  Enable the whole BLE stack running on network core
+
+config EXAMPLE_I2C
+	bool "load I2C example or not"
+	help
+		if yes, load I2C example
+		
+config EXAMPLE_SPIM
+	bool "load SPI master example or not"
+	help
+		if yes, load SPI master example		
+		
+config EXAMPLE_EXT_INT
+	bool "load external IO interrupt example or not"
+	help
+		if yes, load external IO interrupt example
+
+config EXAMPLE_ADC
+	bool "load ADC example or not"
+	help
+		if yes, load ADC example		
+
+config EXAMPLE_HS_UART
+	bool "load high speed UART example or not"
+	help
+		if yes, load high speed UART example	  
+
+config EXAMPLE_FLASH
+	bool "load Flash access usage example"
+	default n
+	help
+		if yes, load Flash access usage example
+
+config IPC_CUSTOM
+	bool "Custom IPC is used for the dual core communication"
+	help
+	  Custom IPC is used for the dual core communication
+	  
+config IPC_SMP_BT
+	bool "load DFU example over BLE SMP"
+	help
+		if yes, load DFU example over BLE SMP
+
+config IPC_REASSEMBLY_BT
+	bool "enable reassembly of BT packets"
+	select MCUMGR_SMP_REASSEMBLY
+	help
+		if yes, enable reassembly of BT packets
+		
+module = COMPREHENSIVE_IPC_EXAMPLE_CONFIG
+module-str = comprehensive_Ipc example configurations
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endmenu

@@ -90,7 +90,7 @@ void main(void)
 	LOG_INF("dual core communication sample at %s %s", __TIME__, __DATE__);
 
 	nrfx_ipc_init(0, nrfx_ipc_handler, NULL);
-	IRQ_CONNECT(NRFX_IRQ_NUMBER_GET(NRF_IPC), 1,
+	IRQ_CONNECT(NRFX_IRQ_NUMBER_GET(NRF_IPC), 4,
 		    nrfx_isr, nrfx_ipc_irq_handler, 0);
 	ipc_tx_buf->data = (void *)((uint32_t) ipc_tx_buf + IPC_DATA_HEADER_LEN);
 	ipc_rx_buf->data = (void *)((uint32_t) ipc_rx_buf + IPC_DATA_HEADER_LEN);

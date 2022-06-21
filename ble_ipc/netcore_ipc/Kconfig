@@ -47,4 +47,9 @@ config BT_NUS_UART_ASYNC_ADAPTER
 	  Enables asynchronous adapter for UART drives that supports only
 	  IRQ interface.
 
+config IPC_SMP_BT
+	bool "load DFU example over BLE SMP"
+	help
+		if yes, load DFU example over BLE SMP	  
+
 endmenu
