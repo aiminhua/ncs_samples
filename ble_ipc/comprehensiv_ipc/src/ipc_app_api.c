@@ -13,7 +13,7 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include "ipc_lib.h"
-#include "ipc_cmd_ids.h"
+#include "../../ipc_cmd_ids.h"
 #include "ipc_app_api.h"
 #include "ipc_app_smp_bt.h"
 

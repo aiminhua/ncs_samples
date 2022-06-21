@@ -15,8 +15,7 @@ target_sources(app PRIVATE
 )
 
 target_sources(app PRIVATE
-  src/ipc_net_api.c src/ipc_lib.c
-)
+  src/ipc_net_api.c src/ipc_lib.c)
 
 target_sources_ifdef(CONFIG_IPC_SMP_BT app
                      PRIVATE src/ipc_net_smp_bt.c)

@@ -18,6 +18,7 @@
 #include <drivers/nrfx_errors.h>
 #include "pm_config.h"
 #endif
+#include "../../ipc_cmd_ids.h"
 
 LOG_MODULE_REGISTER(ipc_app, LOG_LEVEL_INF);
 
@@ -44,10 +45,6 @@ typedef struct
 nrfx_ipc_data_t * ipc_tx_buf = (nrfx_ipc_data_t *) SHARE_RAM_BASE_ADDR;
 nrfx_ipc_data_t * ipc_rx_buf = (nrfx_ipc_data_t *) (SHARE_RAM_BASE_ADDR+IPC_DATA_MAX_SIZE);
 
-#define NET2APP_BT_ADDR_SEND 1
-#define NET2APP_BT_NUS_RECV 2
-#define NET2APP_BT_CONN_STATUS 3
-
 static void nrfx_ipc_handler(uint32_t event_mask, void *p_context)
 {
 	LOG_INF("event_mask %d", event_mask);
@@ -73,7 +70,7 @@ static void nrfx_ipc_handler(uint32_t event_mask, void *p_context)
 			}
 			else
 			{
-				LOG_HEXDUMP_INF(ipc_rx_buf->data, ipc_rx_buf->len, "Undefined data: ");
+				LOG_HEXDUMP_INF(ipc_rx_buf->data, ipc_rx_buf->len, "IPC Rx: ");
 			}
 			
 			/* after processe is done, you must reset the buffer to prepare for next receive. 
@@ -109,7 +106,8 @@ static void send_to_net(void)
 	static uint8_t cnt;
 	char test_str[20];
 
-	snprintf(test_str, 16, "I am from APP %c", cnt++);
+	test_str[0] = APP2NET_TEST;
+	snprintf(&test_str[1], 16, "I am from APP %c", cnt++);
 	ret = nrfx_ipc_send(test_str, 16);
 	if (ret)
 	{
@@ -117,7 +115,7 @@ static void send_to_net(void)
 	}
 	else
 	{
-		LOG_INF("sent successfully %x", cnt-1);
+		LOG_DBG("IPC done %x", cnt-1);
 	}
 }
 
@@ -200,7 +198,7 @@ void main(void)
 #endif
 
 	while (1) {
-		k_sleep(K_SECONDS(3));                 
+		k_sleep(K_SECONDS(5));                 
         LOG_INF("app core start to send");
         send_to_net();        
 	}

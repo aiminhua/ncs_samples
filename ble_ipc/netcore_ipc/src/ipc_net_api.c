@@ -14,7 +14,7 @@
 #include <bluetooth/gatt.h>
 #include <bluetooth/hci.h>
 #include "ipc_lib.h"
-#include "ipc_cmd_ids.h"
+#include "../../ipc_cmd_ids.h"
 #include "ipc_net_api.h"
 #include "ipc_net_smp_bt.h"
 
@@ -33,6 +33,7 @@ static void ipc_rx_handler(uint8_t *data, uint16_t len)
 {
 	switch (data[0])
 	{
+#ifdef CONFIG_IPC_SMP_BT		
 		case APP2NET_SMP_GET_MTU:
 			net2app_send_bt_mtu();
 		break;
@@ -40,7 +41,7 @@ static void ipc_rx_handler(uint8_t *data, uint16_t len)
 		case APP2NET_SMP_SEND:
 			ipc_net_bt_smp_send(current_conn, &data[1], len-1);			
 		break;
-
+#endif
 		case APP2NET_TEST:
 			LOG_HEXDUMP_INF(&data[1], len-1, "IPC test:");
 		break;		
@@ -102,6 +103,7 @@ int net2app_send_conn_status(uint8_t connected)
 	return nrfx_ipc_send(data, sizeof(data));	
 }
 
+#ifdef CONFIG_IPC_SMP_BT
 int net2app_send_bt_mtu(void)
 {
 	uint8_t data[3];
@@ -123,6 +125,7 @@ int net2app_bt_smp_send(uint8_t *data, uint16_t len)
 
 	return nrfx_ipc_send(buf, len+1);	
 }
+#endif
 
 int net2app_test(uint8_t *data, uint16_t len)
 {

@@ -5,7 +5,7 @@
  */
 #include <errno.h>
 #include <init.h>
-#include "ipc_cmd_ids.h"
+#include "../../ipc_cmd_ids.h"
 #include "ipc_app_smp_bt.h"
 #include <mgmt/mcumgr/buf.h>
 #include <mgmt/mcumgr/smp.h>
