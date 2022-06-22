@@ -175,8 +175,9 @@ int nrfx_ipc_send(const uint8_t *data, uint16_t size)
 	}
 	if (ipc_tx_buf->valid == MAGIC_VALID && ipc_tx_buf->busy == 1)
 	{
-		LOG_ERR("ipc is busy");
-		return EBUSY;
+		LOG_ERR("##ipc is busy");
+		ipc_tx_buf->busy = 0; //temp use only
+		return -EBUSY;
 	}
 	ipc_tx_buf->valid = MAGIC_VALID;
 	ipc_tx_buf->busy = 1;

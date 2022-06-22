@@ -297,8 +297,9 @@ static int send_to_app(void)
 	static uint8_t cnt;
 	char test_str[20];
 
-	snprintf(test_str, 16, "I am from NET %c", cnt++);
-	ret = net2app_test(test_str, 15);
+	test_str[0] = 0x1;
+	snprintf(&test_str[1], 16, "I am from NET %c", cnt++);
+	ret = net2app_test(test_str, 16);
 	if (ret)
 	{
 		LOG_ERR("ipc test error %d", ret);

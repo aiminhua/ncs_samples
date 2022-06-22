@@ -30,7 +30,7 @@ nrfx_ipc_data_t * ipc_rx_buf = (nrfx_ipc_data_t *) SHARE_RAM_BASE_ADDR;
 
 static void nrfx_ipc_handler(uint32_t event_mask, void *p_context)
 {
-	LOG_INF("event_mask %d", event_mask);
+	LOG_DBG("event_mask %d", event_mask);
 	if (event_mask == (1 << CH_NO_RECEIVE)) {
 		// we just print out the data
 		if (ipc_rx_buf->valid != MAGIC_VALID)
@@ -73,7 +73,8 @@ void send_to_app(void)
 	static uint8_t cnt;
 	char test_str[20];
 
-	snprintf(test_str, 16, "I am from NET %c", cnt++);
+	test_str[0] = 0x1;
+	snprintf(&test_str[1], 16, "I am from NET %c", cnt++);
 	ret = nrfx_ipc_send(test_str, 16);
 	if (ret)
 	{

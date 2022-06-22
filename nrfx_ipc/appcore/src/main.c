@@ -73,7 +73,8 @@ void send_to_net(void)
 	static uint8_t cnt;
 	char test_str[20];
 
-	snprintf(test_str, 16, "I am from APP %c", cnt++);
+	test_str[0] = 0x81;
+	snprintf(&test_str[1], 16, "I am from APP %c", cnt++);
 	ret = nrfx_ipc_send(test_str, 16);
 	if (ret)
 	{
