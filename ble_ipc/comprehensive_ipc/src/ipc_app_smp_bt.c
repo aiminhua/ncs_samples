@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 #include <errno.h>
-#include <init.h>
+#include <zephyr/init.h>
 #include "../../ipc_cmd_ids.h"
 #include "ipc_app_smp_bt.h"
-#include <mgmt/mcumgr/buf.h>
-#include <mgmt/mcumgr/smp.h>
+#include <zephyr/mgmt/mcumgr/buf.h>
+#include <zephyr/mgmt/mcumgr/smp.h>
 #include "smp_reassembly.h"
-#include <net/buf.h>
-#include <logging/log.h>
+#include <zephyr/net/buf.h>
+#include <zephyr/logging/log.h>
 #include "ipc_app_api.h"
 
 LOG_MODULE_REGISTER(ipc_app_smp, 3);

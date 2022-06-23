@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
+#include <zephyr/zephyr.h>
 #include <nrfx_ipc.h>
 #include <stdio.h>
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
 #ifdef CONFIG_NRF_DFU
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
-#include <sys/reboot.h>
+#include <zephyr/sys/reboot.h>
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #include <drivers/nrfx_errors.h>
@@ -20,7 +20,7 @@
 #endif
 #include "../../ipc_cmd_ids.h"
 
-LOG_MODULE_REGISTER(ipc_app, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ipc_app);
 
 #ifdef PM_SRAM_PRIMARY_END_ADDRESS
 #define SHARE_RAM_END_ADDR PM_SRAM_PRIMARY_END_ADDRESS

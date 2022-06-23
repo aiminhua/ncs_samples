@@ -7,7 +7,7 @@
 #include <zephyr/kernel.h>
 #include <nrfx_ipc.h>
 #include <stdio.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "ipc_lib.h"
 #ifdef PM__SRAM_PRIMARY_END_ADDRESS
 #include "pm_config.h"

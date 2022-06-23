@@ -11,7 +11,7 @@
 #include <zcbor_decode.h>
 #include <zcbor_encode.h>
 #include "common_ids.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "rpc_app_api.h"
 
 #define LOG_MODULE_NAME rpc_app_api_general

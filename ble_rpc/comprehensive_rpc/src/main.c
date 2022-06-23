@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
-#include <drivers/gpio.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/gpio.h>
 #include <stdio.h>
 #include <dk_buttons_and_leds.h>
 #include <nrf.h>
 #include <nrfx.h>
-#include <drivers/uart.h>
+#include <zephyr/drivers/uart.h>
 #ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
 #include "img_mgmt/img_mgmt.h"
 #endif
@@ -30,9 +30,9 @@
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #endif
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
-#include <pm/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/pm/device.h>
 
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

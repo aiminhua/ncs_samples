@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 #include <errno.h>
-#include <init.h>
+#include <zephyr/init.h>
 #include <nrf_rpc_cbor.h>
 #include "common_ids.h"
 #include "rpc_net_api.h"
 #include <bluetooth/services/nus.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME rpc_net_api
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

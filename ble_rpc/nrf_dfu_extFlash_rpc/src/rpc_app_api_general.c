@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 #include <errno.h>
-#include <init.h>
+#include <zephyr/init.h>
 
 #include <tinycbor/cbor.h>
 
 #include <nrf_rpc_cbor.h>
 
 #include "common_ids.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "rpc_app_api.h"
 
 #define LOG_MODULE_NAME rpc_app_api_general

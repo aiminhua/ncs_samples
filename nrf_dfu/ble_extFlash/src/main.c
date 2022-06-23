@@ -9,22 +9,22 @@
  */
 
 #include <zephyr/types.h>
-#include <zephyr.h>
-#include <drivers/uart.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/drivers/uart.h>
 
-#include <device.h>
+#include <zephyr/device.h>
 #include <soc.h>
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/uuid.h>
-#include <bluetooth/gatt.h>
-#include <bluetooth/hci.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/hci.h>
 
 #include <bluetooth/services/nus.h>
 
 #include <dk_buttons_and_leds.h>
 
-#include <settings/settings.h>
+#include <zephyr/settings/settings.h>
 
 #include <stdio.h>
 
@@ -36,8 +36,8 @@
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #include <drivers/nrfx_errors.h>
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
 
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

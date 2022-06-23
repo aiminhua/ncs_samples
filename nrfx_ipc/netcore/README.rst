@@ -18,20 +18,20 @@ they received.
 Requirements
 ************
 
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
+
++------------------------------------------------------------------+
+|NCS tags                                                          +
++==================================================================+
+|v1.9.x/v2.0.x                                                     |
++------------------------------------------------------------------+
+
 The following development kits are tested for this sample.
 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf5340dk_nrf5340_cpunet                                           |
-+------------------------------------------------------------------+
-
-The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
-
-+------------------------------------------------------------------+
-|NCS tags                                                          +
-+==================================================================+
-|v1.9.x                                                            |
+|nrf5340dk_nrf5340_cpunet                                          |
 +------------------------------------------------------------------+
 
 Build & Programming
@@ -64,14 +64,14 @@ Once the communication is successful, the logging looks similar to the following
 
 .. code-block:: console
 
-	*** Booting Zephyr OS build v2.7.99-ncs1  ***
-   <inf> ipc_net: dual core communication sample - net core side at 09:39:54 May 31 2022
+	*** Booting Zephyr OS build v3.0.99-ncs1  ***
+   <inf> ipc_net: dual core communication sample - net core side at 12:02:58 Jun 24 2022
    <inf> ipc_net: ipc init done
    <inf> ipc_net: net core start to send
    <inf> ipc_net: sent successfully 0
    <inf> ipc_net: event_mask 1
    <inf> ipc_net: Received: 
-    49 20 61 6d 20 66 72 6f  6d 20 41 50 50 20 01 00
+    81 49 20 61 6d 20 66 72  6f 6d 20 41 50 50 20 00
    <inf> ipc_net: net core start to send
    <inf> ipc_net: sent successfully 1
    

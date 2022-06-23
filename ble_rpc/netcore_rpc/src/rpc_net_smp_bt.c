@@ -10,17 +10,17 @@
 
 #include <errno.h>
 
-#include <zephyr.h>
-#include <init.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/uuid.h>
-#include <bluetooth/gatt.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/init.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
 #include <zcbor_common.h>
 #include <zcbor_decode.h>
 #include <zcbor_encode.h>
 #include <nrf_rpc_cbor.h>
 #include "common_ids.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(rpc_smp_bt, 3);
 

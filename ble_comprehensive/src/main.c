@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
-#include <drivers/gpio.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/gpio.h>
 #include <stdio.h>
 #include <dk_buttons_and_leds.h>
 #include <nrf.h>
 #include <nrfx.h>
-#include <drivers/uart.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/uuid.h>
-#include <bluetooth/gatt.h>
-#include <bluetooth/hci.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/hci.h>
 #include <bluetooth/services/nus.h>
-#include <settings/settings.h>
+#include <zephyr/settings/settings.h>
 
 #ifdef CONFIG_MCUMGR
 #include "img_mgmt/img_mgmt.h"
 #include "os_mgmt/os_mgmt.h"
 #include <img_mgmt/img_mgmt_impl.h>
-#include <mgmt/mcumgr/smp_bt.h>
+#include <zephyr/mgmt/mcumgr/smp_bt.h>
 #endif
 
 #ifdef CONFIG_NRF_DFU
@@ -34,9 +34,9 @@
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #endif
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
-#include <pm/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/pm/device.h>
 
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

@@ -18,20 +18,20 @@ they received.
 Requirements
 ************
 
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
+
++------------------------------------------------------------------+
+|NCS tags                                                          +
++==================================================================+
+|v1.9.x/v2.0.0x                                                    |
++------------------------------------------------------------------+
+
 The following development kits are tested for this sample.
 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
 |nrf5340dk_nrf5340_cpuapp                                          |
-+------------------------------------------------------------------+
-
-The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
-
-+------------------------------------------------------------------+
-|NCS tags                                                          +
-+==================================================================+
-|v1.9.x                                                            |
 +------------------------------------------------------------------+
 
 Build & Programming
@@ -64,14 +64,14 @@ Once the communication is successful, the logging looks similar to the following
 
 .. code-block:: console
 
-	*** Booting Zephyr OS build v2.7.99-ncs1  ***
-   <inf> ipc_app: dual core communication sample at 09:36:24 May 31 2022
+	*** Booting Zephyr OS build v3.0.99-ncs1  ***
+   <inf> ipc_app: dual core communication sample at 12:04:20 Jun 24 2022
    <inf> ipc_app: ipc init done
    <inf> ipc_app: app core start to send
    <inf> ipc_app: sent successfully 0
    <inf> ipc_app: event_mask 2
    <inf> ipc_app: Received: 
-    49 20 61 6d 20 66 72 6f  6d 20 4e 45 54 20 00 00 
+    01 49 20 61 6d 20 66 72  6f 6d 20 4e 45 54 20 01 
    <inf> ipc_app: app core start to send
    <inf> ipc_app: sent successfully 1
    

@@ -8,7 +8,7 @@
 #define RPC_NET_SMP_BT_H_
 
 #include <zephyr/types.h>
-#include <bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/bluetooth.h>
 
 /**
  * @file

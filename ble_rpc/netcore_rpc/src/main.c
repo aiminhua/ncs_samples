@@ -9,20 +9,20 @@
  */
 
 #include <zephyr/types.h>
-#include <zephyr.h>
-#include <drivers/uart.h>
-#include <device.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/device.h>
 #include <soc.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/uuid.h>
-#include <bluetooth/gatt.h>
-#include <bluetooth/hci.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/hci.h>
 #include <bluetooth/services/nus.h>
-#include <settings/settings.h>
+#include <zephyr/settings/settings.h>
 #include <stdio.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "rpc_net_api.h"
-#include <drivers/gpio.h>
+#include <zephyr/drivers/gpio.h>
 
 #ifdef CONFIG_RPC_SMP_BT
 #include "rpc_net_smp_bt.h"

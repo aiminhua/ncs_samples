@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/device.h>
 #include <string.h>
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
-#include <fs/nvs.h>
-#include "settings/settings.h"
-#include <logging/log.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/fs/nvs.h>
+#include <zephyr/settings/settings.h>
+#include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME flash_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
