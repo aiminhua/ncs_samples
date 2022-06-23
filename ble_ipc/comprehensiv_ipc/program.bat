@@ -10,5 +10,5 @@ nrfjprog -f NRF53 --eraseall
 ::nrfjprog -f NRF53 --program build_nrf5340dk_nrf5340_cpuapp/zephyr/merged.hex --verify
 nrfjprog -f NRF53 --program build/zephyr/merged.hex --verify
 
-nrfjprog -r
+nrfjprog --debugreset
 pause

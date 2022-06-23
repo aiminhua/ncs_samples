@@ -21,7 +21,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
-#define UART_WAIT_FOR_RX 50
+#define UART_WAIT_FOR_RX 10000
 
 static const struct device *uart;
 static rx_callback_t rx_callback;

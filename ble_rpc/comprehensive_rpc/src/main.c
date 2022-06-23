@@ -240,7 +240,7 @@ void main(void)
 {
 	int err;	
 
-	LOG_INF("### comprehensive example @ appcore version v0.2 compiled at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### comprehensive example @ appcore version v0.4 compiled at %s %s\n", __TIME__, __DATE__);
 	assign_io_to_netcore();
 
 	ledDev = device_get_binding(LED0);
@@ -290,7 +290,7 @@ void main(void)
 	while(1)
 	{
 		//add your code here
-		k_sleep(K_SECONDS(20));
-		LOG_INF("main thread\n");
+		k_sleep(K_SECONDS(5));
+		LOG_INF("main thread");
 	}
 }

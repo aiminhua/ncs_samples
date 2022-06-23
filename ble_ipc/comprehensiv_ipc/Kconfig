@@ -60,7 +60,7 @@ config IPC_REASSEMBLY_BT
 		if yes, enable reassembly of BT packets
 		
 module = COMPREHENSIVE_IPC_EXAMPLE_CONFIG
-module-str = comprehensive_Ipc example configurations
+module-str = comprehensive_ipc example configurations
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
 
 endmenu

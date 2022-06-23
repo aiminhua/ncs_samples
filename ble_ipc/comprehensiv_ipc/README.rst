@@ -1,4 +1,4 @@
-.. comprehensive_rpc:
+.. comprehensive_ipc:
 
 Comprehensive example(ble on netcore)
 #####################################
@@ -13,9 +13,9 @@ SPI master example, I2C master example, ADC example, external interrupt example,
 Overview
 ********
 
-This sample only supports ``nRF5340``.Both BLE host and controller run on the network core(the network core source files can be found at ``ncs_samples/netcore_ble``).
-Application core and network core communicate with each other by ``nrf_rpc'' in this example. By default, nrf_dfu is used for the BLE OTA example (change the ``prj.conf`` to 
-support smp OTA DFU). And external Flash is used to store the update image. 
+This sample only supports ``nRF5340``.Both BLE host and controller run on the network core(the network core source files can be found at ``netcore_rpc``).
+Application core and network core communicate with each other by ``nrf_rpc'' in this example. By default, BLE smp DFU is used for the BLE OTA example. 
+And external Flash is used to store the update image. 
 
 Read `Testing`_ for more information of each separate module of this sample.
 
@@ -23,7 +23,7 @@ Read `Testing`_ for more information of each separate module of this sample.
 Build & Programming
 *******************
 
-Make sure ``ncs_samples/netcore_ble`` is placed in the following folder structure.
+Make sure ``netcore_ipc`` is placed in the following folder structure.
 
 ::
 
@@ -31,22 +31,26 @@ Make sure ``ncs_samples/netcore_ble`` is placed in the following folder structur
     ├── nrf
     ├── zephyr
     ├── ncs_samples          
-    │   ├── netcore_ble
+    │   ├── ble_ipc
+	│      ├── netcore_ipc 
 
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.8.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
 +------------------------------------------------------------------+
 
-To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
-and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions. 
 	
-This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, 
-enter folder ``sdk_change/ncs_v1.7.x`` and overwrite the same files in the correspondent NCS ``v1.7.1`` folders.
+This example **may** modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. 
+For example, to work with NCS v1.9.1, copy folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files 
+in the correspondent NCS ``v1.9.1`` folders.
 
 The following development kits are tested for this sample. 
 
@@ -73,26 +77,15 @@ Testing
 
 After programming the sample to your development kit, you can test different modules by the following steps.
 
-Preparations
-============
-
-To make UART1 work, you need to connect the following pins together
-
-* Connect P0.07 to TxD of P24
-* Connect P0.26 to RxD of P24
-
-UART1 will enumerate as the second COM of nRF5340 DK. Select the COM to make NUS and high speed UART examples work. 
-
-You also need to do some preparations for SPI master and I2C master example usage. Read the correspondent sections for the details.
-
 BLE NUS Service
 ===============
 
 Perform the following steps for the test.
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
-#. Open ``Serial Debug Assistant`` (which is available in Microsoft Store). Set baud rate as 1000000 and choose the second COM port of nRF5340 DK. 
-#. Reset the kit.
+#. Open ``Serial Debug Assistant`` (which is available in Microsoft Store). Set baud rate as 1000000 and choose the second COM port of nRF5340 DK 
+   Note: the latest nrf5340dk, we only have 2 COM ports. So you need to have a USB-to-UART bridge or you can change source code to make use of uart0.
+#. Reset the kit. It shall advertise ``comprehensive_ipc``
 #. Connect to the device using nRF Connect for Mobile. Tap **Enable CCCDs**.
 #. Select the UART RX characteristic value in nRF Connect.
    You can write to the UART RX and get the text displayed on the COM listener.
@@ -101,21 +94,25 @@ Perform the following steps for the test.
 #. To send data from the device to your phone or tablet, enter any text, for example, "Hello", and press Enter.
    Observe that a notification is sent to the phone or tablet.
 
+Regarding old nRF5340DK, you need to connect the following pins together. UART1 will enumerate as the second COM of nRF5340 DK.
+In this case, you don't need to have a USB-to-UART bridge.
+
+* Connect P0.07 to TxD of P24
+* Connect P0.26 to RxD of P24
+
 BLE OTA DFU
 ===========
 
-By default, we use DFU module from nRF5 SDK v17.0.2 to do OTA in this sample. This DFU module is called nrf_dfu in this document. The OTA procedure is exactly
-the same as that of nRF5 SDK. Perform the following steps for the test.
+By default, we use BLE smp protocol to do OTA. Perform the following steps for the test.
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
-#. Optionally, connect the RTT console to display logging messages.
-#. Reset the kit. It shall advertise ``nus_netcore``
-#. Copy app_signed.hex(application core update image) and net_core_app_signed.hex(netcore update image) in folder ``build*/zephyr`` to folder ``update``.
-#. Double click ``zip_generate.bat`` in ``update``.You will get 5340_extFlash_rpc.zip as the application core update image and 5340_extFlash_rpc_netcore as the netcore update image.
-#. Perform the DFU steps as nRF5 SDK do
-
-Refer to https://github.com/aiminhua/ncs_samples/tree/master/nrf_dfu/ble_extFlash_rpc for a detailed description.
+#. Copy ``build*/zephyr/app_update.bin`` to your mobile phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
+#. Open nRF connect for Mobile on your phone. (You can also use nRF Device Manager or nRF toolbox to do the DFU)
+#. Connect the board. 
+#. Tap **DFU** button on the right top corner of the mobile app.
+#. Select **app_update.bin** in your phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
+#. Complete the DFU process.
 
 **note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
 
@@ -127,7 +124,7 @@ Dual core interactions
 ======================
 
 In fact, when you test NUS service or OTA service, application core and network core already communicate with each other. 
-You can also press **Button1** to let appcore send messages to netcore by ``nrf_rpc``. Then netcore would forward the messages to mobile app if connected.
+You can also press **Button1** to let appcore send messages to netcore by ``nrfx_ipc``. Then netcore would forward the messages to mobile app if connected.
 
 SPI master
 ==========
@@ -199,7 +196,7 @@ The logging of application core external interrupt example is like below.
 
 .. code-block:: console
 
-	<inf> i2c_thread: external interrupt occurs at 676640	
+	<inf> i2c_thread: external interrupt occurs at 40	
 
 The logging of network core external interrupt example is like below.
 
@@ -258,57 +255,10 @@ impact on the UART communication. You can use app: ``Serial Debug Assistant`` fr
 
 Use ``Serial Debug Assistant`` to send a file to the board. The board would forward the same file back to the PC. Verify whether they are identical.
 
+Note: the latest nrf5340dk, we only have 2 COM ports. So you need to have a USB-to-UART bridge or you can change source code to make use of uart0.
+Regarding the old nRF5340dk, you need to connect the following pins together. UART1 will enumerate as the second COM of nRF5340 DK. 
+In this case you don't need a USB-to-UART bridge.
 
-BT SMP DFU
-==========
+* Connect P0.07 to TxD of P24
+* Connect P0.26 to RxD of P24
 
-We can also do OTA by BT SMP protocol which is an inherent module of NCS. Change the default configurations before the building process.
-
-* Change ``prj.conf``.
-
-.. code-block:: console
-
-	## Open the following configs to run nrf_dfu ##
-	# CONFIG_NRF_DFU=y
-	# CONFIG_NRF_DFU_RPC_APP=y
-	# # CONFIG_NRF_DFU_LOG_LEVEL=3
-	# CONFIG_IMG_MANAGER=y
-	# CONFIG_MCUBOOT_IMG_MANAGER=y
-	# CONFIG_IMG_BLOCK_BUF_SIZE=4096
-
-	## Open the following configs to run SMP DFU ##
-	CONFIG_MCUMGR=y
-	CONFIG_MCUMGR_CMD_IMG_MGMT=y
-	CONFIG_MCUMGR_CMD_OS_MGMT=y
-	CONFIG_OS_MGMT_TASKSTAT=n
-	CONFIG_OS_MGMT_ECHO=y
-	CONFIG_IMG_BLOCK_BUF_SIZE=2048
-	CONFIG_MCUMGR_BUF_SIZE=256
-	CONFIG_MCUMGR_BUF_COUNT=4
-	CONFIG_MGMT_CBORATTR_MAX_SIZE=512
-	CONFIG_RPC_SMP_BT=y
-
-* Change ``netcore_ble/prj.conf``. 
-
-.. code-block:: console
-
-	## Open the following config to run SMP OTA ##
-	CONFIG_RPC_SMP_BT=y
-
-	## Open the following config to run nrf_dfu OTA ##
-	# CONFIG_NRF_DFU_BT=y
-	# CONFIG_NRF_DFU_RPC_NET=y
-	# CONFIG_BT_RX_STACK_SIZE=4096
-
-Then build the project and program it to the board. Perform the following steps to test SMP DFU.
-
-1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
-#. |connect_terminal|
-#. Copy ``build*/zephyr/app_update.bin`` to your mobile phone. If you want to update the net core image, use **net_core_app_update.bin** instead.
-#. Open nRF Connect for Mobile on your phone. 
-#. Connect the board. 
-#. Tap **DFU** button on the right top corner of the mobile app.
-#. Select **app_update.bin** in your phone. If you want to update the net core image, use **net_core_app_update.bin** instead.
-#. Complete the DFU process.
-
-Refer to https://github.com/aiminhua/ncs_samples/tree/master/smp_dfu/ble_extFlash for an independent SMP DFU example.

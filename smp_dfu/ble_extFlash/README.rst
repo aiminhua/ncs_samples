@@ -66,7 +66,7 @@ After programming the sample to your development kit, test it by performing the 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
 #. Copy ``build*/zephyr/app_update.bin`` to your mobile phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
-#. Open nRF connect for Mobile on your phone. 
+#. Open nRF connect for Mobile on your phone. (You can also use nRF Device Manager or nRF toolbox to do the DFU)
 #. Connect the board. 
 #. Tap **DFU** button on the right top corner of the mobile app.
 #. Select **app_update.bin** in your phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
