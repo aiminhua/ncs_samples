@@ -63,7 +63,7 @@ int rpc_app2net_send(int32_t type, uint8_t *buffer, int32_t length)
 
 	err = nrf_rpc_cbor_cmd(&rpc_api, RPC_COMMAND_APP_SEND, &ctx,
 			       rsp_error_code_handle, &result);
-	printk("err %d result %d\r", err, result);
+	//printk("err %d result %d\r", err, result);
 	if (err) {
 		return err;
 	}

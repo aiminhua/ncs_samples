@@ -18,8 +18,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 //CONFIG_GPIO_NRF_INT_EDGE_USING_SENSE
 
 const static struct device *gpio_dev;
-#define INT0_NODE DT_NODELABEL(button3)
-#define INT0	DT_GPIO_LABEL(INT0_NODE, gpios)
+#define INT0_NODE DT_NODELABEL(button0)   //pushing button1 to trigger the external interrupt
+#define INT0_PORT	DT_GPIO_LABEL(INT0_NODE, gpios)
 #define INT0_PIN	DT_GPIO_PIN(INT0_NODE, gpios)
 #define INT0_FLAGS	DT_GPIO_FLAGS(INT0_NODE, gpios)
 
@@ -47,9 +47,9 @@ void ext_int_init(void)
 {
 	int ret;
 	
-	gpio_dev = device_get_binding(INT0);
+	gpio_dev = device_get_binding(INT0_PORT);
 	if (!gpio_dev) {
-		LOG_ERR("INT0 dev null");		
+		LOG_ERR("%s is null", INT0_PORT);		
 	}
 
 	ret = gpio_pin_configure(gpio_dev, INT0_PIN, (GPIO_INPUT | GPIO_PULL_UP));
@@ -103,8 +103,8 @@ void ext_int_init(void)
 void main(void)
 {	
 	LOG_INF("** External interrupt example **");
-
     ext_int_init();
+
 	while (1) {		
 		LOG_INF("main thread");
         k_sleep(K_SECONDS(5));

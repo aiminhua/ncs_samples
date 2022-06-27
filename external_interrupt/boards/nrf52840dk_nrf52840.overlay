@@ -1,6 +1,6 @@
 /* overlay file */
 
 &gpio0 {
-	/* pin 0x19 sense for edge */
-	sense-edge-mask = <0x2000000>;
+	/* button1 -> P0.11 sense for edge */
+	sense-edge-mask = <0x800>;
 };
