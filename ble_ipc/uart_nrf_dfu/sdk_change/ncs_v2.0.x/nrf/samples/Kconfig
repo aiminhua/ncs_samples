@@ -1,0 +1,109 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+config NCS_SAMPLES_DEFAULTS
+	bool "Enable NCS sample default settings"
+	default n
+	imply LOG
+	imply LOG_DEFAULT_MINIMAL
+	imply ASSERT
+	imply ASSERT_NO_COND_INFO
+	imply ASSERT_NO_MSG_INFO
+	imply HW_STACK_PROTECTION if ARCH_HAS_STACK_PROTECTION
+	help
+	  Use the default configuration for NCS samples.
+
+if SOC_SERIES_NRF53X
+
+config NCS_SAMPLE_EMPTY_APP_CORE_CHILD_IMAGE
+	bool "Add empty_app_core as a child image"
+	depends on SOC_NRF5340_CPUNET
+	select PARTITION_MANAGER_ENABLED
+	help
+	  Add empty_app_core as a child image (application core).
+	  Used by samples that run on the network core only.
+
+config NCS_INCLUDE_RPMSG_CHILD_IMAGE
+	bool "Include RPMsg sample on netcore"
+	depends on SOC_NRF5340_CPUAPP && (BT_RPMSG || NRF_802154_SER_HOST || BT_RPC || BLE_NETWORK_CORE)
+	select PARTITION_MANAGER_ENABLED
+	default y if BT_RPMSG || NRF_802154_SER_HOST || BT_RPC || BLE_NETWORK_CORE
+	help
+	  Enabling this setting will include a network stack to run on the
+	  network core and communicate over RPMsg with the application core.
+	  The application core does not have access to the radio peripheral.
+
+	  The network core sample to be included depends on the configuration of
+	  the application.
+
+	  The following RPMsg samples may be included when this setting is enabled:
+	  In order of precedence:
+	  - Multiprotocol RPMsg: When both Bluetooth and nRF IEEE 802.15.4 Serialization host are enabled.
+	  - HCI RPMsg: When only Bluetooth is enabled
+	  - nRF IEEE 802.15.4 Serialization RPMsg: When only nRF IEEE 802.15.4 Serialization host is enabled.
+	  - nRF RPC Host: When Bluetooth and Bluetooth serialization over RPC are enabled.
+
+config NCS_SAMPLE_REMOTE_SHELL_CHILD_IMAGE
+	bool "Add remote_shell sample as a child image"
+	depends on SHELL_IPC
+	select PARTITION_MANAGER_ENABLED
+	help
+	  Add remote_shell as a child image (application core).
+	  Used by samples that run on the network core only.
+
+
+if NCS_INCLUDE_RPMSG_CHILD_IMAGE
+
+config NCS_SAMPLE_MULTIPROTOCOL_RPMSG_CHILD_IMAGE
+	bool
+	depends on BT_RPMSG && NRF_802154_SER_HOST && !BT_RPC
+	default y
+	help
+	  multiprotocol_rpmsg sample as a child image (network core).
+
+config NCS_SAMPLE_HCI_RPMSG_CHILD_IMAGE
+	bool
+	depends on BT_RPMSG && !NRF_802154_SER_HOST && !BT_RPC
+	default y
+	help
+	  hci_rpmsg sample as a child image (network core).
+
+config NCS_SAMPLE_802154_RPMSG_CHILD_IMAGE
+	bool
+	depends on NRF_802154_SER_HOST && !BT_RPMSG && !BT_RPC
+	default y
+	help
+	  802154_rpmsg sample as a child image (network core).
+
+config NCS_SAMPLE_RPC_HOST_CHILD_IMAGE
+	bool
+	depends on BT_RPC
+	default y
+	help
+	  rpc_host sample as a child image (network core).
+
+endif # NCS_INCLUDE_RPMSG_CHILD_IMAGE
+
+endif # SOC_SERIES_NRF53X
+
+if LOG
+
+# LOG_DEFAULT_LEVEL is declared in Zephyr,
+# we declare it here for a second time, to set a different default.
+# Omit the `prompt` to prevent it from appearing twice in two diffent places.
+
+config LOG_DEFAULT_LEVEL
+	default 1 if NCS_SAMPLES_DEFAULTS
+
+endif # LOG
+
+config NCS_IS_VARIANT_IMAGE
+	bool "Image is a variant build of another image [READ ONLY]"
+
+config NCS_MCUBOOT_IN_BUILD
+	bool "MCUBoot is included in the build [READ ONLY]"
+	help
+	  Helper option used to communicate to child images that MCUboot is included in the build.
