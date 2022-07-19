@@ -1,0 +1,8 @@
+sample:
+  description: Peripheral UART + BLE SMP
+  name: Peripheral UART + BLE SMP
+tests:
+  sample.bluetooth.peripheral_uart:
+    build_only: true
+    platform_allow: nrf5340dk_nrf5340_cpuapp nrf52840dk_nrf52840
+    tags: bluetooth ci_build
