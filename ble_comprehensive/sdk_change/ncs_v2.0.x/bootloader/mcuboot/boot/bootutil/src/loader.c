@@ -911,15 +911,15 @@ boot_validated_swap_type(struct boot_loader_state *state,
 {
     int swap_type;
     fih_int fih_rc = FIH_FAILURE;
-    bool upgrade_valid = false;
+    // bool upgrade_valid = false;
 
-#if defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP)
+#if defined(PM_S1_ADDRESS)
     const struct flash_area *secondary_fa =
         BOOT_IMG_AREA(state, BOOT_SECONDARY_SLOT);
-    struct image_header *hdr;
+    struct image_header *hdr = (struct image_header *)secondary_fa->fa_off;
+    uint32_t vtable_addr = 0;
+    uint32_t *vtable = 0;
     uint32_t reset_addr = 0;
-    uint32_t rc;
-
     /* Patch needed for NCS. Since image 0 (the app) and image 1 (the other
      * B1 slot S0 or S1) share the same secondary slot, we need to check
      * whether the update candidate in the secondary slot is intended for
@@ -928,15 +928,10 @@ boot_validated_swap_type(struct boot_loader_state *state,
      * the swap info.
      */
 
-    hdr = boot_img_hdr(state, BOOT_SECONDARY_SLOT);
     if (hdr->ih_magic == IMAGE_MAGIC) {
-        rc = flash_area_read(secondary_fa, hdr->ih_hdr_size + 4, &reset_addr, 4);
-        if (rc)
-        {
-            return BOOT_SWAP_TYPE_NONE;
-        }
-        BOOT_LOG_INF("reset addr %x", reset_addr);
-
+        vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
+        vtable = (uint32_t *)(vtable_addr);
+        reset_addr = vtable[1];
 #ifdef PM_S1_ADDRESS
 #ifdef PM_CPUNET_B0N_ADDRESS
         if(reset_addr < PM_CPUNET_B0N_ADDRESS)
@@ -961,7 +956,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
         }
 #endif /* PM_S1_ADDRESS */
     }
-#endif /* PM_S1_ADDRESS || CONFIG_SOC_NRF5340_CPUAPP */
+#endif /* PM_S1_ADDRESS */
 
     swap_type = boot_swap_type_multi(BOOT_CURR_IMG(state));
     if (BOOT_IS_UPGRADE(swap_type)) {
@@ -975,42 +970,17 @@ boot_validated_swap_type(struct boot_loader_state *state,
             } else {
                 swap_type = BOOT_SWAP_TYPE_FAIL;
             }
-        } else {
-            upgrade_valid = true;
-        }
+        } //else {
+        //     upgrade_valid = true;
+        // }
 
-#if defined(CONFIG_SOC_NRF5340_CPUAPP) && defined(PM_CPUNET_B0N_ADDRESS)       
+#if 0
         /* If the update is valid, and it targets the network core: perform the
          * update and indicate to the caller of this function that no update is
          * available
          */
         if (upgrade_valid && reset_addr > PM_CPUNET_B0N_ADDRESS) {
             uint32_t fw_size = hdr->ih_img_size;
-            uint32_t vtable_addr = 0;
-            uint32_t *vtable = 0;
-            
-            if (strcmp(secondary_fa->fa_dev_name, "NRF_FLASH_DRV_NAME") != 0)
-            {
-                static uint32_t buffer[(256 * 1024) / sizeof(uint32_t)];
-                uint32_t i = 0;
-
-                while (i < sizeof(buffer))
-                {
-                    rc = flash_area_read(secondary_fa, i, (uint8_t *)buffer + i, CONFIG_NORDIC_QSPI_NOR_FLASH_LAYOUT_PAGE_SIZE);
-                    if (rc)
-                    {
-                        return BOOT_SWAP_TYPE_NONE;
-                    }
-                    i += CONFIG_NORDIC_QSPI_NOR_FLASH_LAYOUT_PAGE_SIZE;
-                }
-                hdr = (struct image_header *)buffer;
-            }
-            else
-            {
-                hdr = (struct image_header *)secondary_fa->fa_off;
-            }
-            vtable_addr = (uint32_t)hdr + hdr->ih_hdr_size;
-            vtable = (uint32_t *)(vtable_addr);             
 
             BOOT_LOG_INF("Starting network core update");
             int rc = pcd_network_core_update(vtable, fw_size);

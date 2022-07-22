@@ -1,5 +1,5 @@
 &uart0 {
-	status = "okay";	
+	status = "disabled";	
 	tx-pin = <20>;
 	rx-pin = <22>;		
 };

@@ -77,12 +77,12 @@ bool is_ble_connected(void)
 
 int app2net_smp_send(uint8_t *data, uint16_t len)
 {
-	uint8_t buf[280];
+	uint8_t buf[480];
 
 	LOG_HEXDUMP_DBG(data, len, "smp response:");
-	if (len > 279)
+	if (len > 479)
 	{
-		LOG_ERR("###SMP response too long!");
+		LOG_ERR("###SMP response too long %d", len);
 		return -EBADMSG;
 	}
 	buf[0] = APP2NET_SMP_SEND;

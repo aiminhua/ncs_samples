@@ -70,7 +70,7 @@ Perform the following steps for the test.
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. Open ``Serial Debug Assistant`` (which is available in Microsoft Store). Set baud rate as 1000000 and choose the second COM port of nRF5340 DK 
    Note: the latest nrf5340dk, we only have 2 COM ports. So you need to have a USB-to-UART bridge or you can change source code to make use of uart0.
-#. Reset the kit.
+#. Reset the kit. It shall advertise ``comprehensive``
 #. Connect to the device using nRF Connect for Mobile. Tap **Enable CCCDs**.
 #. Select the UART RX characteristic value in nRF Connect.
    You can write to the UART RX and get the text displayed on the COM listener.
@@ -88,16 +88,17 @@ In this case, you don't need to have a USB-to-UART bridge.
 BLE OTA DFU
 ===========
 
-By default, we use BLE smp protocol to do OTA. Perform the following steps for the test.
+By default, we use BLE smp protocol to do OTA. You can update application core and network core images in one go, or update them separately.
+Perform the following steps for the test.
 
 1. Connect the kit to the computer using a USB cable. The kit is assigned a COM port (Windows) or ttyACM device (Linux), which is visible in the Device Manager.
 #. |connect_terminal|
-#. Copy ``build*/zephyr/app_update.bin`` to your mobile phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
-#. Open nRF connect for Mobile on your phone. (You can also use nRF Device Manager or nRF toolbox to do the DFU)
+#. Open nRF Connect or Device Manager on your phone. 
 #. Connect the board. 
-#. Tap **DFU** button on the right top corner of the mobile app.
-#. Select **app_update.bin** in your phone. (If you want to update the net core image, use **net_core_app_update.bin** instead)
-#. Complete the DFU process.
+#. Enter folder: ``build*/zephyr``. Copy ``dfu_application.zip``, ``app_update.bin`` or ``net_core_app_update.bin`` to your phone for your needs. (Change some code lines before a second build)
+#. Tap **DFU** button on the right top corner of nRF Connect.
+#. Select ``dfu_application.zip``, ``app_update.bin`` or ``net_core_app_update.bin`` on your phone.
+#. Wait until the DFU process is done.
 
 **note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
 

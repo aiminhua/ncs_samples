@@ -43,7 +43,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 static K_SEM_DEFINE(ble_conn_ok, 0, 1);
 
 struct bt_conn *current_conn;
-static struct bt_conn *auth_conn;
+// static struct bt_conn *auth_conn;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -249,26 +249,26 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 };
 
 #if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
-static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
+// static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+// {
+// 	char addr[BT_ADDR_LE_STR_LEN];
 
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+// 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
-}
+// 	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+// }
 
-static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
+// static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
+// {
+// 	char addr[BT_ADDR_LE_STR_LEN];
 
-	auth_conn = bt_conn_ref(conn);
+// 	auth_conn = bt_conn_ref(conn);
 
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+// 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
-	LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
-}
+// 	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+// 	LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
+// }
 
 
 static void auth_cancel(struct bt_conn *conn)

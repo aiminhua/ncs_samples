@@ -465,7 +465,7 @@ void main(void)
 {
 	int err;	
 
-	LOG_INF("### comprehensive example v0.4 compiled at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### comprehensive example v0.5 compiled at %s %s\n", __TIME__, __DATE__);
 
 	runLED = device_get_binding(LED0);
 	if (runLED == NULL) {
