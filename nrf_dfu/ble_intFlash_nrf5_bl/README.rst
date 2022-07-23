@@ -27,19 +27,22 @@ this sample, you need to do the following changes.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
 +------------------------------------------------------------------+
 
-To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
-and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions. 
 	
-This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, 
-enter folder ``sdk_change/ncs_v1.7.x`` and overwrite the same files in the correspondent NCS ``v1.7.1`` folders. 
+This example **may** modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. 
+For example, to work with NCS v1.9.1, copy folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files 
+in the correspondent NCS ``v1.9.1`` folders.
 
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
@@ -66,7 +69,7 @@ Testing
 1. Connect the kit to the computer using a USB cable. 
 #. Compile nRF5 bootloader from nRF5 SDK v17.x.x
 #. Build this sample
-#. Copy ``zephyr.hex`` and ``nRF5 Bootloader`` to ``update``. Double click ``program.bat`` to program the images to the kit
+#. Copy ``zephyr.hex`` ``nRF5 Bootloader hex`` and ``mbr_nrf52_2.4.1_mbr.hex`` to ``update``. Double click ``program.bat`` to program the images to the kit
 #. Reset the kit. It shall advertise ``Nordic_DFU``
 #. Build this sample again with some modification. Rename ``zephyr.hex`` to ``app_new.hex``. Copy it to ``update``. 
    Double click ``zip_generate.bat``. Upload ``ncs_nrf5_bl.zip'' to your testing mobile phone. 

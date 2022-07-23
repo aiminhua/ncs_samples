@@ -20,7 +20,7 @@ this sample, you need to do the following changes.
 
 * #define NRF_BL_DFU_ALLOW_UPDATE_FROM_APP 1 in sdk_config.h
 * comment all nrf_bootloader_flash_protect invocation to avoid flash access blocking in app
-* in this sample, we take ''nRF5_SDK_17.0.2_d674dde/examples/dfu/secure_bootloader/pca10056_uart_debug'' as the example bootloader.
+* in this sample, we take ''nRF5_SDK_17.0.2_d674dde/examples/dfu/secure_bootloader/pca10056_uart'' as the example bootloader.
 
 **Note: you must replace priv.pem with your own keys before production.**
 
@@ -36,19 +36,22 @@ the swap operation to finish the whole DFU process.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                       |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
 +------------------------------------------------------------------+
 
-To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
-and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions. 
 	
-This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, 
-enter folder ``sdk_change/ncs_v1.7.x`` and overwrite the same files in the correspondent NCS ``v1.7.1`` folders. 
+This example **may** modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. 
+For example, to work with NCS v1.9.1, copy folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files 
+in the correspondent NCS ``v1.9.1`` folders.
 
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 

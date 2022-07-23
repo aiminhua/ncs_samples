@@ -1,0 +1,272 @@
+/**
+ * Copyright (c) 2016 - 2020, Nordic Semiconductor ASA
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+/**@file
+ *
+ * @defgroup sdk_nrf_dfu_types DFU types
+ * @{
+ * @ingroup  nrf_dfu
+ */
+
+#ifndef NRF_DFU_TYPES_H__
+#define NRF_DFU_TYPES_H__
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#include "nrf_error.h"
+#include "sdk_config.h"
+
+#define  NRF_DFU_SETTINGS_VERSION 2
+typedef void (*nrf_dfu_flash_callback_t)(void * p_buf);
+typedef uint32_t ret_code_t;
+
+#define UNUSED_VARIABLE(X)  ((void)(X))
+#define UNUSED_PARAMETER(X) UNUSED_VARIABLE(X)
+#define UNUSED_RETURN_VALUE(X) UNUSED_VARIABLE(X)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** @brief The size that must be reserved for the MBR when a SoftDevice is written to flash.
+This is the offset where the first byte of the SoftDevice hex file is written. */
+#define MBR_SIZE                (0x1000)
+
+/**@brief Macro for increasing a number to the nearest (larger) multiple of another number.
+ *
+ * @param[in]  alignment  The number to align to.
+ * @param[in]  number     The number to align (increase).
+ *
+ * @return The aligned (increased) @p number.
+ */
+#define ALIGN_NUM(alignment, number) (((number) - 1) + (alignment) - (((number) - 1) % (alignment)))
+
+/**
+ * Round up val to the next page boundary
+ */
+#define ALIGN_TO_PAGE(val) ALIGN_NUM((CODE_PAGE_SIZE), (val))
+
+
+#define INIT_COMMAND_MAX_SIZE      512 /**< Maximum size of the init command stored in dfu_settings. */
+#define INIT_COMMAND_MAX_SIZE_v1   256 /**< Maximum size of the init command in settings version 1. */
+
+/** @brief  Size of a flash page. This value is used for calculating the size of the reserved
+ *          flash space in the bootloader region.
+ */
+#if defined(NRF51)
+    #define CODE_PAGE_SIZE            1024
+#elif defined(NRF52_SERIES)
+    #define CODE_PAGE_SIZE            4096
+#else
+    #define CODE_PAGE_SIZE            4096
+#endif
+
+/** @brief  Maximum size of a data object.*/
+#if defined(NRF51)
+    #define DATA_OBJECT_MAX_SIZE           (CODE_PAGE_SIZE * 4)
+#elif defined(NRF52_SERIES) || defined (__SDK_DOXYGEN__)
+    #define DATA_OBJECT_MAX_SIZE           (CODE_PAGE_SIZE)
+#else
+    #define DATA_OBJECT_MAX_SIZE           (CODE_PAGE_SIZE)
+#endif
+
+/** @brief  Page location of the bootloader settings address.
+ */
+#if defined  (NRF51)
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0003FC00UL)
+#elif defined( CONFIG_SOC_NRF52805 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)    
+#elif defined( CONFIG_SOC_NRF52810 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)
+#elif defined( CONFIG_SOC_NRF52811 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)
+#elif defined( CONFIG_SOC_NRF52820 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0003F000UL)
+#elif defined( CONFIG_SOC_NRF52832 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
+#elif defined( CONFIG_SOC_NRF52833 )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
+#elif defined(CONFIG_SOC_NRF52840)
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x000FF000UL)
+#elif defined( CONFIG_BOARD_HAS_NRF5_BOOTLOADER )
+    #warning No valid target set for BOOTLOADER_SETTINGS_ADDRESS.
+#endif
+
+
+#define NRF_DFU_CURRENT_BANK_0 0x00
+#define NRF_DFU_CURRENT_BANK_1 0x01
+
+#define NRF_DFU_BANK_LAYOUT_DUAL   0x00
+#define NRF_DFU_BANK_LAYOUT_SINGLE 0x01
+
+/** @brief DFU bank state codes.
+ *
+ * @details The DFU bank state indicates the content of a bank:
+ *          A valid image of a certain type or an invalid image.
+ */
+
+#define NRF_DFU_BANK_INVALID         0x00 /**< Invalid image. */
+#define NRF_DFU_BANK_VALID_APP       0x01 /**< Valid application. */
+#define NRF_DFU_BANK_VALID_SD        0xA5 /**< Valid SoftDevice. */
+#define NRF_DFU_BANK_VALID_BL        0xAA /**< Valid bootloader. */
+#define NRF_DFU_BANK_VALID_SD_BL     0xAC /**< Valid SoftDevice and bootloader. */
+#define NRF_DFU_BANK_VALID_EXT_APP   0xB1 /**< Valid application designated for a remote node. */
+
+/** @brief Description of a single bank. */
+#pragma pack(4)
+typedef struct
+{
+    uint32_t                image_size;         /**< Size of the image in the bank. */
+    uint32_t                image_crc;          /**< CRC of the image. If set to 0, the CRC is ignored. */
+    uint32_t                bank_code;          /**< Identifier code for the bank. */
+} nrf_dfu_bank_t;
+
+/**@brief DFU progress.
+ *
+ * Be aware of the difference between objects and firmware images. A firmware image consists of multiple objects, each of a maximum size @ref DATA_OBJECT_MAX_SIZE.
+ *
+ * @note The union inside this struct is cleared when CREATE_OBJECT of command type is executed, and when there is a valid post-validation.
+ *       In DFU activation (after reset) the @ref dfu_progress_t::update_start_address will be used in case of a SD/SD+BL update.
+ */
+//ANON_UNIONS_ENABLE;
+typedef struct
+{
+    uint32_t command_size;              /**< The size of the current init command stored in the DFU settings. */
+    uint32_t command_offset;            /**< The offset of the currently received init command data. The offset will increase as the init command is received. */
+    uint32_t command_crc;               /**< The calculated CRC of the init command (calculated after the transfer is completed). */
+    uint32_t data_object_size;          /**< The size of the last object created. Note that this size is not the size of the whole firmware image.*/
+    union
+    {
+        struct
+        {
+            uint32_t firmware_image_crc;        /**< CRC value of the current firmware (continuously calculated as data is received). */
+            uint32_t firmware_image_crc_last;   /**< The CRC of the last executed object. */
+            uint32_t firmware_image_offset;     /**< The offset of the current firmware image being transferred. Note that this offset is the offset in the entire firmware image and not only the current object. */
+            uint32_t firmware_image_offset_last;/**< The offset of the last executed object from the start of the firmware image. */
+        };
+        struct
+        {
+            uint32_t update_start_address;      /**< Value indicating the start address of the new firmware (before copy). It's always used, but it's most important for an SD/SD+BL update where the SD changes size or if the DFU process had a power loss when updating a SD with changed size. */
+        };
+    };
+} dfu_progress_t;
+//ANON_UNIONS_DISABLE;
+
+/** @brief Event types in the bootloader and DFU process. */
+typedef enum
+{
+    NRF_DFU_EVT_DFU_INITIALIZED,        /**< Starting DFU. */
+    NRF_DFU_EVT_TRANSPORT_ACTIVATED,    /**< Transport activated (e.g. BLE connected, USB plugged in). */
+    NRF_DFU_EVT_TRANSPORT_DEACTIVATED,  /**< Transport deactivated (e.g. BLE disconnected, USB plugged out). */
+    NRF_DFU_EVT_DFU_STARTED,            /**< DFU process started. */
+    NRF_DFU_EVT_OBJECT_RECEIVED,        /**< A DFU data object has been received. */
+    NRF_DFU_EVT_DFU_FAILED,             /**< DFU process has failed, been interrupted, or hung. */
+    NRF_DFU_EVT_DFU_COMPLETED,          /**< DFU process completed. */
+    NRF_DFU_EVT_DFU_ABORTED,            /**< DFU process aborted. */
+} nrf_dfu_evt_type_t;
+
+/**
+ * @brief Function for notifying DFU state.
+ */
+typedef void (*nrf_dfu_observer_t)(nrf_dfu_evt_type_t notification);
+
+#define NRF_DFU_PEER_DATA_LEN 64 /**< The length in bytes of nrf_dfu_peer_data_t expected by tools manipulating the settings page. Do not change without changing the settings page version. */
+#define NRF_DFU_ADV_NAME_LEN  28 /**< The length in bytes of nrf_dfu_adv_name_t expected by tools manipulating the settings page. Do not change without changing the settings page version. */
+
+#define SETTINGS_RESERVED_AREA_SIZE    16 /**< The number of words in the reserved area of the DFU settings. */
+#define SETTINGS_BOOT_VALIDATION_SIZE  64 /**< The number of bytes reserved for boot_validation value. */
+
+
+typedef enum
+{
+    NO_VALIDATION,
+    VALIDATE_CRC,
+    VALIDATE_SHA256,
+    VALIDATE_ECDSA_P256_SHA256,
+} boot_validation_type_t;
+
+typedef struct
+{
+    boot_validation_type_t type;
+    uint8_t                bytes[SETTINGS_BOOT_VALIDATION_SIZE];
+} boot_validation_t;
+
+/**@brief DFU settings for application and bank data.
+ */
+typedef struct
+{
+    uint32_t            crc;                /**< CRC for the stored DFU settings, not including the CRC itself. If 0xFFFFFFF, the CRC has never been calculated. */
+    uint32_t            settings_version;   /**< Version of the current DFU settings struct layout. */
+    uint32_t            app_version;        /**< Version of the last stored application. */
+    uint32_t            bootloader_version; /**< Version of the last stored bootloader. */
+
+    uint32_t            bank_layout;        /**< Bank layout: single bank or dual bank. This value can change. */
+    uint32_t            bank_current;       /**< The bank that is currently used. */
+
+    nrf_dfu_bank_t      bank_0;             /**< Bank 0. */
+    nrf_dfu_bank_t      bank_1;             /**< Bank 1. */
+
+    uint32_t            write_offset;       /**< Write offset for the current operation. */
+    uint32_t            sd_size;            /**< Size of the SoftDevice. */
+
+    dfu_progress_t      progress;           /**< Current DFU progress. */
+
+    uint32_t            enter_buttonless_dfu;
+    uint8_t             init_command[INIT_COMMAND_MAX_SIZE];  /**< Buffer for storing the init command. */
+
+    uint32_t            boot_validation_crc;
+    boot_validation_t   boot_validation_softdevice;
+    boot_validation_t   boot_validation_app;
+    boot_validation_t   boot_validation_bootloader;
+
+    //nrf_dfu_peer_data_t peer_data;          /**< Not included in calculated CRC. */
+    //nrf_dfu_adv_name_t  adv_name;           /**< Not included in calculated CRC. */
+} nrf_dfu_settings_t;
+
+#pragma pack() // revert pack settings
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DFU_TYPES_H__
+
+/** @} */

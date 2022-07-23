@@ -23,8 +23,13 @@ The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.9.x/v2.0.0x                                                    |
+|v1.9.x/v2.0.x                                                     |
 +------------------------------------------------------------------+
+
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions. 
 
 The following development kits are tested for this sample.
 

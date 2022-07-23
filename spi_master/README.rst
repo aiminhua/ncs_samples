@@ -26,6 +26,19 @@ To facilitate the test, we put the spis images at ``resources``. The spis pin de
 Build & Programming
 *******************
 
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
+
++------------------------------------------------------------------+
+|NCS tags                                                          +
++==================================================================+
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
++------------------------------------------------------------------+
+
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions.
+
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
 +------------------------------------------------------------------+

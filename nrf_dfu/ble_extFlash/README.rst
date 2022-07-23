@@ -1,4 +1,4 @@
-.. nrf_dfu_exFlash:
+.. nrf_dfu_ble_extFlash:
 
 nrf_dfu OTA example(external secondary slot)
 ############################################
@@ -26,19 +26,22 @@ the swap operation to finish the whole DFU process. Regarding ``nRF5340``, the B
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v1.9.1`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x                                |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
 +------------------------------------------------------------------+
 
-To work with a specified NCS tag, read **prj.conf** carefully. Open the configurations relating to the specified version
-and close the configurations of other versions. Search **NCS** in **prj.conf** to locate the configurations quickly.
+Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
+use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
+ncs versions earlier than v1.9.0. After the checkout operation, open this README.rst again and follow 
+the instructions. 
 	
-This example may modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. For example, to work with NCS v1.7.1, 
-enter folder ``sdk_change/ncs_v1.7.x`` and overwrite the same files in the correspondent NCS ``v1.7.1`` folders. 
+This example **may** modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. 
+For example, to work with NCS v1.9.1, copy folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files 
+in the correspondent NCS ``v1.9.1`` folders.
 
 The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
@@ -69,5 +72,5 @@ After programming the sample to your development kit, test it by performing the 
 #. |connect_terminal|
 #. Reset the kit. It shall advertise ``Nordic_DFU``
 #. Copy app_signed.hex in folder ``build*/zephyr`` (and net_core_app_signed.hex if you want to upgrade network core of nRF5340) to folder ``update``.
-#. Double click ``zip_generate.bat`` in ``update``. You will get ble_extFlash.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
+#. Double click ``zip_generate.bat`` in ``update``. You will get nrf_extFlash.zip as the new image bundle. (If you want to update nRF5340 network core too, edit ``zip_generate.bat`` to uncomment the second line)
 #. Perform the DFU steps as nRF5 SDK do
