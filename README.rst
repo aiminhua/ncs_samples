@@ -13,14 +13,15 @@ To make the samples build and run successfully, you can just overwrite the same 
 
 A overview of the samples in this repo is shown below.
 
+
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |Sample                                 |Brief                                                                                      +
 +=======================================+===========================================================================================+
-|comprehensive                          |a comprehensive example containing nus, dfu, spi, uart, etc.                               |
+|ble_comprehensive                      |a comprehensive example containing nus, dfu, spi, uart, etc                                |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
-|comprehensive_rpc                      |a comprehensive example containing rpc, nus, dfu, spi, uart, etc. Work with ``netcore_ble``|
+|ble_rpc                                |a comprehensive example containing rpc, nus, dfu, spi, uart, etc                           |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
-|netcore_ble                            |the whole ble stack and services run on the netcore                                        |
+|ble_ipc                                |a comprehensive example containing ipc, nus, dfu, spi, uart, etc                           |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |nrf_dfu                                |nrf dfu examples with different bootloaders, transport and secondary slot locations        |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
@@ -32,7 +33,13 @@ A overview of the samples in this repo is shown below.
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 |uart_highspeed                         |high speed UART example                                                                    |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
-|nrfx_api                               |demo the direct invocation of nrfx api                                                                        |
+|nrfx_spi_rtc                           |demo the direct invocation of nrfx api                                                     |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|external_interrupt                     |low power external interrupt example                                                       |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|hello_world                            |low power hello_world example                                                              |
++---------------------------------------+-------------------------------------------------------------------------------------------+
+|nrfx_ipc                               |simple dual core communications based on IPC APIs                                          |
 +---------------------------------------+-------------------------------------------------------------------------------------------+
 
 **Note: see the README.rst in the individual sample folder for a detailed description of the samples**.
