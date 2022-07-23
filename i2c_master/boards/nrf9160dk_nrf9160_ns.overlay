@@ -16,15 +16,17 @@ my_i2c: &i2c1 {
 
 	i2c1_default: i2c1_default {
 		group1 {
-			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
-				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			psels = <NRF_PSEL(TWIM_SDA, 0, 18)>,
+				<NRF_PSEL(TWIM_SCL, 0, 19)>;
+			bias-pull-up;
+			nordic,drive-mode = <NRF_DRIVE_S0D1>;		
 		};
 	};
 
 	i2c1_sleep: i2c1_sleep {
 		group1 {
-			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
-				<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			psels = <NRF_PSEL(TWIM_SDA, 0, 18)>,
+				<NRF_PSEL(TWIM_SCL, 0, 19)>;
 			low-power-enable;
 		};
 	};	

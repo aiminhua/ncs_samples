@@ -29,9 +29,9 @@ static int spi_data_exchange(void)
 	spi_cfg.operation = SPI_WORD_SET(8);	
 
 	// cs_ctrl.gpio_dev = device_get_binding(DT_SPI_DEV_CS_GPIOS_LABEL(DT_NODELABEL(spi_sensor)));
-	cs_ctrl.gpio_dev = device_get_binding(DT_GPIO_LABEL(DT_NODELABEL(my_spi), cs_gpios));
+	cs_ctrl.gpio.port = device_get_binding(DT_GPIO_LABEL(DT_NODELABEL(my_spi), cs_gpios));
 	
-	if (!cs_ctrl.gpio_dev) {
+	if (!cs_ctrl.gpio.port) {
         LOG_ERR("cannot find CS GPIO device");
 		return -ENODEV;
 	}
@@ -39,8 +39,8 @@ static int spi_data_exchange(void)
 	// cs_ctrl.gpio_pin = DT_SPI_DEV_CS_GPIOS_PIN(DT_NODELABEL(spi_sensor));
 	// cs_ctrl.gpio_dt_flags = DT_SPI_DEV_CS_GPIOS_FLAGS(DT_NODELABEL(spi_sensor));
 
-	cs_ctrl.gpio_pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
-	cs_ctrl.gpio_dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
+	cs_ctrl.gpio.pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
+	cs_ctrl.gpio.dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
 
 	cs_ctrl.delay = DELAY_SPI_CS_ACTIVE_US;
 

@@ -15,6 +15,7 @@ my_i2c: &i2c1 {
 			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
 				<NRF_PSEL(TWIM_SCL, 0, 3)>;
 			bias-pull-up;
+			nordic,drive-mode = <NRF_DRIVE_S0D1>;
 		};
 	};
 
