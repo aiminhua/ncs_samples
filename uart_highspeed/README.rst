@@ -26,7 +26,7 @@ The following development kits are tested for this sample. However, other nRF52 
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
+|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840/nrf9160dk_nrf9160_ns |
 +------------------------------------------------------------------+
 
 For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
