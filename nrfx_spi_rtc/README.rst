@@ -24,7 +24,7 @@ To facilitate the test, we put the spis images at ``resources``. The spis pin de
    APP_SPIS_MOSI_PIN 29
    APP_SPIS_CS_PIN 31
    
-The SPIM pin definitions are shown below.
+The SPIM pin definitions are shown below. Note: nRF9160 pin definitions see the main.c file.
 
 .. code-block:: console
 
@@ -41,7 +41,7 @@ The following development kits are tested for this sample.
 +------------------------------------------------------------------+
 |Build target                                                      +
 +==================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
+|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840/nrf9160dk_nrf9160_ns |
 +------------------------------------------------------------------+
 
 For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.

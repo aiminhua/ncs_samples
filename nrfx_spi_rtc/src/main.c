@@ -17,6 +17,13 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define SPI_MISO_PIN 46
 #define SPI_SCK_PIN 47
 
+#ifdef CONFIG_SOC_NRF9160
+#define SPI_SS_PIN 16
+#define SPI_MOSI_PIN 17
+#define SPI_MISO_PIN 18
+#define SPI_SCK_PIN 19
+#endif
+
 static const nrfx_spim_t spi = NRFX_SPIM_INSTANCE(1);
 #define TEST_STRING "Nordic"
 static uint8_t       m_tx_buf[] = TEST_STRING;           /**< TX buffer. */
@@ -89,6 +96,8 @@ static void nrfx_spi_example_init(void)
 		.ss_active_high = false,                                 \
 		.irq_priority   = NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, \
 		.orc            = 0xFF,                                  \
+		.skip_gpio_cfg  = false,                                 \
+		.skip_psel_cfg  = false,                                 \
 		.frequency      = NRF_SPIM_FREQ_4M,                      \
 		.mode           = NRF_SPIM_MODE_0,                       \
 		.bit_order      = NRF_SPIM_BIT_ORDER_MSB_FIRST,          \
@@ -100,6 +109,30 @@ static void nrfx_spi_example_init(void)
 	{
 		LOG_ERR("nrfx spi init err %d", rc);
 	}
+	nrf_gpio_cfg(SPI_SCK_PIN,
+					NRF_GPIO_PIN_DIR_OUTPUT,
+					NRF_GPIO_PIN_INPUT_CONNECT,
+					NRF_GPIO_PIN_NOPULL,
+					NRF_GPIO_PIN_H0H1,
+					NRF_GPIO_PIN_NOSENSE);
+		nrf_gpio_cfg(SPI_MOSI_PIN,
+						NRF_GPIO_PIN_DIR_OUTPUT,
+						NRF_GPIO_PIN_INPUT_DISCONNECT,
+						NRF_GPIO_PIN_NOPULL,
+						NRF_GPIO_PIN_H0H1,
+						NRF_GPIO_PIN_NOSENSE);
+		nrf_gpio_cfg(SPI_MISO_PIN,
+						NRF_GPIO_PIN_DIR_INPUT,
+						NRF_GPIO_PIN_INPUT_CONNECT,
+						NRF_GPIO_PIN_PULLUP,
+						NRF_GPIO_PIN_H0H1,
+						NRF_GPIO_PIN_NOSENSE);
+		nrf_gpio_cfg(SPI_SS_PIN,
+						NRF_GPIO_PIN_DIR_OUTPUT,
+						NRF_GPIO_PIN_INPUT_DISCONNECT,
+						NRF_GPIO_PIN_NOPULL,
+						NRF_GPIO_PIN_H0H1,
+						NRF_GPIO_PIN_NOSENSE);						 						 					 	
 	
 }
 
