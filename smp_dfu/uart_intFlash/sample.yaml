@@ -1,10 +1,9 @@
 sample:
-  name: BLE DFU example
+  name: uart smp DFU example
   description: secondary slot on internal Flash
 tests:
   samples.bluetooth.peripheral_uart:
     build_only: true
     build_on_all: true
-    platform_allow: nrf51dk_nrf51422 nrf52dk_nrf52832 nrf52840dk_nrf52840
-      nrf5340dk_nrf5340_cpuapp nrf5340dk_nrf5340_cpuappns
+    platform_allow: nrf52840dk_nrf52840 nrf5340dk_nrf5340_cpuapp
     tags: bluetooth ci_build

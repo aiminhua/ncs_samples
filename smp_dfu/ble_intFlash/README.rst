@@ -1,6 +1,6 @@
-.. smp_dfu_inFlash:
+.. ble_smp_dfu_inFlash:
 
-smp_dfu OTA example(internal secondary slot)
+BLE SMP OTA example(internal secondary slot)
 ############################################
 
 .. contents::
@@ -41,7 +41,7 @@ This example **may** modify the original NCS source code. Refer to ``sdk_change`
 For example, to work with NCS v1.9.1, copy folder ``sdk_change/ncs_v1.9.x`` and overwrite the same files 
 in the correspondent NCS ``v1.9.1`` folders.
 
-The following development kits are tested for this sample. 
+The following development kits are tested for this sample. However, other nRF52 SoC should work too.
 
 +------------------------------------------------------------------+
 |Build target                                                      +

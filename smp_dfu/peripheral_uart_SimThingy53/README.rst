@@ -38,3 +38,13 @@ After programming the sample to your development kit, complete the following ste
 #. Tap **DFU** button on the right top corner of nRF Connect.
 #. Select ``dfu_application.zip`` or ``app_update.bin`` on your phone.
 #. Wait until the DFU process is done.
+
+Test MCUboot recovery mode by the following steps:
+
+1. Connect the kit to the computer using a USB cable.
+#. Open a serial terminal.
+#. Reset the kit while long pressing **Button1**.
+#. Open ``Programmer`` on nRF Connect for Desktop.
+#. Select ``Bootloader Thingy:53``.
+#. Select ``dfu_application.zip`` in folder: ``build*/zephyr``.
+#. Wait until the DFU process is done.
