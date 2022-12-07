@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -19,7 +19,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 const static struct device *gpio_dev;
 #define INT0_NODE DT_NODELABEL(button0)   //pushing button1 to trigger the external interrupt
-#define INT0_PORT	DT_GPIO_LABEL(INT0_NODE, gpios)
+#define INT0_PORT	DT_GPIO_CTLR(INT0_NODE, gpios)
 #define INT0_PIN	DT_GPIO_PIN(INT0_NODE, gpios)
 #define INT0_FLAGS	DT_GPIO_FLAGS(INT0_NODE, gpios)
 
@@ -47,7 +47,7 @@ void ext_int_init(void)
 {
 	int ret;
 	
-	gpio_dev = device_get_binding(INT0_PORT);
+	gpio_dev = DEVICE_DT_GET(INT0_PORT);
 	if (!gpio_dev) {
 		LOG_ERR("%s is null", INT0_PORT);		
 	}

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <nrfx_ipc.h>
 #include <stdio.h>
 #include <zephyr/logging/log.h>
@@ -133,7 +133,7 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
         case NRF_DFU_EVT_DFU_COMPLETED:
         case NRF_DFU_EVT_DFU_ABORTED:
 			LOG_INF("resetting...");
-			while(log_process(false));
+			while(log_process());
             sys_reboot(SYS_REBOOT_WARM);
             break;
         case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:

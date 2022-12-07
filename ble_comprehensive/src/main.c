@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -71,12 +71,12 @@ K_THREAD_STACK_DEFINE(application_stack_area,
 static struct k_work_q application_work_q;
 
 #define LED0_NODE DT_ALIAS(led0)
-#define LED0	DT_GPIO_LABEL(LED0_NODE, gpios)
+#define LED0	DT_GPIO_CTLR(LED0_NODE, gpios)
 #define LED0_PIN	DT_GPIO_PIN(LED0_NODE, gpios)
 #define LED0_FLAGS	DT_GPIO_FLAGS(LED0_NODE, gpios)
 
 #define LED1_NODE DT_ALIAS(led1)
-#define LED1	DT_GPIO_LABEL(LED1_NODE, gpios)
+#define LED1	DT_GPIO_CTLR(LED1_NODE, gpios)
 #define LED1_PIN	DT_GPIO_PIN(LED1_NODE, gpios)
 #define LED1_FLAGS	DT_GPIO_FLAGS(LED1_NODE, gpios)
 
@@ -144,7 +144,7 @@ void set_device_pm_state(void)
 	{
 		LOG_INF("UART0 is in active state. We suspend it");
 		//print out all the pending logging messages
-		while(log_process(false));
+		while(log_process());
 
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
@@ -188,7 +188,7 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
         case NRF_DFU_EVT_DFU_COMPLETED:
         case NRF_DFU_EVT_DFU_ABORTED:
 			LOG_INF("resetting...");
-			while(log_process(false));
+			while(log_process());
             sys_reboot(SYS_REBOOT_WARM);
             break;
         case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:
@@ -250,7 +250,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-	LOG_INF("Connected %s", log_strdup(addr));
+	LOG_INF("Connected %s", (addr));
 
 	current_conn = bt_conn_ref(conn);
 
@@ -276,7 +276,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Disconnected: %s (reason %u)", log_strdup(addr), reason);
+	LOG_INF("Disconnected: %s (reason %u)", (addr), reason);
 
 	if (auth_conn) {
 		bt_conn_unref(auth_conn);
@@ -299,10 +299,10 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
 	if (!err) {
-		LOG_INF("Security changed: %s level %u", log_strdup(addr),
+		LOG_INF("Security changed: %s level %u", (addr),
 			level);
 	} else {
-		LOG_WRN("Security failed: %s level %u err %d", log_strdup(addr),
+		LOG_WRN("Security failed: %s level %u err %d", (addr),
 			level, err);
 	}
 }
@@ -329,7 +329,7 @@ static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+	LOG_INF("Passkey for %s: %06u", (addr), passkey);
 }
 
 static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
@@ -340,7 +340,7 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+	LOG_INF("Passkey for %s: %06u", (addr), passkey);
 	LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
 }
 
@@ -351,7 +351,7 @@ static void auth_cancel(struct bt_conn *conn)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing cancelled: %s", log_strdup(addr));
+	LOG_INF("Pairing cancelled: %s", (addr));
 }
 
 static void pairing_complete(struct bt_conn *conn, bool bonded)
@@ -360,7 +360,7 @@ static void pairing_complete(struct bt_conn *conn, bool bonded)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing completed: %s, bonded: %d", log_strdup(addr),
+	LOG_INF("Pairing completed: %s, bonded: %d", (addr),
 		bonded);
 }
 
@@ -371,7 +371,7 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing failed conn: %s, reason %d", log_strdup(addr),
+	LOG_INF("Pairing failed conn: %s, reason %d", (addr),
 		reason);
 }
 
@@ -396,7 +396,7 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
-	LOG_INF("Received data from: %s", log_strdup(addr));
+	LOG_INF("Received data from: %s", (addr));
 
 	err = my_uart_send(data, len);
 	
@@ -467,7 +467,7 @@ void main(void)
 
 	LOG_INF("### comprehensive example v0.5 compiled at %s %s\n", __TIME__, __DATE__);
 
-	runLED = device_get_binding(LED0);
+	runLED = DEVICE_DT_GET(LED0);
 	if (runLED == NULL) {
 		LOG_ERR("LED0 bind null\n");
 	}
@@ -476,7 +476,7 @@ void main(void)
 		LOG_ERR("led0 configure error %d \n", err);		
 	}
 
-	conLED = device_get_binding(LED1);
+	conLED = DEVICE_DT_GET(LED1);
 	if (conLED == NULL) {
 		LOG_ERR("LED1 bind null\n");
 	}

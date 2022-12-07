@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -15,7 +15,7 @@
 LOG_MODULE_REGISTER(adc_thread, 3);
 
 #define NUM_OF_CH 2
-#define ADC_DEVICE_NAME		DT_LABEL(DT_NODELABEL(adc))
+#define ADC_DEVICE_NAME		DT_NODE_FULL_NAME(DT_NODELABEL(adc))
 #define ADC_RESOLUTION		12
 #define ADC_OVERSAMPLING	4 /* 2^ADC_OVERSAMPLING samples are averaged */
 #define ADC_MAX 		4096

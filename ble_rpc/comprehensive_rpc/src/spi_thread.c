@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -29,7 +29,7 @@ static int spi_data_exchange(void)
 	spi_cfg.frequency = 8000000U;
 	spi_cfg.operation = SPI_WORD_SET(8);
 
-	cs_ctrl.gpio.port = device_get_binding(DT_GPIO_LABEL(DT_NODELABEL(my_spi), cs_gpios));
+	cs_ctrl.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_NODELABEL(my_spi), cs_gpios));
 	if (!cs_ctrl.gpio.port) {
         LOG_ERR("cannot find CS GPIO device");
 		return -ENODEV;
@@ -98,7 +98,7 @@ void spi_thread(void)
 	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\spi");
 	LOG_INF("The related spis example is from nRF5_SDK\\examples\\peripheral\\spis");
 	
-	spi_dev = device_get_binding(DT_LABEL(DT_NODELABEL(my_spi)));
+	spi_dev = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_spi)));
 	if (!spi_dev) {
 		LOG_ERR("SPIM driver not found.\n");
 		return;

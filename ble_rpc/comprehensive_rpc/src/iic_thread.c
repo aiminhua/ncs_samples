@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -87,7 +87,7 @@ void config_io_interrupt(void)
 {
 	int ret;
 
-	gpio_dev = device_get_binding(DT_LABEL(DT_NODELABEL(gpio0)));
+	gpio_dev = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(gpio0)));
 	if (!gpio_dev) {
 		LOG_ERR("Error: didn't find GPIO_0\n");
 		return;
@@ -120,7 +120,7 @@ void iic_thread(void)
 	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\twi_master_with_twis_slave");
 	LOG_INF("The related twis example is from nRF5_SDK\\examples\\peripheral\\twi_master_with_twis_slave");	
 	
-	i2c_dev = device_get_binding(DT_LABEL(DT_NODELABEL(my_i2c)));
+	i2c_dev = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_i2c)));
 	if (!i2c_dev) {
 		LOG_ERR("I2C Device driver not found");
 		return;

@@ -9,7 +9,7 @@
  */
 
 #include <zephyr/types.h>
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/drivers/uart.h>
 
 #include <zephyr/device.h>
@@ -109,7 +109,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-	LOG_INF("Connected %s", log_strdup(addr));
+	LOG_INF("Connected %s", (addr));
 
 	current_conn = bt_conn_ref(conn);
 
@@ -135,7 +135,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Disconnected: %s (reason %u)", log_strdup(addr), reason);
+	LOG_INF("Disconnected: %s (reason %u)", (addr), reason);
 
 	if (auth_conn) {
 		bt_conn_unref(auth_conn);
@@ -158,10 +158,10 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
 	if (!err) {
-		LOG_INF("Security changed: %s level %u", log_strdup(addr),
+		LOG_INF("Security changed: %s level %u", (addr),
 			level);
 	} else {
-		LOG_WRN("Security failed: %s level %u err %d", log_strdup(addr),
+		LOG_WRN("Security failed: %s level %u err %d", (addr),
 			level, err);
 	}
 }
@@ -188,7 +188,7 @@ static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+	LOG_INF("Passkey for %s: %06u", (addr), passkey);
 }
 
 static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
@@ -199,7 +199,7 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Passkey for %s: %06u", log_strdup(addr), passkey);
+	LOG_INF("Passkey for %s: %06u", (addr), passkey);
 	LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
 }
 
@@ -210,7 +210,7 @@ static void auth_cancel(struct bt_conn *conn)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing cancelled: %s", log_strdup(addr));
+	LOG_INF("Pairing cancelled: %s", (addr));
 }
 
 
@@ -220,7 +220,7 @@ static void pairing_complete(struct bt_conn *conn, bool bonded)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing completed: %s, bonded: %d", log_strdup(addr),
+	LOG_INF("Pairing completed: %s, bonded: %d", (addr),
 		bonded);
 }
 
@@ -231,7 +231,7 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing failed conn: %s, reason %d", log_strdup(addr),
+	LOG_INF("Pairing failed conn: %s, reason %d", (addr),
 		reason);
 }
 
@@ -255,7 +255,7 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
-	LOG_INF("Received data from: %s", log_strdup(addr));
+	LOG_INF("Received data from: %s", (addr));
 
 	err = uart_send(data, len);
 	
@@ -333,7 +333,7 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
         case NRF_DFU_EVT_DFU_COMPLETED:
         case NRF_DFU_EVT_DFU_ABORTED:
 			LOG_INF("resetting...");
-			while(log_process(false));
+			while(log_process());
             sys_reboot(SYS_REBOOT_WARM);
             break;
         case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:

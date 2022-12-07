@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -52,7 +52,7 @@ static struct k_work_q application_work_q;
 #define LED0_NODE DT_ALIAS(led0)
 
 #if DT_NODE_HAS_STATUS(LED0_NODE, okay)
-#define LED0	DT_GPIO_LABEL(LED0_NODE, gpios)
+#define LED0	DT_GPIO_CTLR(LED0_NODE, gpios)
 #define LED0_PIN	DT_GPIO_PIN(LED0_NODE, gpios)
 #define LED0_FLAGS	DT_GPIO_FLAGS(LED0_NODE, gpios)
 #else
@@ -127,7 +127,7 @@ void set_device_pm_state(void)
 	{
 		LOG_INF("UART0 is in active state. We suspend it");
 		//print out all the pending logging messages
-		while(log_process(false));
+		while(log_process());
 
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
@@ -202,7 +202,7 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
         case NRF_DFU_EVT_DFU_COMPLETED:
         case NRF_DFU_EVT_DFU_ABORTED:
 			LOG_INF("resetting...");
-			while(log_process(false));
+			while(log_process());
             sys_reboot(SYS_REBOOT_WARM);
             break;
         case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:
@@ -243,7 +243,7 @@ void main(void)
 	LOG_INF("### comprehensive example @ appcore version v0.5 compiled at %s %s\n", __TIME__, __DATE__);
 	assign_io_to_netcore();
 
-	ledDev = device_get_binding(LED0);
+	ledDev = DEVICE_DT_GET(LED0);
 	if (ledDev == NULL) {
 		return;
 	}

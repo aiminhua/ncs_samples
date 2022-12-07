@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -16,7 +16,7 @@
 #define LED0_NODE DT_ALIAS(led0)
 
 #if DT_NODE_HAS_STATUS(LED0_NODE, okay)
-#define LED0	DT_GPIO_LABEL(LED0_NODE, gpios)
+#define LED0	DT_GPIO_CTLR(LED0_NODE, gpios)
 #define PIN	DT_GPIO_PIN(LED0_NODE, gpios)
 #define FLAGS	DT_GPIO_FLAGS(LED0_NODE, gpios)
 #else
@@ -33,7 +33,7 @@ void blinky_thread(void)
 	bool led_is_on = true;
 	int ret;
 
-	dev = device_get_binding(LED0);
+	dev = DEVICE_DT_GET(LED0);
 	if (dev == NULL) {
 		return;
 	}

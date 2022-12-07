@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <string.h>
 #include <zephyr/drivers/flash.h>
@@ -99,7 +99,7 @@ int alpha_handle_set(const char *name, size_t len, settings_read_cb read_cb,
 	const char *next;
 	int rc;
 
-	LOG_INF("set handler name=%s, len=%d ", log_strdup(name), len);
+	LOG_INF("set handler name=%s, len=%d ", (name), len);
 	if (settings_name_steq(name, "boot_cnt", &next) && !next)
 	{
 		if (len != sizeof(reboot_cnt))

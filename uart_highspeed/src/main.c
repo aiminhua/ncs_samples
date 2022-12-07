@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -16,7 +16,7 @@
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define UART_DEVICE_NAME         DT_LABEL(DT_NODELABEL(my_uart))
+#define UART_DEVICE_NAME         DT_NODE_FULL_NAME(DT_NODELABEL(my_uart))
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
