@@ -2,7 +2,7 @@ sample:
   name: nrfx use example
 tests:
   sample.boards.nrf.nrfx:
-    platform_allow: nrf5340dk_nrf5340_cpuapp
+    platform_allow: nrf5340dk_nrf5340_cpunet
     tags: board
     harness: console
     harness_config:

@@ -125,7 +125,7 @@ void iic_thread(void)
 		LOG_ERR("I2C Device driver not found");
 		return;
 	}
-    uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_FAST) | I2C_MODE_MASTER;
+    uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_FAST) | I2C_MODE_CONTROLLER;
     if (i2c_configure(i2c_dev, i2c_cfg)) {
         LOG_ERR("I2C config failed");
         return;

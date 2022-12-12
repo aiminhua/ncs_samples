@@ -24,7 +24,7 @@
 #include "os_mgmt/os_mgmt.h"
 #include <img_mgmt/img_mgmt_impl.h>
 #include <zephyr/mgmt/mcumgr/smp_bt.h>
-#include "sys/reboot.h"
+#include <zephyr/sys/reboot.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 

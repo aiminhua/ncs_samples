@@ -26,7 +26,7 @@
 #ifdef CONFIG_NRF_DFU
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
-#include "sys/reboot.h"
+#include <zephyr/sys/reboot.h>
 #include "nrf_dfu.h"
 #include "nrf_dfu_validation.h"
 #endif

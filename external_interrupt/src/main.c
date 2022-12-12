@@ -49,7 +49,7 @@ void ext_int_init(void)
 	
 	gpio_dev = DEVICE_DT_GET(INT0_PORT);
 	if (!gpio_dev) {
-		LOG_ERR("%s is null", INT0_PORT);		
+		LOG_ERR("INT0_PORT is null");		
 	}
 
 	ret = gpio_pin_configure(gpio_dev, INT0_PIN, (GPIO_INPUT | GPIO_PULL_UP));

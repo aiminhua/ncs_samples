@@ -21,36 +21,23 @@
 		 */
 		nordic_ram_flash_controller: nordic_ram-flash-controller@0 {
 			compatible = "zephyr,sim-flash";
-			reg = <0x00000000 DT_SIZE_K(40)>;
-			#address-cells = <1>;
-			#size-cells = <1>;
-			erase-value = <0xff>;
-			label = "nordic_ram_flash_flash_controller";
-
-			/* This node label must match that used in the flash
-			 * simulator.
-			 */
+			reg = < 0x0 0xa000 >;
+			#address-cells = < 0x1 >;
+			#size-cells = < 0x1 >;
+			erase-value = < 0xff >;
 			flash_sim0: flash_sim@0 {
 				status = "okay";
 				compatible = "soc-nv-flash";
-				label = "simulated_flash";
-				erase-block-size = <4096>;
-				write-block-size = <4>;
-				reg = <0x00000000 DT_SIZE_K(256)>;
-
+				erase-block-size = < 0x1000 >;
+				write-block-size = < 0x4 >;
+				reg = < 0x0 0x40000 >;
 				partitions {
 					compatible = "fixed-partitions";
-					#address-cells = <1>;
-					#size-cells = <1>;
-
-					/* This partition must be defined for
-					 * MCUboot to find the partition ID
-					 * of the primary slot for image 1,
-					 * which is stored in this partition.
-					 */
+					#address-cells = < 0x1 >;
+					#size-cells = < 0x1 >;
 					slot2_partition: partition@0 {
 						label = "image-2";
-						reg = <0x00000000 0x00000A000>;
+						reg = < 0x0 0xa000 >;
 					};
 				};
 			};

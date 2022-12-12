@@ -41,7 +41,7 @@
 #endif
 
 #include "uart_hs.h"
-#include "sys/reboot.h"
+#include <zephyr/sys/reboot.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 
