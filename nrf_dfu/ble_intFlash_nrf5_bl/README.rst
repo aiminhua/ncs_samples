@@ -27,12 +27,12 @@ this sample, you need to do the following changes.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.2.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x                         |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x                  |
 +------------------------------------------------------------------+
 
 Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 

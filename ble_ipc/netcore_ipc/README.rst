@@ -28,12 +28,12 @@ To work with the parent projects automatically, make sure this project is put in
 	│      ├── netcore_ipc 
 
 
-The following NCS tags are tested for this sample. By default, NCS ``v2.0.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.2.0`` is used.
 
 +------------------------------------------------------------------+
 |NCS tags                                                          +
 +==================================================================+
-|v1.9.x/v2.0.x                                                     |
+|v1.9.x/v2.0.x/v2.2.x                                              |
 +------------------------------------------------------------------+
 
 The following development kits are tested for this sample.

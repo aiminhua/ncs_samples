@@ -1,5 +1,3 @@
 &uart0 {
-	status = "disabled";	
-	tx-pin = <20>;
-	rx-pin = <22>;		
+	status = "disabled";
 };

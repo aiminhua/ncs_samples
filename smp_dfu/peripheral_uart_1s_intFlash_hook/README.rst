@@ -12,7 +12,7 @@ The secondary slot is on the internal Flash. You can update application core ima
 
 This example **may** modify the original NCS source code. Refer to ``sdk_change`` for the detailed changes. 
 For example, to work with NCS v2.0.0, copy folder ``sdk_change/ncs_v2.0.x`` and overwrite the same files 
-in the correspondent NCS ``v2.0.0`` folders.
+in the correspondent NCS ``v2.2.0`` folders.
 
 The following development kits are tested for this sample. 
 
