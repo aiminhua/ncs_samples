@@ -44,9 +44,9 @@ nrfx_ipc_data_t * ipc_rx_buf = (nrfx_ipc_data_t *) SHARE_RAM_BASE_ADDR;
 static ipc_rx_callback_t ipc_rx_callback;
 K_SEM_DEFINE(sem_ipc_respone, 0, 1);
 
-static void nrfx_ipc_handler(uint32_t event_mask, void *p_context)
+static void nrfx_ipc_handler(uint8_t event_mask, void *p_context)
 {
-	if (event_mask == (1 << CH_NO_RECEIVE)) {
+	if (event_mask == CH_NO_RECEIVE) {
 
 		if (ipc_rx_buf->response == MAGIC_RESPONSE)
 		{

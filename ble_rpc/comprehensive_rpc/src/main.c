@@ -241,7 +241,7 @@ void main(void)
 	int err;	
 
 	LOG_INF("### comprehensive example @ appcore version v0.5 compiled at %s %s\n", __TIME__, __DATE__);
-	assign_io_to_netcore();
+	// assign_io_to_netcore();  //It's now replaced by device tree configurations
 
 	ledDev = DEVICE_DT_GET(LED0);
 	if (ledDev == NULL) {

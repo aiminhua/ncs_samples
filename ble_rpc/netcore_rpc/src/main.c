@@ -197,8 +197,7 @@ static struct bt_nus_cb nus_cb = {
 
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
-{
-	gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO, GPIO_INT_DISABLE);
+{	
 	LOG_INF("button4 pressed and going to send nus packet\n");
     k_sem_give(&sem_nus_op);    
 }
@@ -207,7 +206,7 @@ void setup_ext_int(void)
 {
 	int err;
 
-	gpio_dev = device_get_binding("GPIO_0");
+	gpio_dev = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(gpio0)));
 	if (gpio_dev == NULL) {
 		printk("GPIO_0 bind error");
 		return;
@@ -220,7 +219,7 @@ void setup_ext_int(void)
 	}
 
 	err = gpio_pin_interrupt_configure(gpio_dev, EXT_INT_IO,
-					   GPIO_INT_EDGE_TO_INACTIVE);
+					   GPIO_INT_EDGE_FALLING);
 	if (err) {
 		printk("GPIO_0 enable callback error: %d", err);
 	}

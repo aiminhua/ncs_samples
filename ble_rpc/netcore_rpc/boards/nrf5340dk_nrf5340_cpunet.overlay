@@ -16,3 +16,8 @@
 		};
 	};
 };
+
+&gpio0 {
+	/* button4 -> P0.9 sense for edge */
+	sense-edge-mask = <0x200>;
+};

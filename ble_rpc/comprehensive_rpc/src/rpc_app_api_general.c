@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <zephyr/init.h>
 #include <string.h>
+#include <nrf_rpc/nrf_rpc_ipc.h>
 #include <nrf_rpc_cbor.h>
 #include <zcbor_common.h>
 #include <zcbor_decode.h>
@@ -16,14 +17,13 @@
 
 #define LOG_MODULE_NAME rpc_app_api_general
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
-
-
 #define CBOR_BUF_SIZE 16
 
+NRF_RPC_IPC_TRANSPORT(rpc_api_tr, DEVICE_DT_GET(DT_NODELABEL(ipc0)), "nrf_rpc_ept_2");
+NRF_RPC_GROUP_DEFINE(rpc_api, "RPC_API", &rpc_api_tr, NULL, NULL, NULL);
 
-NRF_RPC_GROUP_DEFINE(rpc_api, "rpc_api", NULL, NULL, NULL);
-
-static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+static void rsp_error_code_handle(const struct nrf_rpc_group *group, struct nrf_rpc_cbor_ctx *ctx,
+			   void *handler_data)
 {
 	int32_t val;
 
@@ -34,14 +34,14 @@ static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_da
 	}
 }
 
-static void rsp_error_code_send(int err_code)
+static void rsp_error_code_send(const struct nrf_rpc_group *group, int err_code)
 {
 	struct nrf_rpc_cbor_ctx ctx;
 
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
+	NRF_RPC_CBOR_ALLOC(group, ctx, CBOR_BUF_SIZE);
 	zcbor_int32_put(ctx.zs, err_code);
 
-	nrf_rpc_cbor_rsp_no_err(&ctx);
+	nrf_rpc_cbor_rsp_no_err(group, &ctx);
 }
 
 int rpc_app2net_send(int32_t type, uint8_t *buffer, int32_t length)
@@ -55,7 +55,7 @@ int rpc_app2net_send(int32_t type, uint8_t *buffer, int32_t length)
 		return -NRF_EINVAL;
 	}	
 
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
+	NRF_RPC_CBOR_ALLOC(&rpc_api, ctx, CBOR_BUF_SIZE + length);
 	
 	zcbor_int32_put(ctx.zs, type);
 	zcbor_int32_put(ctx.zs, length);
@@ -71,7 +71,7 @@ int rpc_app2net_send(int32_t type, uint8_t *buffer, int32_t length)
 	return result;
 }
 
-static void rpc_net2app_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+static void rpc_net2app_send(const struct nrf_rpc_group *group, struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {	
 	struct zcbor_string zst;
 	int err_code = -NRF_EINVAL;
@@ -95,8 +95,8 @@ static void rpc_net2app_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 	err_code = net2app_receive(type, buf, length);
 
 cbor_error_exit:
-	nrf_rpc_cbor_decoding_done(ctx);
-	rsp_error_code_send(err_code);
+	nrf_rpc_cbor_decoding_done(group, ctx);
+	rsp_error_code_send(group, err_code);
 }
 
 

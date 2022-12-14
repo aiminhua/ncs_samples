@@ -7,15 +7,15 @@
 #include <zephyr/init.h>
 #include "../../ipc_cmd_ids.h"
 #include "ipc_app_smp_bt.h"
-#include <zephyr/mgmt/mcumgr/buf.h>
 #include <zephyr/mgmt/mcumgr/smp.h>
 #include "smp_reassembly.h"
+#include "smp/smp.h"
 #include <zephyr/net/buf.h>
 #include <zephyr/logging/log.h>
 #include "ipc_app_api.h"
 
 LOG_MODULE_REGISTER(ipc_app_smp, 3);
-static struct zephyr_smp_transport smp_ipc_transport;
+static struct smp_transport smp_ipc_transport;
 static uint16_t mtu;
 
 int smp_receive_data(const void *buf, uint16_t len)
@@ -26,8 +26,8 @@ int smp_receive_data(const void *buf, uint16_t len)
 	int ret;
 	bool started;
 
-	started = (zephyr_smp_reassembly_expected(&smp_ipc_transport) >= 0);
-	ret = zephyr_smp_reassembly_collect(&smp_ipc_transport, buf, len);
+	started = (smp_reassembly_expected(&smp_ipc_transport) >= 0);
+	ret = smp_reassembly_collect(&smp_ipc_transport, buf, len);
 
 	LOG_DBG("collect = %d", ret);
 
@@ -39,27 +39,27 @@ int smp_receive_data(const void *buf, uint16_t len)
 		/* Failed to collect the buffer */
 		return -ENOMEM;
 	} else if (ret < 0) {
-		zephyr_smp_reassembly_drop(&smp_ipc_transport);
+		smp_reassembly_drop(&smp_ipc_transport);
 		return ret;
 	}
 
 	/* No more bytes are expected for this packet */
 	if (ret == 0) {
-		zephyr_smp_reassembly_complete(&smp_ipc_transport, false);
+		smp_reassembly_complete(&smp_ipc_transport, false);
 	}
 
 	return 0;
 #else
 	struct net_buf *nb;	
 
-	nb = mcumgr_buf_alloc();
+	nb = smp_packet_alloc();
 	if (!nb)
 	{
 		LOG_ERR("net buf alloc failed");
 		return -ENOMEM;
 	}
 	net_buf_add_mem(nb, buf, len);
-	zephyr_smp_rx_req(&smp_ipc_transport, nb);	
+	smp_rx_req(&smp_ipc_transport, nb);	
 
 	return 0;
 #endif	
@@ -68,12 +68,12 @@ int smp_receive_data(const void *buf, uint16_t len)
 /**
  * Transmits the specified SMP response.
  */
-static int smp_ipc_tx_pkt(struct zephyr_smp_transport *zst, struct net_buf *nb)
+static int smp_ipc_tx_pkt(struct net_buf *nb)
 {	
 	int rc;
 	LOG_HEXDUMP_DBG(nb->data, nb->len, "ipc app send");
 	rc = app2net_smp_send(nb->data, nb->len);
-	mcumgr_buf_free(nb);
+	smp_packet_free(nb);
 	return rc;
 }
 
@@ -98,9 +98,9 @@ int smp_ipc_init(const struct device *dev)
 {	
 	ARG_UNUSED(dev);
 	
-	zephyr_smp_transport_init(&smp_ipc_transport, smp_ipc_tx_pkt,
+	smp_transport_init(&smp_ipc_transport, smp_ipc_tx_pkt,
 				  smp_ipc_get_mtu, NULL,
-				  NULL);
+				  NULL, NULL);
 	return 0;
 }
 

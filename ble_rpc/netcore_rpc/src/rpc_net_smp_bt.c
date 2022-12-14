@@ -9,16 +9,17 @@
  */
 
 #include <errno.h>
-
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/gatt.h>
+#include <string.h>
+#include <nrf_rpc/nrf_rpc_ipc.h>
+#include <nrf_rpc_cbor.h>
 #include <zcbor_common.h>
 #include <zcbor_decode.h>
 #include <zcbor_encode.h>
-#include <nrf_rpc_cbor.h>
 #include "common_ids.h"
 #include <zephyr/logging/log.h>
 
@@ -42,20 +43,22 @@ static struct bt_uuid_128 smp_bt_chr_uuid = BT_UUID_INIT_128(
 
 #define CBOR_BUF_SIZE 16
 
-NRF_RPC_GROUP_DEFINE(rpc_smp, "rpc_smp", NULL, NULL, NULL);
+NRF_RPC_IPC_TRANSPORT(rpc_smp_tr, DEVICE_DT_GET(DT_NODELABEL(ipc0)), "nrf_rpc_ept_1");
+NRF_RPC_GROUP_DEFINE(rpc_smp, "RPC_SMP", &rpc_smp_tr, NULL, NULL, NULL);
 
-static void rsp_error_code_send(int err_code)
+static void rsp_error_code_send(const struct nrf_rpc_group *group, int err_code)
 {
 	struct nrf_rpc_cbor_ctx ctx;
 
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE);
+	NRF_RPC_CBOR_ALLOC(group, ctx, CBOR_BUF_SIZE);
 
 	zcbor_int32_put(ctx.zs, err_code);
 
-	nrf_rpc_cbor_rsp_no_err(&ctx);
+	nrf_rpc_cbor_rsp_no_err(group, &ctx);
 }
 
-static void rsp_error_code_handle(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+static void rsp_error_code_handle(const struct nrf_rpc_group *group,
+				       struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
 	int32_t val;
 
@@ -77,7 +80,7 @@ int rpc_net_bt_smp_receive_cb(const uint8_t *buffer, uint16_t length)
 		return -NRF_EINVAL;
 	}	
 	printk("smp rec len %x\r", length);
-	NRF_RPC_CBOR_ALLOC(ctx, CBOR_BUF_SIZE + length);
+	NRF_RPC_CBOR_ALLOC(&rpc_smp, ctx, CBOR_BUF_SIZE + length);
 	zcbor_bstr_encode_ptr(ctx.zs, buffer, length);
 	
 	err = nrf_rpc_cbor_cmd(&rpc_smp, RPC_COMMAND_NET_BT_SMP_RECEIVE_CB, &ctx,
@@ -134,7 +137,8 @@ static struct bt_gatt_service smp_bt_svc = BT_GATT_SERVICE(smp_bt_attrs);
 /**
  * Transmits an SMP response over the specified Bluetooth connection.
  */
-static void rpc_net_bt_smp_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+static void rpc_net_bt_smp_send(const struct nrf_rpc_group *group,
+				       struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
 	struct zcbor_string zst;
 	int err;
@@ -156,9 +160,9 @@ static void rpc_net_bt_smp_send(struct nrf_rpc_cbor_ctx *ctx, void *handler_data
 		err = bt_gatt_notify(current_conn, smp_bt_attrs + 2, buf, zst.len);		
 	}
 	
-	nrf_rpc_cbor_decoding_done(ctx);
+	nrf_rpc_cbor_decoding_done(group, ctx);
 
-	rsp_error_code_send(err);
+	rsp_error_code_send(group, err);
 
 }
 
@@ -166,16 +170,17 @@ NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_net_bt_smp_send_xx,
 			 RPC_COMMAND_APP_BT_SMP_SEND,
 			 rpc_net_bt_smp_send, NULL);
 
-static void rpc_net_bt_smp_get_mtu(struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
+static void rpc_net_bt_smp_get_mtu(const struct nrf_rpc_group *group,
+				       struct nrf_rpc_cbor_ctx *ctx, void *handler_data)
 {
 	uint16_t mtu;
 
-	nrf_rpc_cbor_decoding_done(ctx);
+	nrf_rpc_cbor_decoding_done(group, ctx);
 
 	mtu = bt_gatt_get_mtu(current_conn) - 3;
 	LOG_INF("smp MTU:%d", mtu);
 
-	rsp_error_code_send(mtu);
+	rsp_error_code_send(group, mtu);
 }
 
 NRF_RPC_CBOR_CMD_DECODER(rpc_smp, rpc_net_bt_smp_get_mtu_name,

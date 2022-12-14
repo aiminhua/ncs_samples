@@ -28,10 +28,10 @@ typedef struct
 nrfx_ipc_data_t * ipc_tx_buf = (nrfx_ipc_data_t *) SHARE_RAM_BASE_ADDR;
 nrfx_ipc_data_t * ipc_rx_buf = (nrfx_ipc_data_t *) (SHARE_RAM_BASE_ADDR+IPC_DATA_MAX_SIZE);
 
-static void nrfx_ipc_handler(uint32_t event_mask, void *p_context)
+static void nrfx_ipc_handler(uint8_t event_mask, void *p_context)
 {
 	LOG_INF("event_mask %d", event_mask);
-	if (event_mask == (1 << CH_NO_RECEIVE)) {
+	if (event_mask == CH_NO_RECEIVE) {
 		// we just print out the data
 		if (ipc_rx_buf->valid != MAGIC_VALID)
 		{
@@ -57,7 +57,7 @@ int nrfx_ipc_send(const void *data, int size)
 	if (ipc_tx_buf->valid == MAGIC_VALID && ipc_tx_buf->busy == 1)
 	{
 		LOG_ERR("ipc is busy");
-		return EBUSY;
+		return -EBUSY;
 	}
 	ipc_tx_buf->valid = MAGIC_VALID;
 	ipc_tx_buf->busy = 1;
