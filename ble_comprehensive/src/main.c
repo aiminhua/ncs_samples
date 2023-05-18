@@ -20,13 +20,6 @@
 #include <bluetooth/services/nus.h>
 #include <zephyr/settings/settings.h>
 
-#ifdef CONFIG_MCUMGR
-#include "img_mgmt/img_mgmt.h"
-#include "os_mgmt/os_mgmt.h"
-#include <img_mgmt/img_mgmt_impl.h>
-#include <zephyr/mgmt/mcumgr/smp_bt.h>
-#endif
-
 #ifdef CONFIG_NRF_DFU
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu.h"
@@ -61,9 +54,9 @@ static const struct bt_data ad[] = {
 	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
 
-static const struct bt_data sd[] = {
-	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
-};
+// static const struct bt_data sd[] = {
+// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
+// };
 
 /* Stack definition for application workqueue */
 K_THREAD_STACK_DEFINE(application_stack_area,
@@ -83,80 +76,63 @@ static struct k_work_q application_work_q;
 #ifdef CONFIG_PM_DEVICE
 const struct device *devUart0;
 const struct device *devUart1;
+const struct device *devI2C;
+const struct device *devSPI;
 static void get_device_handles(void)
 {
-	devUart0 = device_get_binding("UART_0");
-    devUart1 = device_get_binding("UART_1");
+	devUart0 = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(uart0)));
+    devUart1 = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(uart1)));
+	devI2C = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_i2c)));
+    devSPI = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_spi)));	
 }
 
 void set_device_pm_state(void)
 {
-	int err;
-	enum pm_device_state pm_state;
-
-	if (devUart1)
+	static bool is_off;
+	int err = 0;
+	
+	if (is_off)
 	{
-		pm_device_state_get(devUart1, &pm_state);
-		if (pm_state == PM_DEVICE_STATE_SUSPENDED)
-		{
-			LOG_INF("UART1 is in low power state. We activate it");
-			err = pm_device_action_run(devUart1,PM_DEVICE_ACTION_RESUME);
-			if (err) {
-				LOG_ERR("UART1 enable failed");			
-			}
-			else
-			{
-				LOG_INF("## UART1 is active now ##");
-			}		
+		LOG_INF("Turning on UART/SPI/I2C");
+		is_off = false;
+		err = pm_device_action_run(devUart0, PM_DEVICE_ACTION_RESUME);
+		err |= pm_device_action_run(devI2C,	PM_DEVICE_ACTION_RESUME);
+		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_RESUME);		
+		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_RESUME);
+
+		if (err) {
+			LOG_ERR("Activating err %d", err);			
 		}
-		else if (pm_state == PM_DEVICE_STATE_ACTIVE)
+		else
 		{
-			LOG_INF("UART1 is in active state. We suspend it");
+			LOG_INF("Entered active state");
+		}
+		
+	}
+	else
+	{
+		LOG_INF("Turning off UART/SPI/I2C to save power");
+		is_off = true;
+		err = pm_device_action_run(devI2C,	PM_DEVICE_ACTION_SUSPEND);
+		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_SUSPEND);		
 
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
 #endif			
-			err = pm_device_action_run(devUart1,	PM_DEVICE_ACTION_SUSPEND);
-			if (err) {
-				LOG_ERR("UART1 disable failed");
-			}
-			else
-			{
-				LOG_INF("## UART1 is suspended now ##");
-			}		
-		}
-	}
-
-	pm_device_state_get(devUart0, &pm_state);
-	if (pm_state == PM_DEVICE_STATE_SUSPENDED)
-	{
-		LOG_INF("UART0 is in low power state. We activate it");
-		err = pm_device_action_run(devUart0,	PM_DEVICE_ACTION_RESUME);
-		if (err) {
-			LOG_ERR("UART0 enable failed");			
-		}
-		else
-		{
-			LOG_INF("## UART0 is active now ##");
-		}		
-	}
-	else if (pm_state == PM_DEVICE_STATE_ACTIVE)
-	{
-		LOG_INF("UART0 is in active state. We suspend it");
-		//print out all the pending logging messages
-		while(log_process());
+		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_SUSPEND);
 
 #if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
 		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
 #endif
-		err = pm_device_action_run(devUart0,	PM_DEVICE_ACTION_SUSPEND);
 		if (err) {
-			LOG_ERR("UART0 disable failed");
+			LOG_ERR("Entering low power err %d", err);			
 		}
 		else
 		{
-			LOG_INF("## UART0 is suspended now ##");
-		}		
+			LOG_INF("Entered lowe power");
+		}			
+		while(log_process());
+		err = pm_device_action_run(devUart0, PM_DEVICE_ACTION_SUSPEND);
 	}
 
 }
@@ -440,8 +416,8 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 		k_sem_give(&sem_spi_txrx);
 	}
 
-	if (buttons & DK_BTN3_MSK) {
-		LOG_INF("button3 isr");
+	if (buttons & DK_BTN1_MSK) {
+		LOG_INF("button1 isr");
 #ifdef CONFIG_PM_DEVICE		
 		set_device_pm_state();
 #endif		
@@ -460,6 +436,15 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 #endif
 
 }
+
+void att_mtu_updated(struct bt_conn *conn, uint16_t tx, uint16_t rx)
+{
+	LOG_INF("MTU Updated: tx %d, rx %d\n", tx, rx);
+}
+
+static struct bt_gatt_cb mtu_cb = {
+	.att_mtu_updated = att_mtu_updated,
+};
 
 void main(void)
 {
@@ -516,6 +501,8 @@ void main(void)
 
 	LOG_INF("Bluetooth initialized");
 
+	bt_gatt_cb_register(&mtu_cb);
+
 	if (IS_ENABLED(CONFIG_SETTINGS)) {
 		settings_load();
 	}
@@ -526,12 +513,6 @@ void main(void)
 		return;
 	}
 
-#ifdef CONFIG_MCUMGR
-	smp_bt_register();
-	os_mgmt_register_group();
-	img_mgmt_register_group();
-#endif
-
 #ifdef CONFIG_NRF_DFU
 	err = dfu_init();
 	if (err) {
@@ -539,8 +520,14 @@ void main(void)
 	}
 #endif //CONFIG_NRF_DFU
 
-	err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), sd,
-			      ARRAY_SIZE(sd));
+	struct bt_le_adv_param adv_para;
+	memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
+	adv_para.options = BT_LE_ADV_OPT_CONNECTABLE;
+	adv_para.interval_min = BT_GAP_ADV_FAST_INT_MIN_2 * 3;
+	adv_para.interval_max = BT_GAP_ADV_FAST_INT_MAX_2 * 2;
+
+	err = bt_le_adv_start(&adv_para, ad, ARRAY_SIZE(ad), NULL,
+			      0);
 	if (err) {
 		LOG_ERR("Advertising failed to start (err %d)", err);
 	}

@@ -135,6 +135,8 @@ my_spi: &spi3 {
 	};
   };
 
+/delete-node/ &button3;
+
 /delete-node/ &storage_partition;
 &flash0{
 		partitions {

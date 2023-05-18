@@ -33,11 +33,6 @@
 
 #include <zephyr/logging/log.h>
 
-#include "img_mgmt/img_mgmt.h"
-#include "os_mgmt/os_mgmt.h"
-#include <img_mgmt/img_mgmt_impl.h>
-#include <zephyr/mgmt/mcumgr/smp_bt.h>
-
 #define LOG_MODULE_NAME peripheral_uart
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
@@ -611,10 +606,6 @@ void main(void)
 		LOG_ERR("Failed to initialize UART service (err: %d)", err);
 		return;
 	}
-
-	smp_bt_register();
-	os_mgmt_register_group();
-	img_mgmt_register_group();
 
 	err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), sd,
 			      ARRAY_SIZE(sd));

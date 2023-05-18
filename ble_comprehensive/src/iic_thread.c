@@ -14,17 +14,16 @@
 #define LOG_MODULE_NAME i2c_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
+// correspondent to Button4. Change it as per your board's definition
+#define MY_GPIO DT_NODE_FULL_NAME(DT_NODELABEL(gpio0))
+#define INT0_PIN 9
+
 const struct device *i2c_dev;
 const static struct device *gpio_dev;
 //static struct k_delayed_work read_eeprom;
 #ifdef CONFIG_EXAMPLE_EXT_INT
 K_SEM_DEFINE(sem_iic_op, 0, 1);
 #endif
-
-#define INT0_NODE DT_NODELABEL(button3)
-#define INT0	DT_GPIO_CTLR(INT0_NODE, gpios)
-#define INT0_PIN	DT_GPIO_PIN(INT0_NODE, gpios)
-#define INT0_FLAGS	DT_GPIO_FLAGS(INT0_NODE, gpios)
 
 static struct gpio_callback ext_int_cb_data;
 
@@ -91,9 +90,9 @@ void config_io_interrupt(void)
 {
 	int ret;
 
-	gpio_dev = DEVICE_DT_GET(INT0);
+	gpio_dev = device_get_binding(MY_GPIO);
 	if (!gpio_dev) {
-		LOG_ERR("INT0 dev null");		
+		LOG_ERR("GPIO handle failed to be obtained");		
 	}
 
 	ret = gpio_pin_configure(gpio_dev, INT0_PIN, (GPIO_INPUT | GPIO_PULL_UP));
@@ -112,6 +111,7 @@ void config_io_interrupt(void)
 
 	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(INT0_PIN));
 	gpio_add_callback(gpio_dev, &ext_int_cb_data);
+
 	LOG_INF("External interrupt example at Pin:%d", INT0_PIN);
 }
 #endif //CONFIG_EXAMPLE_EXT_INT
