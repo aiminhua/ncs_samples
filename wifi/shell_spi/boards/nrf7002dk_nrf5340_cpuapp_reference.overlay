@@ -1,0 +1,90 @@
+/* overlay file for app core */
+
+
+&spi4 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi4_default>;
+	pinctrl-1 = <&spi4_sleep>;
+	pinctrl-names = "default", "sleep";
+	cs-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>;
+	/delete-node/ mx25r6435f@0;
+	nrf7002: nrf7002@0 {
+		status = "okay";
+		compatible = "nordic,nrf7002-spi";
+		reg = <0>;
+		spi-max-frequency = <32000000>;
+		iovdd-ctrl-gpios = < &gpio0 0x1f 0x0 >;
+		bucken-gpios = < &gpio0 0xc 0x0 >;
+		host-irq-gpios = < &gpio0 0x17 0x0 >;
+	};
+};
+
+&qspi {
+		compatible = "nordic,nrf-qspi";
+		#address-cells = < 0x1 >;
+		#size-cells = < 0x0 >;
+		reg = < 0x2b000 0x1000 >, < 0x10000000 0x10000000 >;
+		reg-names = "qspi", "qspi_mm";
+		interrupts = < 0x2b 0x1 >;
+		status = "okay";
+		pinctrl-0 = < &qspi_default >;
+		pinctrl-1 = < &qspi_sleep >;
+		pinctrl-names = "default", "sleep";
+		/delete-node/ nrf7002@1;
+		mx25r64: mx25r6435f@0 {
+			compatible = "nordic,qspi-nor";
+			reg = < 0x0 >;
+			writeoc = "pp4io";
+			readoc = "read4io";
+			sck-frequency = < 0x7a1200 >;
+			jedec-id = [ C2 28 17 ];
+			sfdp-bfp = [ E5 20 F1 FF FF FF FF 03 44 EB 08 6B 08 3B 04 BB EE FF FF FF FF FF 00 FF FF FF 00 FF 0C 20 0F 52 10 D8 00 FF 23 72 F5 00 82 ED 04 CC 44 83 68 44 30 B0 30 B0 F7 C4 D5 5C 00 BE 29 FF F0 D0 FF FF ];
+			size = < 0x4000000 >;
+			has-dpd;
+			t-enter-dpd = < 0x2710 >;
+			t-exit-dpd = < 0x88b8 >;
+		};
+};
+
+
+&pinctrl {
+	spi4_default: spi4_default {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+				<NRF_PSEL(SPIM_MOSI, 0, 13)>,
+				<NRF_PSEL(SPIM_MISO, 0, 14)>;
+			nordic,drive-mode = <NRF_DRIVE_H0H1>;
+		};
+	};
+
+	spi4_sleep: spi4_sleep {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+				<NRF_PSEL(SPIM_MOSI, 0, 13)>,
+				<NRF_PSEL(SPIM_MISO, 0, 14)>;
+			low-power-enable;
+		};
+	};
+
+	qspi_default: qspi_default {
+		phandle = < 0x12 >;
+		group1 {
+			psels = < 0x1d0011 >, < 0x1f000d >, < 0x20000e >, < 0x21000f >, < 0x220010 >, < 0x1e0012 >;
+		};
+	};
+	
+	qspi_sleep: qspi_sleep {
+		phandle = < 0x13 >;
+		group1 {
+			psels = < 0x1d0011 >, < 0x1f000d >, < 0x20000e >, < 0x21000f >, < 0x220010 >;
+			low-power-enable;
+		};
+		group2 {
+			psels = < 0x1e0012 >;
+			low-power-enable;
+			bias-pull-up;
+		};
+	};	
+};
+
