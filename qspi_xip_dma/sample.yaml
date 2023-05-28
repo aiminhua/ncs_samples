@@ -1,0 +1,9 @@
+sample:
+  name: QSPI_XIP_DMA OTA
+  description: This sample demonstrates how QSPI DMA coexists with QSPI XIP. In addition, it sets up the whole OTA framework.
+tests:
+  samples.bluetooth.peripheral_uart:
+    build_only: true
+    build_on_all: true
+    platform_allow: nrf5340dk_nrf5340_cpuapp nrf7002dk_nrf5340_cpuapp
+    tags: bluetooth ci_build

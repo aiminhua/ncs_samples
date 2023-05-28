@@ -1,0 +1,92 @@
+/*
+ * Copyright (c) 2021 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		nordic,pm-ext-flash = &mx25r64;
+	};
+};
+
+&uart0{
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	current-speed = < 0x1c200 >;
+	pinctrl-0 = < &uart0_default >;
+	pinctrl-1 = < &uart0_sleep >;
+	pinctrl-names = "default", "sleep";
+};
+
+&spi4 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi4_default>;
+	pinctrl-1 = <&spi4_sleep>;
+	pinctrl-names = "default", "sleep";
+	cs-gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
+	/delete-node/ mx25r6435f@0;
+	nrf7002: nrf7002@0 {
+		status = "okay";
+		compatible = "nordic,nrf7002-spi";
+		reg = <0>;
+		spi-max-frequency = <32000000>;
+		/* Wi-Fi Pins used */
+		iovdd-ctrl-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
+		bucken-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+		host-irq-gpios = <&gpio0 23 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&qspi {
+		compatible = "nordic,nrf-qspi";
+		#address-cells = < 0x1 >;
+		#size-cells = < 0x0 >;
+		reg = < 0x2b000 0x1000 >, < 0x10000000 0x10000000 >;
+		reg-names = "qspi", "qspi_mm";
+		interrupts = < 0x2b 0x1 >;
+		status = "okay";
+		pinctrl-0 = < &qspi_default >;
+		pinctrl-1 = < &qspi_sleep >;
+		pinctrl-names = "default", "sleep";
+		/delete-node/ nrf7002@1;
+		mx25r64: mx25r6435f@0 {
+			compatible = "nordic,qspi-nor";
+			reg = < 0x0 >;
+			writeoc = "pp4o";
+			readoc = "read4io";
+			sck-frequency = < 0xf42400 >;
+			jedec-id = [ C8 60 17 ];
+			quad-enable-requirements = "S2B1v1";
+			/delete-property/ sfdp;
+			// /delete-property/ size;
+			// sfdp-bfp = [ E5 20 F1 FF FF FF FF 03 44 EB 08 6B 08 3B 04 BB EE FF FF FF FF FF 00 FF FF FF 00 FF 0C 20 0F 52 10 D8 00 FF 23 72 F5 00 82 ED 04 CC 44 83 68 44 30 B0 30 B0 F7 C4 D5 5C 00 BE 29 FF F0 D0 FF FF ];
+			// size-in-bytes = < 0x800000 >;
+			// size = < 0x4000000 >;
+			size = <67108864>;
+			has-dpd;
+			t-enter-dpd = < 5000 >;
+			t-exit-dpd = < 5000 >;
+		};
+};
+
+&pinctrl {
+	uart0_default: uart0_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 25)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 0, 26)>;
+			bias-pull-up;
+		};
+	};
+
+	uart0_sleep: uart0_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 25)>,
+				<NRF_PSEL(UART_RX, 0, 26)>;
+			low-power-enable;
+		};
+	};
+};
