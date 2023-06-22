@@ -146,7 +146,7 @@ void iic_thread(void)
 #endif                
         LOG_INF("i2c master thread");
         eeprom_cmd_read();
-        k_sleep(K_SECONDS(2));
+        k_sleep(K_SECONDS(3));
 	}
 }
 
