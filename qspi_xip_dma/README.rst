@@ -15,7 +15,7 @@ the update process starts after a reset. The detailed update process is shown be
 1. Upload the app_update.bin to partition:mcuboot_secondary if you want to update the app image of application core.
 #. Upload the xip_signed.bin to partition:mcuboot_secondary_2 if you want to update the xip image of application core.
 #. Upload the net_core_app_update.bin to partition:mcuboot_secondary_1 if you want to update the app image of network core.
-#. Write a magic word to mcuboot_secondary. you can use boot_request_upgrade_multi(0, 0) to do the trick.
+#. Write a magic word to mcuboot_secondary. you can use boot_request_upgrade_multi(0, 0) or boot_request_upgrade_multi(1, 0) to do the trick.
 #. Reset the device.
 #. MCUboot would perform the subsequent updating process.
 

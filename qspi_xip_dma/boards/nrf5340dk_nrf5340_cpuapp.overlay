@@ -8,4 +8,17 @@
 	chosen {
 		nordic,pm-ext-flash = &mx25r64;
 	};
+	
+	power-states {
+		state0: state0 {
+			compatible = "zephyr,power-state";
+			power-state-name = "runtime-idle";
+			min-residency-us = <20000>;			
+			substate-id = <1>;
+		};
+	};	
+};
+
+&cpu0 {
+	cpu-power-states = <&state0>;
 };

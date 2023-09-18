@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20.0)
-set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+set(CMAKE_OBJCOPY arm-zephyr-eabi-objcopy)
 
 set_property(GLOBAL 
     APPEND 

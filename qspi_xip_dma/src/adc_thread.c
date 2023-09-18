@@ -136,7 +136,7 @@ void adc_thread(void)
 	while (1) {                
         LOG_INF("ADC thread");
         adc_sample_sync();
-        k_sleep(K_SECONDS(1)); 
+        k_sleep(K_SECONDS(2)); 
 	}
 }
 
