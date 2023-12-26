@@ -6,6 +6,10 @@
 	};
 };
 
+&uicr {
+	nfct-pins-as-gpios;
+};
+
 &pinctrl {
 	uart0_default: uart0_default {
 		group1 {

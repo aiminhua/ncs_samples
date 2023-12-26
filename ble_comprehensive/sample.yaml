@@ -5,5 +5,5 @@ tests:
   samples.bluetooth.peripheral_uart:
     build_only: true
     build_on_all: true
-    platform_allow: nrf5340dk_nrf5340_cpuapp nrf52840dk_nrf52840
+    platform_allow: nrf5340dk_nrf5340_cpuapp nrf52840dk_nrf52840 nrf7002dk_nrf5340_cpuapp
     tags: bluetooth ci_build

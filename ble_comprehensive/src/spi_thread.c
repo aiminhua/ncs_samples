@@ -23,24 +23,21 @@ extern struct k_sem sem_spi_txrx;
 static int spi_data_exchange(void)
 {
     int err;
-    struct spi_cs_control cs_ctrl;
     struct spi_config spi_cfg = {0};
 
 	spi_cfg.frequency = 8000000U;
 	spi_cfg.operation = SPI_WORD_SET(8);
 
-	cs_ctrl.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_NODELABEL(my_spi), cs_gpios));
-	if (!cs_ctrl.gpio.port) {
+	spi_cfg.cs.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_NODELABEL(my_spi), cs_gpios));
+	if (!spi_cfg.cs.gpio.port) {
         LOG_ERR("cannot find CS GPIO device");
 		return -ENODEV;
 	}
 
-	cs_ctrl.gpio.pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
-	cs_ctrl.gpio.dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
+	spi_cfg.cs.gpio.pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
+	spi_cfg.cs.gpio.dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
 
-	cs_ctrl.delay = DELAY_SPI_CS_ACTIVE_US;
-
-	spi_cfg.cs = &cs_ctrl;
+	spi_cfg.cs.delay = DELAY_SPI_CS_ACTIVE_US;
 
 	uint8_t buf[] = TEST_STRING;
     uint8_t data[] = TEST_STRING;

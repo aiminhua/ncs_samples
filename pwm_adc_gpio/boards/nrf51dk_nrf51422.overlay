@@ -1,0 +1,76 @@
+/* Copyright (c) 2021 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+
+/ {
+
+	aliases {
+		pwm-led1 = &pwm_led1;
+		pwm-led2 = &pwm_led2;
+		pwm-led3 = &pwm_led3;	
+		red-pwm-led = &pwm_led1;
+		green-pwm-led = &pwm_led2;
+		blue-pwm-led = &pwm_led3;		
+	};
+
+	zephyr,user {
+		led-gpios = <&gpio0 16 GPIO_ACTIVE_HIGH>;
+		gnd-gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
+		vdd-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+	};	
+
+	pwmleds {
+		pwm_led1: pwm_led_1 {
+			pwms = <&sw_pwm 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led2: pwm_led_2 {
+			pwms = <&sw_pwm 1 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led3: pwm_led_3 {
+			pwms = <&sw_pwm 2 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};	
+	};
+};
+
+&sw_pwm {
+	status ="okay";
+	channel-gpios = <&gpio0 17 PWM_POLARITY_INVERTED>, <&gpio0 18 PWM_POLARITY_INVERTED>, <&gpio0 19 PWM_POLARITY_INVERTED>;
+	clock-prescaler = <8>;
+};
+
+&spi1 {
+	status ="disabled";
+};
+
+&adc {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_1_3";
+		zephyr,reference = "ADC_REF_VDD_1_3";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_ADC_AIN4>;			
+	};
+	
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1_3";
+		zephyr,reference = "ADC_REF_VDD_1_3";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_ADC_AIN5>;		
+	};
+
+	channel@2 {
+		reg = <2>;
+		zephyr,gain = "ADC_GAIN_1_3";
+		zephyr,reference = "ADC_REF_VDD_1_3";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_ADC_AIN6>;			
+	};	
+};
+
