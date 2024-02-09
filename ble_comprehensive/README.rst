@@ -20,13 +20,13 @@ Read `Testing`_ for more information of each separate module of this sample.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v2.4.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.5.0`` is used.
 
-+------------------------------------------------------------------+
-|NCS tags                                                          +
-+==================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x    |
-+------------------------------------------------------------------+
++----------------------------------------------------------------------+
+|NCS tags                                                              +
++======================================================================+
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x |
++----------------------------------------------------------------------+
 
 Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
 use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
@@ -39,11 +39,11 @@ in the correspondent NCS ``v1.9.1`` folders.
 
 The following development kits are tested for this sample. 
 
-+------------------------------------------------------------------+
-|Build target                                                      +
-+==================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840                      |
-+------------------------------------------------------------------+
++----------------------------------------------------------------------+
+|Build target                                                          +
++======================================================================+
+|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840/nrf7002dk_nrf5340_cpuapp |
++----------------------------------------------------------------------+
 
 For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
 

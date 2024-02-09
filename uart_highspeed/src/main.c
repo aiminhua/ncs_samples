@@ -85,6 +85,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_BUF_REQUEST:
+		LOG_INF("UART_RX_BUF_REQUEST %p", next_buf);
 		err = uart_rx_buf_rsp(uart, next_buf,
 			sizeof(uart_rx_buf[0]));
 		if (err) {

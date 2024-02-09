@@ -123,6 +123,12 @@ static int uart_init(void)
 
 }
 
+int my_uart_enable()
+{
+	next_buf = uart_rx_buf[1];
+	uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
+}
+
 int my_uart_send(const uint8_t *buf, size_t len)
 {
 	int err;

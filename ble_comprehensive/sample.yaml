@@ -1,6 +1,6 @@
 sample:
   name: BLE Comprehensive example
-  description: secondary slot on external QSPI flash
+  description: secondary slot on external QSPI/SPI flash
 tests:
   samples.bluetooth.peripheral_uart:
     build_only: true

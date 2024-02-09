@@ -86,6 +86,7 @@ static void get_device_handles(void)
     devSPI = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_spi)));	
 }
 
+extern int my_uart_enable();
 void set_device_pm_state(void)
 {
 	static bool is_off;
@@ -107,7 +108,11 @@ void set_device_pm_state(void)
 		{
 			LOG_INF("Entered active state");
 		}
-		
+
+#if CONFIG_UART_ASYNC_API && CONFIG_UART_1_NRF_HW_ASYNC
+		my_uart_enable();
+#endif
+
 	}
 	else
 	{
@@ -120,10 +125,6 @@ void set_device_pm_state(void)
 		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
 #endif			
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_SUSPEND);
-
-#if CONFIG_UART_ASYNC_API && CONFIG_UART_0_NRF_HW_ASYNC
-		((const struct uart_driver_api *)devUart0->api)->rx_disable(devUart0);
-#endif
 		if (err) {
 			LOG_ERR("Entering low power err %d", err);			
 		}

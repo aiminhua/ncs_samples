@@ -20,17 +20,8 @@ LOG_MODULE_REGISTER(adc_thread, 3);
 #define ADC_OVERSAMPLING	4 /* 2^ADC_OVERSAMPLING samples are averaged */
 #define ADC_MAX 		4096
 #define BATTERY_MEAS_VOLTAGE_GAIN	6
-#define ADC_GAIN		ADC_GAIN_1_6
-#define ADC_REFERENCE		ADC_REF_INTERNAL
 #define ADC_REF_INTERNAL_MV	600UL
-#define ADC_ACQUISITION_TIME	ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)
-#define ADC_CHANNEL_ID		0
-#define ADC_CHANNEL_INPUT	NRF_SAADC_INPUT_VDD
-#define ADC_CHANNEL_ID2		1
-#define ADC_CHANNEL_INPUT2	NRF_SAADC_INPUT_AIN1   //P0.05
-/* ADC asynchronous read is scheduled on odd works. Value read happens during
- * even works. This is done to avoid creating a thread for battery monitor.
- */
+
 #define ADC_SAMPLE_INTERVAL	20  //unit:s
 
 #define BATTERY_VOLTAGE(sample) (sample * BATTERY_MEAS_VOLTAGE_GAIN	\
@@ -48,9 +39,13 @@ static struct k_poll_event  async_evt =
 				 K_POLL_MODE_NOTIFY_ONLY,
 				 &async_sig);
 
+static const struct adc_channel_cfg ch0_cfg_dt =
+    ADC_CHANNEL_CFG_DT(DT_CHILD(DT_NODELABEL(adc), channel_0));
+static const struct adc_channel_cfg ch1_cfg_dt =
+    ADC_CHANNEL_CFG_DT(DT_CHILD(DT_NODELABEL(adc), channel_1));
+
 static struct adc_sequence sequence = {
 	.options	= NULL,
-	.channels	= BIT(ADC_CHANNEL_ID),
 	.buffer		= adc_buffer,
 	.buffer_size	= sizeof(adc_buffer),
 	.resolution	= ADC_RESOLUTION,
@@ -59,7 +54,6 @@ static struct adc_sequence sequence = {
 };
 static struct adc_sequence sequence_calibrate = {
 	.options	= NULL,
-	.channels	= BIT(ADC_CHANNEL_ID),
 	.buffer		= adc_buffer,
 	.buffer_size	= sizeof(adc_buffer),
 	.resolution	= ADC_RESOLUTION,
@@ -73,10 +67,12 @@ void adc_sample_sync(void)
 {
 	int err;
 
+	sequence.channels = BIT(ch0_cfg_dt.channel_id);
+	sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id);
 	if (NUM_OF_CH == 2)
 	{
-		sequence.channels = BIT(ADC_CHANNEL_ID) | BIT(ADC_CHANNEL_ID2);
-		sequence_calibrate.channels = BIT(ADC_CHANNEL_ID) | BIT(ADC_CHANNEL_ID2);
+		sequence.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
+		sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
 		sequence.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
 		sequence_calibrate.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
 	}
@@ -103,8 +99,8 @@ static void adc_sample_async(struct k_work *work)
 
 	if (NUM_OF_CH == 2)
 	{
-		sequence.channels = BIT(ADC_CHANNEL_ID) | BIT(ADC_CHANNEL_ID2);
-		sequence_calibrate.channels = BIT(ADC_CHANNEL_ID) | BIT(ADC_CHANNEL_ID2);
+		sequence.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
+		sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
 		sequence.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
 		sequence_calibrate.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;		
 	}
@@ -148,36 +144,18 @@ static int init_adc(void)
 	adc_dev = device_get_binding(ADC_DEVICE_NAME);
 	if (!adc_dev) {
 		LOG_ERR("Cannot get ADC device");
-		return -ENXIO;
+		return -EIO;
 	}
 
-	struct adc_channel_cfg channel_cfg = {
-		.gain             = ADC_GAIN,
-		.reference        = ADC_REFERENCE,
-		.acquisition_time = ADC_ACQUISITION_TIME,
-		.channel_id       = ADC_CHANNEL_ID,
-		.differential	  = 0,
-#if defined(CONFIG_ADC_CONFIGURABLE_INPUTS)
-		.input_positive   = ADC_CHANNEL_INPUT,
-#endif
-	};
-	err = adc_channel_setup(adc_dev, &channel_cfg);
-	if (err) {
-		LOG_ERR("Setting up the ADC channel%d failed", ADC_CHANNEL_ID);
-		return err;
-	}
-
+	err = adc_channel_setup(adc_dev, &ch0_cfg_dt);
 	if (NUM_OF_CH == 2)
 	{
-		channel_cfg.channel_id = ADC_CHANNEL_ID2;
-		channel_cfg.input_positive = ADC_CHANNEL_INPUT2;
-		err = adc_channel_setup(adc_dev, &channel_cfg);
-		if (err) {
-			LOG_ERR("Setting up the ADC channel%d failed", ADC_CHANNEL_ID2);
-			return err;
-		}		
+		err |= adc_channel_setup(adc_dev, &ch1_cfg_dt);	
 	}
-
+	if (err) {
+		LOG_ERR("ADC channel setup err:%d", err);
+		return err;
+	}	
 
 #ifdef CONFIG_ADC_ASYNC
 	k_work_init_delayable(&adc_work, adc_sample_async);

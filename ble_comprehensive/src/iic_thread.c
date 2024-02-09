@@ -15,12 +15,11 @@
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 // correspondent to Button4. Change it as per your board's definition
-#define MY_GPIO DT_NODE_FULL_NAME(DT_NODELABEL(gpio0))
-#define INT0_PIN 9
+#define ZEPHYR_USER_NODE DT_PATH(zephyr_user)
+const struct gpio_dt_spec ext_int =
+        GPIO_DT_SPEC_GET(ZEPHYR_USER_NODE, extint_gpios);
 
 const struct device *i2c_dev;
-const static struct device *gpio_dev;
-//static struct k_delayed_work read_eeprom;
 #ifdef CONFIG_EXAMPLE_EXT_INT
 K_SEM_DEFINE(sem_iic_op, 0, 1);
 #endif
@@ -90,29 +89,24 @@ void config_io_interrupt(void)
 {
 	int ret;
 
-	gpio_dev = device_get_binding(MY_GPIO);
-	if (!gpio_dev) {
-		LOG_ERR("GPIO handle failed to be obtained");		
-	}
-
-	ret = gpio_pin_configure(gpio_dev, INT0_PIN, (GPIO_INPUT | GPIO_PULL_UP));
+	ret = gpio_pin_configure(ext_int.port, ext_int.pin, (GPIO_INPUT | GPIO_PULL_UP));
 	if (ret != 0) {
 		LOG_ERR("Error %d: failed to configure pin %d",
-		       ret, INT0_PIN);		
+		       ret, ext_int.pin);		
 	}
 
-	ret = gpio_pin_interrupt_configure(gpio_dev,
-					   INT0_PIN,
+	ret = gpio_pin_interrupt_configure(ext_int.port,
+					   ext_int.pin,
 					   GPIO_INT_EDGE_FALLING);	                       
 	if (ret != 0) {
 		LOG_ERR("Error %d: failed to configure interrupt on pin %d",
-			ret, INT0_PIN);		
+			ret, ext_int.pin);		
 	}
 
-	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(INT0_PIN));
-	gpio_add_callback(gpio_dev, &ext_int_cb_data);
+	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(ext_int.pin));
+	gpio_add_callback(ext_int.port, &ext_int_cb_data);
 
-	LOG_INF("External interrupt example at Pin:%d", INT0_PIN);
+	LOG_INF("External interrupt example at Pin:%d", ext_int.pin);
 }
 #endif //CONFIG_EXAMPLE_EXT_INT
 
