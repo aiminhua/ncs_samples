@@ -20,13 +20,13 @@ Read `Testing`_ for more information of each separate module of this sample.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v2.5.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.6.0`` is used.
 
-+----------------------------------------------------------------------+
-|NCS tags                                                              +
-+======================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x |
-+----------------------------------------------------------------------+
++--------------------------------------------------------------------------------------+
+|NCS tags                                                                              +
++======================================================================================+
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x/v2.6.x          |
++--------------------------------------------------------------------------------------+
 
 Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
 use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
