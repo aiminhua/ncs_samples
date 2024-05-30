@@ -14,7 +14,7 @@ project(comprensive_example)
 target_sources(app PRIVATE src/main.c)
 
 target_sources_ifdef(CONFIG_EXAMPLE_I2C app
-                     PRIVATE src/iic_thread.c)
+                     PRIVATE src/i2c_thread.c)
 					 
 target_sources_ifdef(CONFIG_EXAMPLE_SPIM app
                      PRIVATE src/spi_thread.c)
@@ -24,9 +24,15 @@ target_sources_ifdef(CONFIG_EXAMPLE_HS_UART app
 					 
 target_sources_ifdef(CONFIG_EXAMPLE_ADC app
                      PRIVATE src/adc_thread.c)
+
+target_sources_ifdef(CONFIG_EXAMPLE_EXT_INT app
+                     PRIVATE src/io_int_thread.c)                     
 					 
-target_sources_ifdef(CONFIG_EXAMPLE_FLASH app
-                     PRIVATE src/flash_thread.c)
+target_sources_ifdef(CONFIG_EXAMPLE_FLASH_SETTINGS app
+                     PRIVATE src/settings_thread.c)
+
+target_sources_ifdef(CONFIG_EXAMPLE_FLASH_NVS app
+                     PRIVATE src/nvs_thread.c)
 
 zephyr_library_include_directories(.)
 

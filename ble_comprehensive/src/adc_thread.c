@@ -180,4 +180,4 @@ void adc_thread(void)
 }
 
 K_THREAD_DEFINE(adc_thread_id, 1024, adc_thread, NULL, NULL,
-		NULL, 8, 0, 0);
+		NULL, 9, 0, 0);

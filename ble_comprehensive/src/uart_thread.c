@@ -50,7 +50,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		struct uart_data_t *buf;
 		struct uart_data_t *buf2;
 		
-		buf = CONTAINER_OF(evt->data.tx.buf, struct uart_data_t,  data);		
+		buf = CONTAINER_OF(evt->data.tx.buf, struct uart_data_t,  data[0]);		
 		LOG_INF("UART_TX_DONE %d", evt->data.tx.len);
 		k_free(buf);
 
@@ -126,7 +126,7 @@ static int uart_init(void)
 int my_uart_enable()
 {
 	next_buf = uart_rx_buf[1];
-	uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
+	return uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
 }
 
 int my_uart_send(const uint8_t *buf, size_t len)
@@ -143,7 +143,7 @@ int my_uart_send(const uint8_t *buf, size_t len)
 	tx->len = len;
 	err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
 	if (err) {
-		LOG_WRN("buffer uart tx data for later retry");
+		LOG_WRN("buffer uart tx data for later retry (err %d)", err);
 		k_fifo_put(&fifo_uart_tx_data, tx);
 	}
 	return err;		

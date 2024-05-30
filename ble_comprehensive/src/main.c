@@ -19,14 +19,6 @@
 #include <zephyr/bluetooth/hci.h>
 #include <bluetooth/services/nus.h>
 #include <zephyr/settings/settings.h>
-
-#ifdef CONFIG_NRF_DFU
-#include "nrf_dfu_settings.h"
-#include "nrf_dfu.h"
-#include "sys/reboot.h"
-#include "nrf_dfu.h"
-#include "nrf_dfu_validation.h"
-#endif
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 #include <zephyr/pm/device.h>
@@ -150,55 +142,6 @@ static void blinky_work_fn(struct k_work *work)
 
 }
 
-#ifdef CONFIG_NRF_DFU
-
-/**@brief Function for handling DFU events.
- */
-static void dfu_observer(nrf_dfu_evt_type_t evt_type)
-{
-    switch (evt_type)
-    {
-        case NRF_DFU_EVT_DFU_STARTED:
-        case NRF_DFU_EVT_OBJECT_RECEIVED:
-
-            break;
-        case NRF_DFU_EVT_DFU_COMPLETED:
-        case NRF_DFU_EVT_DFU_ABORTED:
-			LOG_INF("resetting...");
-			while(log_process());
-            sys_reboot(SYS_REBOOT_WARM);
-            break;
-        case NRF_DFU_EVT_TRANSPORT_DEACTIVATED:
-            // Reset the internal state of the DFU settings to the last stored state.
-			LOG_INF("NRF_DFU_EVT_TRANSPORT_DEACTIVATED");
-            nrf_dfu_settings_reinit();
-            break;
-        default:
-            break;
-    }
-
-}
-
-int dfu_init(void)
-{
-    int ret_val;
-
-    ret_val = nrf_dfu_settings_init(true);
-    if (ret_val != NRF_SUCCESS)
-	{
-		LOG_WRN("dfu settings init err %d", ret_val);
-	}
-
-    ret_val = nrf_dfu_init(dfu_observer);
-    if (ret_val != NRF_SUCCESS)
-	{
-		LOG_WRN("dfu init err %d", ret_val);
-	}
-
-    return ret_val;
-}
-#endif //CONFIG_NRF_DFU
-
 #ifdef CONFIG_BT_GATT_CLIENT
 static struct bt_gatt_exchange_params exchange_params;
 
@@ -289,7 +232,8 @@ static void param_updated(struct bt_conn *conn, uint16_t interval,
 {
 	LOG_INF("conn interval=%d, latency=%d, timeout=%d", interval, latency, timeout);
 }
-static struct bt_conn_cb conn_callbacks = {
+
+BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected    = connected,
 	.disconnected = disconnected,
 	.le_param_updated = param_updated,
@@ -330,6 +274,7 @@ static void auth_cancel(struct bt_conn *conn)
 	LOG_INF("Pairing cancelled: %s", addr);
 }
 
+
 static void pairing_complete(struct bt_conn *conn, bool bonded)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
@@ -366,17 +311,17 @@ static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
 #endif
 
 extern int my_uart_send(const uint8_t *buf, size_t len);
+
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 			  uint16_t len)
-{
-	int err;
+{	
 	char addr[BT_ADDR_LE_STR_LEN] = {0};
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
-	LOG_INF("Received data from: %s", (addr));
+	LOG_INF("Received data from: %s", addr);
 
-	err = my_uart_send(data, len);
+	my_uart_send(data, len);
 	
 }
 
@@ -393,6 +338,7 @@ void error(void)
 		k_sleep(K_MSEC(1000));
 	}
 }
+
 #if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
 static void num_comp_reply(bool accept)
 {
@@ -407,6 +353,7 @@ static void num_comp_reply(bool accept)
 	bt_conn_unref(auth_conn);
 	auth_conn = NULL;
 }
+
 #endif
 
 void button_changed(uint32_t button_state, uint32_t has_changed)
@@ -452,7 +399,7 @@ int main(void)
 {
 	int err;	
 
-	LOG_INF("### comprehensive example v0.5 compiled at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### Comprehensive example v1.0 built at %s %s\n", __TIME__, __DATE__);
 
 	runLED = DEVICE_DT_GET(LED0);
 	if (runLED == NULL) {
@@ -490,8 +437,6 @@ int main(void)
 	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
 					   	K_MSEC(20));	
 
-	bt_conn_cb_register(&conn_callbacks);
-
 	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED)) {
 		err = bt_conn_auth_cb_register(&conn_auth_callbacks);
 		if (err) {
@@ -525,30 +470,24 @@ int main(void)
 		return err;
 	}
 
-#ifdef CONFIG_NRF_DFU
-	err = dfu_init();
-	if (err) {
-		LOG_ERR("dfu service init err %d", err);		
-	}
-#endif //CONFIG_NRF_DFU
-
 	struct bt_le_adv_param adv_para;
 	memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
 	adv_para.options = BT_LE_ADV_OPT_CONNECTABLE;
-	adv_para.interval_min = BT_GAP_ADV_FAST_INT_MIN_2 * 3;
-	adv_para.interval_max = BT_GAP_ADV_FAST_INT_MAX_2 * 2;
+	adv_para.interval_min = 200;
+	adv_para.interval_max = 300;
 
 	err = bt_le_adv_start(&adv_para, ad, ARRAY_SIZE(ad), NULL,
 			      0);
 	if (err) {
 		LOG_ERR("Advertising failed to start (err %d)", err);
+		return err;
 	}
 
 	while(1)
 	{
 		//add your code here
-		k_sleep(K_SECONDS(20));
-		LOG_INF("main thread\n");
+		LOG_INF("main thread");
+		k_sleep(K_SECONDS(20));		
 	}
 
 	return 0;

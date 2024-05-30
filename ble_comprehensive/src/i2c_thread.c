@@ -14,25 +14,13 @@
 #define LOG_MODULE_NAME i2c_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-// correspondent to Button4. Change it as per your board's definition
-#define ZEPHYR_USER_NODE DT_PATH(zephyr_user)
-const struct gpio_dt_spec ext_int =
-        GPIO_DT_SPEC_GET(ZEPHYR_USER_NODE, extint_gpios);
-
 const struct device *i2c_dev;
-#ifdef CONFIG_EXAMPLE_EXT_INT
-K_SEM_DEFINE(sem_iic_op, 0, 1);
-#endif
-
-static struct gpio_callback ext_int_cb_data;
+extern struct k_sem sem_iic_op;
 
 #define EEPROM_SIM_SIZE                   (320u) //!< Simulated EEPROM size.
-
 #define EEPROM_SIM_ADDR                   0x50    //!< Simulated EEPROM TWI slave address.
-
 /* Slave memory addressing byte length */
 #define EEPROM_SIM_ADDRESS_LEN_BYTES    2
-
 #define IN_LINE_PRINT_CNT   (16u)   //!< Number of data bytes printed in a single line.
 
 
@@ -76,40 +64,6 @@ static void eeprom_cmd_read(void)
     }
 }
 
-
-#ifdef CONFIG_EXAMPLE_EXT_INT
-void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
-{
-	LOG_INF("external interrupt occurs at %x", pins);   
-    k_sem_give(&sem_iic_op);    
-}
-
-void config_io_interrupt(void)
-{
-	int ret;
-
-	ret = gpio_pin_configure(ext_int.port, ext_int.pin, (GPIO_INPUT | GPIO_PULL_UP));
-	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure pin %d",
-		       ret, ext_int.pin);		
-	}
-
-	ret = gpio_pin_interrupt_configure(ext_int.port,
-					   ext_int.pin,
-					   GPIO_INT_EDGE_FALLING);	                       
-	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure interrupt on pin %d",
-			ret, ext_int.pin);		
-	}
-
-	gpio_init_callback(&ext_int_cb_data, ext_int_isr, BIT(ext_int.pin));
-	gpio_add_callback(ext_int.port, &ext_int_cb_data);
-
-	LOG_INF("External interrupt example at Pin:%d", ext_int.pin);
-}
-#endif //CONFIG_EXAMPLE_EXT_INT
-
 void iic_thread(void)
 {	
 	
@@ -127,17 +81,9 @@ void iic_thread(void)
         LOG_ERR("I2C config failed");
         return;
     }
-#ifdef CONFIG_EXAMPLE_EXT_INT
-    config_io_interrupt();    
-#endif
     
-	// k_delayed_work_init(&read_eeprom, eeprom_read_fn);
-    // k_delayed_work_submit(&read_eeprom, K_MSEC(50));	    
-
-	while (1) {
-#ifdef CONFIG_EXAMPLE_EXT_INT        
-        k_sem_take(&sem_iic_op, K_FOREVER);
-#endif                
+	while (1) {       
+        k_sem_take(&sem_iic_op, K_FOREVER);         
         LOG_INF("i2c master thread");
         eeprom_cmd_read();
         k_sleep(K_SECONDS(3));
@@ -145,4 +91,4 @@ void iic_thread(void)
 }
 
 K_THREAD_DEFINE(iic_thread_id, 1024, iic_thread, NULL, NULL,
-		NULL, 7, 0, 0);
+		NULL, 8, 0, 0);

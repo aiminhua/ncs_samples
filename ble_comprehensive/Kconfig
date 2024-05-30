@@ -32,11 +32,15 @@ config EXAMPLE_HS_UART
 	help
 		if yes, load high speed UART example	  
 
-config EXAMPLE_FLASH
-	bool "load Flash access usage example"
-	default n
+config EXAMPLE_FLASH_NVS
+	bool "load NVS Flash access usage example"	
 	help
-		if yes, load Flash access usage example
+		if yes, load NVS Flash access usage example
+
+config EXAMPLE_FLASH_SETTINGS
+	bool "load Settings Flash access usage example"	
+	help
+		if yes, load Settings Flash access usage example
 		
 config BT_NUS_SECURITY_ENABLED
 	bool "Enable security"
