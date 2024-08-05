@@ -20,12 +20,12 @@ Read `Testing`_ for more information of each separate module of this sample.
 Build & Programming
 *******************
 
-The following NCS tags are tested for this sample. By default, NCS ``v2.6.0`` is used.
+The following NCS tags are tested for this sample. By default, NCS ``v2.7.0`` is used.
 
 +--------------------------------------------------------------------------------------+
 |NCS tags                                                                              +
 +======================================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x/v2.6.x          |
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x/v2.6.x/v2.7.x   |
 +--------------------------------------------------------------------------------------+
 
 Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
@@ -42,20 +42,20 @@ The following development kits are tested for this sample.
 +----------------------------------------------------------------------+
 |Build target                                                          +
 +======================================================================+
-|nrf5340dk_nrf5340_cpuapp/nrf52840dk_nrf52840/nrf7002dk_nrf5340_cpuapp |
+|nrf5340dk/nrf5340/cpuapp nrf52840dk/nrf52840 nrf7002dk/nrf5340/cpuapp |
 +----------------------------------------------------------------------+
 
-For example, enter the following command to build ``nrf5340dk_nrf5340_cpuapp``.
+For example, enter the following command to build ``|nrf5340dk/nrf5340/cpuapp``.
 
 .. code-block:: console
 
-   west build -b nrf5340dk_nrf5340_cpuapp -d build_nrf5340dk_nrf5340_cpuapp -p
+   west build -b nrf5340dk/nrf5340/cpuapp --sysbuild -p
    
 To flash the images to the board, just double click ``program.bat``, or use the following command:
 
 .. code-block:: console
 
-   west flash -d build_nrf5340dk_nrf5340_cpuapp
+   west flash
 
 Testing
 *******

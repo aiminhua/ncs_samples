@@ -28,14 +28,14 @@ static int spi_data_exchange(void)
 	spi_cfg.frequency = 8000000U;
 	spi_cfg.operation = SPI_WORD_SET(8);
 
-	spi_cfg.cs.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_NODELABEL(my_spi), cs_gpios));
+	spi_cfg.cs.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_ALIAS(myspi), cs_gpios));
 	if (!spi_cfg.cs.gpio.port) {
         LOG_ERR("cannot find CS GPIO device");
 		return -ENODEV;
 	}
 
-	spi_cfg.cs.gpio.pin = DT_GPIO_PIN(DT_NODELABEL(my_spi), cs_gpios);
-	spi_cfg.cs.gpio.dt_flags = DT_GPIO_FLAGS(DT_NODELABEL(my_spi), cs_gpios);
+	spi_cfg.cs.gpio.pin = DT_GPIO_PIN(DT_ALIAS(myspi), cs_gpios);
+	spi_cfg.cs.gpio.dt_flags = DT_GPIO_FLAGS(DT_ALIAS(myspi), cs_gpios);
 
 	spi_cfg.cs.delay = DELAY_SPI_CS_ACTIVE_US;
 
@@ -95,7 +95,7 @@ void spi_thread(void)
 	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\spi");
 	LOG_INF("The related spis example is from nRF5_SDK\\examples\\peripheral\\spis");
 	
-	spi_dev = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_spi)));
+	spi_dev = DEVICE_DT_GET(DT_ALIAS(myspi));
 	if (!spi_dev) {
 		LOG_ERR("SPIM driver not found.\n");
 		return;

@@ -191,3 +191,4 @@
 	/* pin9 sense for edge */
 	sense-edge-mask = <0x200>;
 };
+

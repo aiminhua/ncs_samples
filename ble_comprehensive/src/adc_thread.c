@@ -15,7 +15,7 @@
 LOG_MODULE_REGISTER(adc_thread, 3);
 
 #define NUM_OF_CH 2
-#define ADC_DEVICE_NAME		DT_NODE_FULL_NAME(DT_NODELABEL(adc))
+#define ADC_DEVICE_NAME		DT_NODELABEL(adc)
 #define ADC_RESOLUTION		12
 #define ADC_OVERSAMPLING	4 /* 2^ADC_OVERSAMPLING samples are averaged */
 #define ADC_MAX 		4096
@@ -141,7 +141,7 @@ static int init_adc(void)
 {
 	int err;
 
-	adc_dev = device_get_binding(ADC_DEVICE_NAME);
+	adc_dev = DEVICE_DT_GET(ADC_DEVICE_NAME);
 	if (!adc_dev) {
 		LOG_ERR("Cannot get ADC device");
 		return -EIO;

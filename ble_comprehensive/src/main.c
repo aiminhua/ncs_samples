@@ -72,10 +72,10 @@ const struct device *devI2C;
 const struct device *devSPI;
 static void get_device_handles(void)
 {
-	devUart0 = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(uart0)));
-    devUart1 = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(uart1)));
-	devI2C = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_i2c)));
-    devSPI = device_get_binding(DT_NODE_FULL_NAME(DT_NODELABEL(my_spi)));	
+	devUart0 = DEVICE_DT_GET(DT_NODELABEL(uart0));
+    devUart1 = DEVICE_DT_GET(DT_NODELABEL(uart1));
+	devI2C = DEVICE_DT_GET(DT_ALIAS(myi2c));
+    devSPI = DEVICE_DT_GET(DT_ALIAS(myspi));	
 }
 
 extern int my_uart_enable();
@@ -399,7 +399,7 @@ int main(void)
 {
 	int err;	
 
-	LOG_INF("### Comprehensive example v1.0 built at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### Comprehensive example v1.1 built at %s %s\n", __TIME__, __DATE__);
 
 	runLED = DEVICE_DT_GET(LED0);
 	if (runLED == NULL) {

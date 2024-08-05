@@ -17,8 +17,7 @@
 #define LOG_MODULE_NAME uart_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MY_UARTE			DT_NODELABEL(uart1)
-#define UART_DEVICE_NAME         DT_NODE_FULL_NAME(MY_UARTE)
+#define UART_DEVICE_NAME         DT_NODELABEL(uart1)
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
@@ -109,7 +108,7 @@ static int uart_init(void)
 {
 	int err;
 	
-	uart = device_get_binding(UART_DEVICE_NAME);
+	uart = DEVICE_DT_GET(UART_DEVICE_NAME);
 	if (!uart) {
 		return -ENXIO;
 	}
