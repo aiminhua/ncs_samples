@@ -4,6 +4,10 @@
 	chosen {
 		nordic,pm-ext-flash = &mx25r64;
 	};
+	aliases {
+		myi2c = &i2c2;
+		myspi = &spi3;
+	};	
 	/* See &GPIO0 definition below */
 	zephyr,user {
 		extint-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
@@ -115,7 +119,7 @@
 	status = "disabled";
 };
 
-my_i2c: &i2c2 {
+&i2c2 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
 	pinctrl-0 = < &i2c2_default >;
@@ -127,7 +131,7 @@ my_i2c: &i2c2 {
 	status = "disabled";
 };
 
-my_spi: &spi3 {
+&spi3 {
 	status = "okay"; 
 	compatible = "nordic,nrf-spim";
 	pinctrl-0 = <&spi3_default_alt>;

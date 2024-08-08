@@ -399,7 +399,7 @@ int main(void)
 {
 	int err;	
 
-	LOG_INF("### Comprehensive example v1.1 built at %s %s\n", __TIME__, __DATE__);
+	LOG_INF("### Comprehensive example v1.1 @ %s built at %s %s\n", CONFIG_BOARD_TARGET, __TIME__, __DATE__);
 
 	runLED = DEVICE_DT_GET(LED0);
 	if (runLED == NULL) {
