@@ -24,7 +24,8 @@
 extern "C" {
 int start_matter_adv(struct bt_le_adv_param *param,
 		    const struct bt_data *ad, size_t ad_len,
-		    const struct bt_data *sd, size_t sd_len);          
+		    const struct bt_data *sd, size_t sd_len);
+int stop_matter_adv(void);                      
 }
 
 namespace chip {
@@ -61,7 +62,7 @@ void NotifyAdvertisingStopped(const sys_snode_t * node)
 CHIP_ERROR RestartAdvertising()
 {
     // Note: bt_le_adv_stop() returns success when the advertising was not started
-    // ReturnErrorOnFailure(System::MapErrorZephyr(bt_le_adv_stop()));
+    ReturnErrorOnFailure(System::MapErrorZephyr(stop_matter_adv()));
     ReturnErrorCodeIf(sys_slist_is_empty(&sRequests), CHIP_NO_ERROR);
 
     const Request & top    = ToRequest(sys_slist_peek_head(&sRequests));

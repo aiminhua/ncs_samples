@@ -609,6 +609,22 @@ int matter_set_public_addr(void)
 	return 0;
 }
 
+int stop_matter_adv(void) 
+{
+    int err;
+
+	if (adv_matter->cb == &adv_matter_cb)
+	{
+		err = bt_le_ext_adv_stop(adv_matter);
+		if (err) {
+			printk("Stop Matter adv (err %d)\n", err);
+			return err;			
+		}
+	}
+    
+    return 0;
+}
+
 int start_matter_adv(struct bt_le_adv_param *param,
 		    const struct bt_data *ad, size_t ad_len,
 		    const struct bt_data *sd, size_t sd_len)
@@ -627,11 +643,11 @@ int start_matter_adv(struct bt_le_adv_param *param,
 		adv_matter->cb = &adv_matter_cb;		
 	}		
 
-	err = bt_le_ext_adv_stop(adv_matter);
-	if (err) {
-		printk("Stop Matter adv (err %d)\n", err);
-		return err;			
-	}
+	// err = bt_le_ext_adv_stop(adv_matter);
+	// if (err) {
+	// 	printk("Stop Matter adv (err %d)\n", err);
+	// 	return err;			
+	// }
 
 	err = bt_le_ext_adv_set_data(adv_matter, ad , ad_len, sd, sd_len);
 	if (err) {
