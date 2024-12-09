@@ -76,10 +76,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 	case UART_RX_DISABLED:
 		LOG_INF("UART_RX_DISABLED");
+	#ifndef CONFIG_UART_ASYNC_API
 		err = uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
 		if (err) {
 			LOG_ERR("UART RX enable failed: %d", err);			
 		}
+	#endif
 		break;
 
 	case UART_RX_BUF_REQUEST:
