@@ -34,7 +34,7 @@ static int nvs_usage_init(void)
 		printk("Flash device %s is not ready\n", fs.flash_device->name);
 		return -EINVAL;
 	}
-	fs.offset = FLASH_AREA_OFFSET(storage);
+	fs.offset = FLASH_AREA_OFFSET(STORAGE_NODE_LABEL);
 	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
 	if (rc) {
 		printk("Unable to get page info\n");
