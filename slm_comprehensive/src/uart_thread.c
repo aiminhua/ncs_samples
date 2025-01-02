@@ -17,6 +17,8 @@
 #define LOG_MODULE_NAME uart_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
+#define UART_DEVICE_NAME         DT_NODELABEL(uart1)
+
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
 #define UART_WAIT_FOR_RX 10000
@@ -108,7 +110,7 @@ static int uart_init(void)
 {
 	int err;
 	
-	uart = DEVICE_DT_GET(DT_ALIAS(myuart));
+	uart = DEVICE_DT_GET(UART_DEVICE_NAME);
 	if (!uart) {
 		return -ENXIO;
 	}
@@ -160,11 +162,9 @@ void uart_thread(void)
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data,
 						     K_FOREVER);
 
-		bt_nus_send(NULL,buf->data, buf->len);
-
 		my_uart_send(buf->data,buf->len);
 		
-		LOG_HEXDUMP_INF(buf->data, buf->len, "uart received:");
+		// LOG_HEXDUMP_INF(buf->data, buf->len, "uart received:");
 		k_free(buf);					
 	}
 }

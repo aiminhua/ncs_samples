@@ -1,0 +1,13 @@
+littlefs_storage:
+  region: external_flash
+  address: 0x0
+  size: 0x100000
+nvs_fs:
+  region: external_flash
+  address: 0x100000
+  size: 0x4000  
+settings_storage:
+  address: 0xfe000
+  end_address: 0x100000
+  region: flash_primary
+  size: 0x2000

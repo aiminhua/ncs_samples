@@ -72,8 +72,8 @@ const struct device *devI2C;
 const struct device *devSPI;
 static void get_device_handles(void)
 {
-	devUart0 = DEVICE_DT_GET(DT_NODELABEL(uart0));
-    devUart1 = DEVICE_DT_GET(DT_NODELABEL(uart1));
+	devUart0 = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+    devUart1 = DEVICE_DT_GET(DT_ALIAS(myuart));
 	devI2C = DEVICE_DT_GET(DT_ALIAS(myi2c));
     devSPI = DEVICE_DT_GET(DT_ALIAS(myspi));	
 }

@@ -1,0 +1,131 @@
+/* overlay file for app core */
+
+/ {
+	chosen {
+		nordic,pm-ext-flash = &mx25r64;
+	};
+	aliases {
+		myi2c = &i2c21;
+		myspi = &spi22;
+		myuart = &uart30;  
+	};	
+	/* See &GPIO0 definition below */
+	zephyr,user {
+		extint-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
+	};		
+};
+
+&uicr {
+	nfct-pins-as-gpios;
+};
+
+&pinctrl {
+	
+	i2c21_default: i2c21_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 1, 11)>,
+				<NRF_PSEL(TWIM_SCL, 1, 12)>;
+			bias-pull-up;
+			nordic,drive-mode = <NRF_DRIVE_S0D1>;				
+		};
+	};
+
+	i2c21_sleep: i2c21_sleep {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 1, 11)>,
+				<NRF_PSEL(TWIM_SCL, 1, 12)>;
+			low-power-enable;
+		};
+	};	
+
+	spi22_default: spi22_default {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 3)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 15)>,
+				<NRF_PSEL(SPIM_MISO, 1, 2)>;
+		};
+	};
+
+	spi22_sleep: spi22_sleep {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 3)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 15)>,
+				<NRF_PSEL(SPIM_MISO, 1, 2)>;
+			low-power-enable;
+		};
+	};
+};
+
+
+&uart30 {
+	status = "okay";
+	current-speed = < 1000000 >;
+	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;	
+};
+
+&uart20 {
+	status = "okay";
+	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;	
+};
+
+&spi22 {
+	status = "okay"; 
+	compatible = "nordic,nrf-spim";
+	pinctrl-0 = <&spi22_default>;
+	pinctrl-1 = <&spi22_sleep>;
+	pinctrl-names = "default", "sleep";	
+	cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>;
+};
+
+&i2c21 {
+	status = "okay";
+	pinctrl-0 = < &i2c21_default >;
+	pinctrl-1 = < &i2c21_sleep >;
+	pinctrl-names = "default", "sleep";	
+};
+
+&adc {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_2_5";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
+		zephyr,input-positive = <NRF_SAADC_AIN2>;			
+	};
+	
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_2_5";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
+		zephyr,input-positive = <NRF_SAADC_AIN3>;		
+	};
+
+};
+
+&gpio0 {
+	/* pin9 sense for edge */
+	sense-edge-mask = <0x200>;
+};
+
+// restore full RRAM and SRAM space - by default some parts are dedicated to FLRP
+&cpuapp_rram {
+	reg = <0x0 DT_SIZE_K(1524)>;
+};
+
+&cpuapp_sram {
+	reg = <0x20000000 DT_SIZE_K(256)>;
+	ranges = <0x0 0x20000000  0x40000>;
+};
+
+&mx25r64 {
+	status = "okay";
+};
