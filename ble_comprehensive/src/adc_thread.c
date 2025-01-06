@@ -14,153 +14,86 @@
 
 LOG_MODULE_REGISTER(adc_thread, 3);
 
-#define NUM_OF_CH 2
-#define ADC_DEVICE_NAME		DT_NODELABEL(adc)
-#define ADC_RESOLUTION		12
-#define ADC_OVERSAMPLING	4 /* 2^ADC_OVERSAMPLING samples are averaged */
-#define ADC_MAX 		4096
-#define BATTERY_MEAS_VOLTAGE_GAIN	6
-#define ADC_REF_INTERNAL_MV	600UL
+#if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
+	!DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
+#error "No suitable devicetree overlay specified"
+#endif
 
-#define ADC_SAMPLE_INTERVAL	20  //unit:s
+#define DT_SPEC_AND_COMMA(node_id, prop, idx) \
+	ADC_DT_SPEC_GET_BY_IDX(node_id, idx),
 
-#define BATTERY_VOLTAGE(sample) (sample * BATTERY_MEAS_VOLTAGE_GAIN	\
-				 * ADC_REF_INTERNAL_MV / ADC_MAX)
-
-
-static const struct device *adc_dev;
-static int16_t adc_buffer[NUM_OF_CH];
-static bool adc_async_read_pending;
-static struct k_work_delayable adc_work;
-
-static struct k_poll_signal async_sig = K_POLL_SIGNAL_INITIALIZER(async_sig);
-static struct k_poll_event  async_evt =
-	K_POLL_EVENT_INITIALIZER(K_POLL_TYPE_SIGNAL,
-				 K_POLL_MODE_NOTIFY_ONLY,
-				 &async_sig);
-
-static const struct adc_channel_cfg ch0_cfg_dt =
-    ADC_CHANNEL_CFG_DT(DT_CHILD(DT_NODELABEL(adc), channel_0));
-static const struct adc_channel_cfg ch1_cfg_dt =
-    ADC_CHANNEL_CFG_DT(DT_CHILD(DT_NODELABEL(adc), channel_1));
-
-static struct adc_sequence sequence = {
-	.options	= NULL,
-	.buffer		= adc_buffer,
-	.buffer_size	= sizeof(adc_buffer),
-	.resolution	= ADC_RESOLUTION,
-	.oversampling	= ADC_OVERSAMPLING,
-	.calibrate	= false,
-};
-static struct adc_sequence sequence_calibrate = {
-	.options	= NULL,
-	.buffer		= adc_buffer,
-	.buffer_size	= sizeof(adc_buffer),
-	.resolution	= ADC_RESOLUTION,
-	.oversampling	= ADC_OVERSAMPLING,
-	.calibrate	= true,
+/* Data of ADC io-channels specified in devicetree. */
+static const struct adc_dt_spec adc_channels[] = {
+	DT_FOREACH_PROP_ELEM(DT_PATH(zephyr_user), io_channels,
+			     DT_SPEC_AND_COMMA)
 };
 
-static bool calibrated;
+uint16_t buf;
+struct adc_sequence sequence = {
+	.buffer = &buf,
+	/* buffer size in bytes, not number of samples */
+	.buffer_size = sizeof(buf),
+};
 
 void adc_sample_sync(void)
 {
 	int err;
 
-	sequence.channels = BIT(ch0_cfg_dt.channel_id);
-	sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id);
-	if (NUM_OF_CH == 2)
-	{
-		sequence.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
-		sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
-		sequence.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
-		sequence_calibrate.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
-	}
-	if (likely(calibrated)) {		
-		err = adc_read(adc_dev, &sequence);
-	} else {
-		err = adc_read(adc_dev, &sequence_calibrate);
-		calibrated = true;
-	}
-	if (err) {
-		LOG_WRN("ADC read err %d", err);
-	} else {
-		for (int i = 0; i < NUM_OF_CH; i++)
-		{
-			uint32_t voltage = BATTERY_VOLTAGE(adc_buffer[i]);
-			LOG_INF("Voltage%d: %u mV / %d", i, voltage, adc_buffer[i]);
-		}
-	}			
-}
-#ifdef CONFIG_ADC_ASYNC
-static void adc_sample_async(struct k_work *work)
-{
-	int err;
+	for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++) {
+		int32_t val_mv;
 
-	if (NUM_OF_CH == 2)
-	{
-		sequence.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
-		sequence_calibrate.channels = BIT(ch0_cfg_dt.channel_id) | BIT(ch1_cfg_dt.channel_id);
-		sequence.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;
-		sequence_calibrate.oversampling  = NRF_SAADC_OVERSAMPLE_DISABLED;		
-	}
-	if (!adc_async_read_pending) {
-		if (likely(calibrated)) {
-			err = adc_read_async(adc_dev, &sequence, &async_sig);
-		} else {
-			err = adc_read_async(adc_dev, &sequence_calibrate,
-					     &async_sig);
-			calibrated = true;
+		printk("- %s, channel %d: ",
+				adc_channels[i].dev->name,
+				adc_channels[i].channel_id);
+
+		(void)adc_sequence_init_dt(&adc_channels[i], &sequence);
+
+		err = adc_read_dt(&adc_channels[i], &sequence);
+		if (err < 0) {
+			printk("Could not read (%d)\n", err);
+			continue;
 		}
 
-		if (err) {
-			LOG_WRN("adc_read_async err %d", err);
+		/*
+			* If using differential mode, the 16 bit value
+			* in the ADC sample buffer should be a signed 2's
+			* complement value.
+			*/
+		if (adc_channels[i].channel_cfg.differential) {
+			val_mv = (int32_t)((int16_t)buf);
 		} else {
-			adc_async_read_pending = true;
+			val_mv = (int32_t)buf;
 		}
-	} else {
-		err = k_poll(&async_evt, 1, K_NO_WAIT);
-		if (err) {
-			LOG_WRN("ADC sampling timeout");
+		printk("%"PRId32, val_mv);
+		err = adc_raw_to_millivolts_dt(&adc_channels[i],
+							&val_mv);
+		/* conversion to mV may not be supported, skip if not */
+		if (err < 0) {
+			printk(" (value in mV not available)\n");
 		} else {
-			adc_async_read_pending = false;			
-			for (int i = 0; i < NUM_OF_CH; i++)
-			{
-				uint32_t voltage = BATTERY_VOLTAGE(adc_buffer[i]);
-				LOG_INF("Voltage%d: %u mV / %d async", i, voltage, adc_buffer[i]);
-			}			
+			printk(" = %"PRId32" mV\n", val_mv);
 		}
 	}
-
-	k_work_reschedule(&adc_work, K_SECONDS(ADC_SAMPLE_INTERVAL));
 
 }
-#endif
 
 static int init_adc(void)
 {
 	int err;
 
-	adc_dev = DEVICE_DT_GET(ADC_DEVICE_NAME);
-	if (!adc_dev) {
-		LOG_ERR("Cannot get ADC device");
-		return -EIO;
-	}
+	/* Configure channels individually prior to sampling. */
+	for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++) {
+		if (!adc_is_ready_dt(&adc_channels[i])) {
+			printk("ADC controller device %s not ready\n", adc_channels[i].dev->name);
+			return 0;
+		}
 
-	err = adc_channel_setup(adc_dev, &ch0_cfg_dt);
-	if (NUM_OF_CH == 2)
-	{
-		err |= adc_channel_setup(adc_dev, &ch1_cfg_dt);	
+		err = adc_channel_setup_dt(&adc_channels[i]);
+		if (err < 0) {
+			printk("Could not setup channel #%d (%d)\n", i, err);
+			return 0;
+		}
 	}
-	if (err) {
-		LOG_ERR("ADC channel setup err:%d", err);
-		return err;
-	}	
-
-#ifdef CONFIG_ADC_ASYNC
-	k_work_init_delayable(&adc_work, adc_sample_async);
-	k_work_reschedule(&adc_work, K_MSEC(10));
-#endif //CONFIG_ADC_ASYNC
 
 	return 0;
 }
@@ -175,9 +108,9 @@ void adc_thread(void)
 	while (1) {                
         LOG_INF("ADC thread");
         adc_sample_sync();
-        k_sleep(K_SECONDS(ADC_SAMPLE_INTERVAL)); 
+        k_sleep(K_SECONDS(5)); 
 	}
 }
 
-K_THREAD_DEFINE(adc_thread_id, 1024, adc_thread, NULL, NULL,
+K_THREAD_DEFINE(adc_thread_id, 512, adc_thread, NULL, NULL,
 		NULL, 9, 0, 0);

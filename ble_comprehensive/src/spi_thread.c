@@ -14,77 +14,66 @@
 #define LOG_MODULE_NAME spi_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define DELAY_SPI_CS_ACTIVE_US 2
 #define TEST_STRING "Nordic"
-
-const struct device *spi_dev;
 extern struct k_sem sem_spi_txrx;
+#define SPI_OP     SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_WORD_SET(8) | SPI_LINES_SINGLE
+static struct spi_dt_spec spi_dev0 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_0), SPI_OP, 0);
+static struct spi_dt_spec spi_dev1 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_1), SPI_OP, 0);
 
 static int spi_data_exchange(void)
 {
-    int err;
-    struct spi_config spi_cfg = {0};
+    int err;  
+	uint8_t tx_data[] = TEST_STRING;
+    uint8_t rx_data[7];
 
-	spi_cfg.frequency = 8000000U;
-	spi_cfg.operation = SPI_WORD_SET(8);
-
-	spi_cfg.cs.gpio.port = DEVICE_DT_GET(DT_GPIO_CTLR(DT_ALIAS(myspi), cs_gpios));
-	if (!spi_cfg.cs.gpio.port) {
-        LOG_ERR("cannot find CS GPIO device");
-		return -ENODEV;
-	}
-
-	spi_cfg.cs.gpio.pin = DT_GPIO_PIN(DT_ALIAS(myspi), cs_gpios);
-	spi_cfg.cs.gpio.dt_flags = DT_GPIO_FLAGS(DT_ALIAS(myspi), cs_gpios);
-
-	spi_cfg.cs.delay = DELAY_SPI_CS_ACTIVE_US;
-
-	uint8_t buf[] = TEST_STRING;
-    uint8_t data[] = TEST_STRING;
-
-	struct spi_buf spi_buf[2] = {
+	struct spi_buf tx_buf[2] = {
 		{
-			.buf = buf,
-			.len = sizeof(buf),
+			.buf = tx_data,
+			.len = sizeof(tx_data),
 		},
 		{
-			.buf = data,
-			.len = sizeof(data)
+			.buf = tx_data,
+			.len = sizeof(tx_data)
 		}
 	};
-    
-	const struct spi_buf_set tx_set = {
-		.buffers = spi_buf,
+	struct spi_buf rx_buf = {		
+		.buf = rx_data,
+		.len = sizeof(tx_data)		
+	};  	    
+	struct spi_buf_set tx_set = {
+		.buffers = tx_buf,
 		.count = 1
 	};
-
-	const struct spi_buf_set rx_set = {
-		.buffers = spi_buf,
+	struct spi_buf_set rx_set = {
+		.buffers = &rx_buf,
 		.count = 1
-	};
-
-	// const struct spi_buf_set tx_set = {
-	// 	.buffers = spi_buf,
-	// 	.count = 2
-	// };
-
-	// const struct spi_buf_set rx_set = {
-	// 	.buffers = spi_buf,
-	// 	.count = 2
-	// };    
-
-	err = spi_transceive(spi_dev, &spi_cfg, &tx_set, &rx_set);
+	}; 
+	
+	err = spi_transceive_dt(&spi_dev0, &tx_set, &rx_set);
     
     if (err)
     {
-        LOG_ERR("SPI transcation failed err %d", err);
+        LOG_ERR("SPI dev0 transcation failed err %d", err);
+		return err;
     }
     else
     {
-        LOG_HEXDUMP_INF(rx_set.buffers->buf, rx_set.buffers->len, "Received SPI data: ");
+        LOG_HEXDUMP_INF(rx_set.buffers->buf, rx_set.buffers->len, "Received SPI dev0 data: ");
     }
 
-    return err;
+	tx_set.count = 2;
+	err = spi_write_dt(&spi_dev1, &tx_set);    
+    if (err)
+    {
+        LOG_ERR("SPI dev1 write failed err %d", err);
+		return err;
+    }
+    else
+    {
+        LOG_INF("SPI dev1 write success");
+    }
+
+    return 0;
 
 }
 
@@ -95,16 +84,21 @@ void spi_thread(void)
 	LOG_INF("This example is ported from nRF5_SDK\\examples\\peripheral\\spi");
 	LOG_INF("The related spis example is from nRF5_SDK\\examples\\peripheral\\spis");
 	
-	spi_dev = DEVICE_DT_GET(DT_ALIAS(myspi));
-	if (!spi_dev) {
-		LOG_ERR("SPIM driver not found.\n");
+	if (!spi_is_ready_dt(&spi_dev0)) {
+		LOG_ERR("SPI bus %s dev0 not ready", spi_dev0.bus->name);
 		return;
 	}
+
+	if (!spi_is_ready_dt(&spi_dev1)) {
+		LOG_ERR("SPI bus %s dev1 not ready", spi_dev1.bus->name);
+		return;
+	}
+
     k_sem_take(&sem_spi_txrx, K_FOREVER);
 	while (1) {                
         LOG_INF("spi master thread");
         spi_data_exchange();
-        k_sleep(K_MSEC(800)); 
+        k_sleep(K_MSEC(5000)); 
 	}
 }
 

@@ -11,6 +11,7 @@
 	};	
 	/* See &GPIO0 definition below */
 	zephyr,user {
+		io-channels = <&adc 0>, <&adc 1>;
 		extint-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
 	};		
 };
@@ -41,7 +42,7 @@
 	spi22_default: spi22_default {
 		group1 {
 			psels = <NRF_PSEL(SPIM_SCK, 1, 3)>,
-				<NRF_PSEL(SPIM_MOSI, 1, 15)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 7)>,
 				<NRF_PSEL(SPIM_MISO, 1, 2)>;
 		};
 	};
@@ -49,7 +50,7 @@
 	spi22_sleep: spi22_sleep {
 		group1 {
 			psels = <NRF_PSEL(SPIM_SCK, 1, 3)>,
-				<NRF_PSEL(SPIM_MOSI, 1, 15)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 7)>,
 				<NRF_PSEL(SPIM_MISO, 1, 2)>;
 			low-power-enable;
 		};
@@ -60,16 +61,16 @@
 &uart30 {
 	status = "okay";
 	current-speed = < 1000000 >;
-	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
 	/delete-property/ rts-pin;
-	/delete-property/ cts-pin;	
+	/delete-property/ cts-pin;
+	/delete-property/ hw-flow-control;
 };
 
 &uart20 {
 	status = "okay";
-	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
 	/delete-property/ rts-pin;
-	/delete-property/ cts-pin;	
+	/delete-property/ cts-pin;
+	/delete-property/ hw-flow-control;
 };
 
 &spi22 {
@@ -78,7 +79,18 @@
 	pinctrl-0 = <&spi22_default>;
 	pinctrl-1 = <&spi22_sleep>;
 	pinctrl-names = "default", "sleep";	
-	cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>;
+    cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>,
+               <&gpio2 8 GPIO_ACTIVE_LOW>;
+	spi_dev_0: spi_dev_0@0 {
+		compatible = "spi-user-define";
+		reg = <0>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+	}; 
+	spi_dev_1: spi_dev_1@0 {
+		compatible = "spi-user-define";
+		reg = <1>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+	};    			   	
 };
 
 &i2c21 {
@@ -98,7 +110,9 @@
 		zephyr,gain = "ADC_GAIN_2_5";
 		zephyr,reference = "ADC_REF_INTERNAL";
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
-		zephyr,input-positive = <NRF_SAADC_AIN2>;			
+		zephyr,input-positive = <NRF_SAADC_AIN2>;
+		zephyr,vref-mv = <900>;
+		zephyr,resolution = <10>;					
 	};
 	
 	channel@1 {
@@ -106,7 +120,9 @@
 		zephyr,gain = "ADC_GAIN_2_5";
 		zephyr,reference = "ADC_REF_INTERNAL";
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
-		zephyr,input-positive = <NRF_SAADC_AIN3>;		
+		zephyr,input-positive = <NRF_SAADC_AIN3>;
+		zephyr,vref-mv = <900>;
+		zephyr,resolution = <10>;				
 	};
 
 };
