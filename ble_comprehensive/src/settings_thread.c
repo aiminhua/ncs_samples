@@ -125,6 +125,26 @@ static int flash_access(void)
 	return rc;
 }
 
+static void erase_secondary_slot(void)
+{
+	const struct flash_area *fa;
+	int rc;
+
+	rc = flash_area_open(PM_MCUBOOT_SECONDARY_ID, &fa);
+	if (rc) {
+		LOG_ERR("flash_area_open err:%d", rc);
+		return;
+	}
+
+	LOG_INF("Erasing MCUboot secondary slot...");	
+	rc = flash_area_erase(fa, 0, PM_MCUBOOT_SECONDARY_SIZE);   
+	if (rc) {
+		LOG_ERR("flash_area_erase err:%d", rc);
+		return;
+	}		
+
+}
+
 void settings_thread(void)
 {
 	static bool operation;
@@ -148,6 +168,7 @@ void settings_thread(void)
 		{
 			operation = false;
 			flash_access();
+			// erase_secondary_slot();
 		}
 
 		k_sleep(K_SECONDS(20));

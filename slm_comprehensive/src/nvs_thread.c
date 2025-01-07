@@ -47,7 +47,7 @@ static int nvs_usage_init(void)
 	// LOG_INF("Please wait......");
 	// rc = flash_area_erase(fa, 0, PM_RAM_SIM_SIZE);   //PM_RAM_SIM_SIZE
 	// if (rc) {
-	// 	printk("flash_area_open err:%d\n", rc);
+	// 	printk("flash_area_erase err:%d\n", rc);
 	// 	return -EINVAL;
 	// }	
 

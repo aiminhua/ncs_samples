@@ -7,9 +7,11 @@
 	aliases {
 		myi2c = &i2c2;
 		myspi = &spi3;
+		myuart = &uart1; 
 	};	
 	/* See &GPIO0 definition below */
 	zephyr,user {
+		io-channels = <&adc 0>, <&adc 1>;
 		extint-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
 	};		
 };
@@ -76,7 +78,7 @@
 		};
 	};	
 
-	spi3_default_alt: spi3_default_alt {
+	spi3_default: spi3_default {
 		group1 {
 			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
 				<NRF_PSEL(SPIM_MOSI, 1, 13)>,
@@ -84,7 +86,7 @@
 		};
 	};
 
-	spi3_sleep_alt: spi3_sleep_alt {
+	spi3_sleep: spi3_sleep {
 		group1 {
 			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
 				<NRF_PSEL(SPIM_MOSI, 1, 13)>,
@@ -125,6 +127,14 @@
 	pinctrl-0 = < &i2c2_default >;
 	pinctrl-1 = < &i2c2_sleep >;
 	pinctrl-names = "default", "sleep";	
+	i2c_dev_0: i2c_dev_0@0 {
+		compatible = "i2c-user-define";
+		reg = <0x50>;
+	};
+	i2c_dev_1: i2c_dev_1@1 {
+		compatible = "i2c-user-define";
+		reg = <0x0B>;
+	}; 	
 };
 
 &spi2 {
@@ -134,10 +144,20 @@
 &spi3 {
 	status = "okay"; 
 	compatible = "nordic,nrf-spim";
-	pinctrl-0 = <&spi3_default_alt>;
-	pinctrl-1 = <&spi3_sleep_alt>;
+	pinctrl-0 = <&spi3_default>;
+	pinctrl-1 = <&spi3_sleep>;
 	pinctrl-names = "default", "sleep";	
-	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>, <&gpio1 6 GPIO_ACTIVE_LOW>;
+	spi_dev_0: spi_dev_0@0 {
+		compatible = "spi-user-define";
+		reg = <0>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+	}; 
+	spi_dev_1: spi_dev_1@1 {
+		compatible = "spi-user-define";
+		reg = <1>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+	};    			   	
 };
 
 &adc {
@@ -150,7 +170,9 @@
 		zephyr,gain = "ADC_GAIN_1_6";
 		zephyr,reference = "ADC_REF_INTERNAL";
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
-		zephyr,input-positive = <NRF_SAADC_AIN0>;			
+		zephyr,input-positive = <NRF_SAADC_AIN1>;			
+		zephyr,vref-mv = <600>;
+		zephyr,resolution = <10>;						
 	};
 	
 	channel@1 {
@@ -158,7 +180,9 @@
 		zephyr,gain = "ADC_GAIN_1_6";
 		zephyr,reference = "ADC_REF_INTERNAL";
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
-		zephyr,input-positive = <NRF_SAADC_AIN1>;		
+		zephyr,input-positive = <NRF_SAADC_VDD>;		
+		zephyr,vref-mv = <600>;
+		zephyr,resolution = <10>;					
 	};
 
 };

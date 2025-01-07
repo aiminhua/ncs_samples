@@ -27,7 +27,7 @@ static struct gpio_callback ext_int_cb_data;
 void ext_int_isr(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	LOG_INF("external interrupt occurs on pin 0x%x at 0x%x", pins, k_uptime_get());   
+	LOG_INF("External interrupt occurs on pin 0x%x at 0x%x", pins, k_uptime_get());   
     k_sem_give(&sem_i2c_op);    
 }
 
