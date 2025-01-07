@@ -12,7 +12,7 @@
 	/* See &GPIO0 definition below */
 	zephyr,user {
 		io-channels = <&adc 0>, <&adc 1>;
-		extint-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
+		extint-gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
 	};		
 };
 
@@ -125,9 +125,18 @@
 
 &i2c22 {
 	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
 	pinctrl-0 = < &i2c22_default >;
 	pinctrl-1 = < &i2c22_sleep >;
-	pinctrl-names = "default", "sleep";	
+	pinctrl-names = "default", "sleep";
+	i2c_dev_0: i2c_dev_0@0 {
+		compatible = "i2c-user-define";
+		reg = <0x50>;
+	};
+	i2c_dev_1: i2c_dev_1@1 {
+		compatible = "i2c-user-define";
+		reg = <0x0B>;
+	}; 		
 };
 
 &adc {
@@ -158,8 +167,8 @@
 };
 
 &gpio0 {
-	/* pin9 sense for edge */
-	sense-edge-mask = <0x200>;
+	/* p0.4 sense for edge */
+	sense-edge-mask = <0x0010>;
 };
 
 // restore full RRAM and SRAM space - by default some parts are dedicated to FLRP
@@ -180,16 +189,9 @@
 / {
 	aliases {  
 	 /delete-property/ sw3;
-	};
-  };
-
-/delete-node/ &button3;
-
-/* delete sw3 to reserve the related pin for GPIO use */
-/ {
-	aliases {  
 	 /delete-property/ led3;
 	};
   };
 
+/delete-node/ &button3;
 /delete-node/ &led3;

@@ -119,7 +119,7 @@ static int flash_access(void)
 						   sizeof(reboot_cnt));
 	if (rc)
 	{
-		LOG_ERR("boot_cnt save err %d ", rc);
+		LOG_ERR("reboot_cnt save err %d ", rc);
 	}
 
 	return rc;

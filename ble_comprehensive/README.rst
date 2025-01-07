@@ -95,12 +95,13 @@ Perform the following steps for the test.
 #. |connect_terminal|
 #. Open nRF Connect or Device Manager on your phone. 
 #. Connect the board. 
-#. Enter folder: ``build*/zephyr``. Copy ``dfu_application.zip``, ``app_update.bin`` or ``net_core_app_update.bin`` to your phone for your needs. (Change some code lines before a second build)
+#. Copy ``build/dfu_application.zip`` or ``build/ble_comprehensive/zephyr/zephyr.signed.bin`` to your phone. (Change some code lines before a second build)
 #. Tap **DFU** button on the right top corner of nRF Connect.
-#. Select ``dfu_application.zip``, ``app_update.bin`` or ``net_core_app_update.bin`` on your phone.
+#. Select ``dfu_application.zip`` or ``zephyr.signed.bin`` on your phone.
 #. Wait until the DFU process is done.
+#. nRF Connect would auto connect the device to confirm the new image if applicable. Otherwise, the old image would restore after a second reset.
 
-**note: In this sample, MCUBoot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
+**note: In this sample, MCUboot uses the default signing key, which must be replaced with your own key before production.** Do it like below:
 
 .. code-block:: console
 
@@ -126,8 +127,10 @@ After pressing **Button2**, this module starts to communicate with the SPI slave
 
 .. code-block:: console
 
-	<inf> spi_thread: Received SPI data:
-			4e 6f 72 64 69 63 00
+	[00:04:38.533,844] <inf> spi_thread: spi master thread
+	[00:04:38.534,155] <inf> spi_thread: Received SPI dev0 data: 
+										4e 6f 72 64 69 63 00         
+	[00:04:38.534,454] <inf> spi_thread: SPI dev1 write success
 
 I2C master
 ==========
@@ -147,8 +150,13 @@ After **Button4** is pushed down, this module starts to communicate with I2C sla
 
 .. code-block:: console
 
-	<inf> i2c_thread: EEPROM:
-			f8 6f 32 5f e4 21 80 65 e3 a3 4b 3c 8d 91 03 7f
+	[00:01:55.881,248] <inf> i2c_thread: i2c master thread
+	[00:01:55.881,849] <inf> i2c_thread: EEPROM: 
+										f8 f7 66 ff 1e b9 25 a1  f4 20 f8 f7 61 ff 28 46 
+	[00:01:55.882,450] <inf> i2c_thread: EEPROM: 
+										00 f0 60 f8 10 b1 11 20  bd e8 f0 9f 66 61 4f f0
+	[00:01:55.883,041] <inf> i2c_thread: EEPROM: 
+										00 09 c4 f8 20 90 a7 60  84 f8 28 90 4f f4 8e 78
 	
 ADC usage
 =========
@@ -158,11 +166,9 @@ and work in both sync and async mode. If you change the voltage on P0.05, you wo
 
 .. code-block:: console
 
-	<inf> adc_thread: ADC thread
-	<inf> adc_thread: Voltage0: 2988 mV / 3400
-	<inf> adc_thread: Voltage1: 259 mV / 295
-	<inf> adc_thread: Voltage0: 2988 mV / 3400 async
-	<inf> adc_thread: Voltage1: 259 mV / 295 async
+	[00:04:30.853,300] <inf> adc_thread: ADC thread
+	- adc@d5000, channel 0: 2 = 4 mV
+	- adc@d5000, channel 1: 1023 = 2247 mV
 
 External interrupt
 ==================
@@ -172,7 +178,7 @@ The logging is like below.
 
 .. code-block:: console
 
-	<inf> i2c_thread: external interrupt occurs at 200 	
+	[00:00:22.533,525] <inf> extint_thread: external interrupt occurs on pin 0x10 at 0x1f589
 
 Flash access
 ============
@@ -186,12 +192,15 @@ In this example, we use both NVS API and Settings API to do the same thing: stor
 
 .. code-block:: console
 
-	<inf> flash_thread: Key value in NVS:
-            ff fe fd fc fb fa f9 f8                                
-	<inf> flash_thread: *** Reboot counter in NVS: 6 ***
-	<inf> flash_thread: *** Reboot counter in Settings: 6 ****
-	<inf> flash_thread: Key value in Settings:
-            30 31 32 33 34 35 36 37                           
+	[00:00:00.843,753] <inf> settings_thread: settings subsys initialization: OK.
+	[00:00:00.843,764] <inf> settings_thread: Load all key-value pairs using registered handlers
+	[00:00:00.843,829] <inf> settings_thread: set handler name=boot_cnt, len=4 
+	[00:00:00.843,854] <inf> settings_thread: *** Reboot counter in Settings: 3 ****
+	[00:00:00.843,930] <inf> settings_thread: set handler name=key, len=8 
+	[00:00:00.843,977] 0m<inf> settings_thread: Key value in Settings:
+											30 31 32 33 34 35 36 37                          
+	[00:00:00.843,990] <inf> settings_thread: Settings thread
+	[00:00:00.843,996] <inf> settings_thread: save new reboot counter by Settings API                       
 
 Device PM
 =========
@@ -225,10 +234,27 @@ impact on the UART communication. You can use app: ``Serial Debug Assistant`` fr
 
 Use ``Serial Debug Assistant`` to send a file to the board. The board would forward the same file back to the PC. Verify whether they are identical.
 
-Note: the latest nrf5340dk, we only have 2 COM ports. So you need to have a USB-to-UART bridge or you can change source code to make use of uart0.
-Regarding the old nRF5340dk, you need to connect the following pins together. UART1 will enumerate as the second COM of nRF5340 DK. 
-In this case you don't need a USB-to-UART bridge.
+Note: please shut down your logging terminal to achieve the 1Mbps baud rate.
 
-* Connect P0.07 to TxD of P24
-* Connect P0.26 to RxD of P24
+.. code-block:: console
 
+	[00:01:50.627,425] <inf> uart_thread: UART_RX_RDY 255
+	[00:01:50.627,442] <inf> uart_thread: UART_RX_BUF_RELEASED
+	[00:01:50.627,541] <inf> uart_thread: uart received:
+										44 65 61 72 20 61 6c 6c  2c 0d 0a 20 0d 0a 41 73 
+										20 64 69 73 63 75 73 73  65 64 20 6a 75 73 74 20 
+										6e 6f 77 2c 20 77 65 e2  80 99 6c 6c 20 73 74 61 
+										72 74 20 4e 43 20 77 65  65 6b 6c 79 20 75 70 64 
+										61 74 65 20 66 72 6f 6d  20 6e 65 78 74 20 77 65 
+										65 6b 2c 20 40 44 69 6e  67 2c 20 45 72 69 63 40 
+										5a 68 61 6e 67 2c 20 4f  6c 69 76 65 72 70 6c 65 
+										61 73 65 20 6d 61 6b 65  20 73 75 72 65 20 74 68 
+										61 74 20 74 68 65 20 6f  6e 65 6e 6f 74 65 20 49 
+										20 73 68 61 72 65 64 20  74 6f 20 79 6f 75 20 e2 
+										80 98 4e 43 20 77 65 65  6b 6c 79 20 75 70 64 61 
+										74 65 e2 80 99 20 69 73  20 75 70 64 61 74 65 64 
+										20 62 65 66 6f 72 65 20  74 68 65 20 6d 65 65 74 
+										69 6e 67 2e 20 54 68 61  6e 6b 20 79 6f 75 21 0d 
+										0a 54 68 65 20 6d 65 65  74 69 6e 67 20 77 69 6c 
+										6c 20 6c 61 73 74 20 66  6f 72 20 61 62 6f 75    
+	[00:01:50.630,096] <inf> uart_thread: UART_TX_DONE 255 

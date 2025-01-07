@@ -86,7 +86,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		err = uart_rx_buf_rsp(uart, next_buf,
 			sizeof(uart_rx_buf[0]));
 		if (err) {
-			LOG_WRN("UART RX buf rsp: %d", err);
+			LOG_WRN("UART RX buf requst err: %d", err);
 		}		
 		break;
 
@@ -96,7 +96,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_TX_ABORTED:
-		LOG_INF("UART_TX_ABORTED");
+		LOG_ERR("UART_TX_ABORTED");
 		break;
 
 	default:
