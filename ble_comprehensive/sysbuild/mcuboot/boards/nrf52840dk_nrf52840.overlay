@@ -119,11 +119,11 @@
 	pinctrl-1 = < &i2c0_sleep >;
 	pinctrl-names = "default", "sleep";
 	i2c_dev_0: i2c_dev_0@50 {
-		compatible = "i2c-user-define";
+		compatible = "i2c-device";
 		reg = <0x50>;
 	};
 	i2c_dev_1: i2c_dev_1@b {
-		compatible = "i2c-user-define";
+		compatible = "i2c-device";
 		reg = <0x0B>;
 	}; 	
 };

@@ -128,11 +128,11 @@
 	pinctrl-1 = < &i2c2_sleep >;
 	pinctrl-names = "default", "sleep";	
 	i2c_dev_0: i2c_dev_0@0 {
-		compatible = "i2c-user-define";
+		compatible = "i2c-device";
 		reg = <0x50>;
 	};
 	i2c_dev_1: i2c_dev_1@1 {
-		compatible = "i2c-user-define";
+		compatible = "i2c-device";
 		reg = <0x0B>;
 	}; 	
 };
