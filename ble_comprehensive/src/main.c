@@ -22,6 +22,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 #include <zephyr/pm/device.h>
+#include <helpers/nrfx_reset_reason.h>
 
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -399,9 +400,14 @@ static struct bt_gatt_cb mtu_cb = {
 
 int main(void)
 {
-	int err;	
+	int err;
+	uint32_t rc;	
 
 	LOG_INF("### Comprehensive example v2.0 @ %s built at %s %s\n", CONFIG_BOARD_TARGET, __TIME__, __DATE__);
+
+	rc = nrfx_reset_reason_get();
+	LOG_INF("=== Reset reason:0x%x", rc);
+	nrfx_reset_reason_clear(rc);
 
 	runLED = DEVICE_DT_GET(LED0);
 	if (runLED == NULL) {

@@ -1,0 +1,12 @@
+#
+# Copyright (c) Kevin.ai
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+description: |
+    This binding provides resources required to build and run in Zephyr.
+
+compatible: "i2c-user-define"
+
+include: [i2c-device.yaml]
