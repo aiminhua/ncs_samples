@@ -206,20 +206,21 @@ Device PM
 =========
 
 We can use PM to turn on/off peripherals dynamically to save power consumption. 
-In this example, press **Button3** to turn on/off UART0/UART1 repeatedly. If the logging backend is UART0, the logging message would be gone after pressing **Button3**.	
+In this example, press **Button0** to turn on/off peripherals repeatedly. If the logging backend is UART, the logging message would be gone after pressing **Button0**.	
 The logging is like below.
 
 .. code-block:: console
 
-	<inf> main: button3 isr
-	<inf> main: UART1 is in active state. We suspend it	
-	<inf> main: UART0 is in active state. We suspend it
-	<inf> main: ## UART1 is suspended now ##	
-	<inf> main: button3 isr
-	<inf> main: UART1 is in low power state. We activate it	
-	<inf> main: UART0 is in low power state. We activate it
-	<inf> main: ## UART1 is active now ##	
-	<inf> main: ## UART0 is active now ##
+	[00:02:23.346,708] <inf> main: button1 isr
+	[00:02:23.346,728] <inf> main: Turning off UART/SPI/I2C to save power
+	[00:02:23.346,832] <inf> uart_thread: UART_RX_BUF_RELEASED
+	[00:02:23.346,844] <inf> uart_thread: UART_RX_BUF_RELEASED
+	[00:02:23.346,854] <inf> uart_thread: UART_RX_DISABLED
+	[00:02:23.356,858] <inf> main: Entered lowe power
+	
+    [00:03:29.875,444] <inf> main: button1 isr
+    [00:03:29.875,458] <inf> main: Turning on UART/SPI/I2C
+    [00:03:29.875,492] <inf> main: Entered active state
 
 
 High speed UART
