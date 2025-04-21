@@ -40,8 +40,8 @@ static int nvs_usage_init(void)
 	}
 
 	flash_area_read(fa, 0x1000, test_data, 256);
-	LOG_INF("external Flash read: 0x%x ~ 0x%x",
-				test_data[0], test_data[255]);
+	// LOG_INF("external Flash read: 0x%x ~ 0x%x",
+	// 			test_data[0], test_data[255]);
 
 	// LOG_INF("erasing the whole external SIMULATION RAM Flash area");
 	// LOG_INF("Please wait......");
