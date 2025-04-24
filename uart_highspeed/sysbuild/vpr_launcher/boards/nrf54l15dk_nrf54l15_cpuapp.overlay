@@ -1,0 +1,18 @@
+/* overlay file for app core */
+
+/ {
+	chosen {
+		zephyr,console = &uart30;
+	};		
+};
+
+&uart30 {
+	status = "okay";
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;
+	/delete-property/ hw-flow-control;
+};
+
+&uart20 {
+	status = "reserved";
+};

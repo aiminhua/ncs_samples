@@ -1,0 +1,20 @@
+/* overlay file for app core */
+
+/ {
+	aliases {
+		myuart = &uart20;  
+	};			
+};
+
+&uart20 {
+	status = "okay";
+	current-speed = < 1000000 >;
+	/delete-property/ rts-pin;
+	/delete-property/ cts-pin;
+	/delete-property/ hw-flow-control;
+	/delete-property/ frame-timeout-supported;
+};
+
+&uart30 {
+	status = "disabled";
+};

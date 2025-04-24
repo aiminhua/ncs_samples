@@ -16,8 +16,6 @@
 #define LOG_MODULE_NAME main
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define UART_DEVICE_NAME         DT_NODE_FULL_NAME(DT_NODELABEL(my_uart))
-
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
 #define UART_WAIT_FOR_RX 10000
@@ -51,7 +49,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		struct uart_data_t *buf;
 		struct uart_data_t *buf2;
 		
-		buf = CONTAINER_OF(evt->data.tx.buf, struct uart_data_t,  data);		
+		buf = CONTAINER_OF(evt->data.tx.buf, struct uart_data_t,  data[0]);		
 		LOG_INF("UART_TX_DONE %d", evt->data.tx.len);
 		k_free(buf);
 
@@ -78,18 +76,19 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 	case UART_RX_DISABLED:
 		LOG_INF("UART_RX_DISABLED");
+	#ifndef CONFIG_UART_ASYNC_API
 		err = uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
 		if (err) {
 			LOG_ERR("UART RX enable failed: %d", err);			
 		}
+	#endif
 		break;
 
 	case UART_RX_BUF_REQUEST:
-		LOG_INF("UART_RX_BUF_REQUEST %p", next_buf);
 		err = uart_rx_buf_rsp(uart, next_buf,
 			sizeof(uart_rx_buf[0]));
 		if (err) {
-			LOG_WRN("UART RX buf rsp: %d", err);
+			LOG_WRN("UART RX buf requst err: %d", err);
 		}		
 		break;
 
@@ -99,7 +98,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_TX_ABORTED:
-		LOG_INF("UART_TX_ABORTED");
+		LOG_ERR("UART_TX_ABORTED");
 		break;
 
 	default:
@@ -111,7 +110,7 @@ int uart_init(rx_callback_t cb)
 {
 	int err;
 	
-	uart = device_get_binding(UART_DEVICE_NAME);
+	uart = DEVICE_DT_GET(DT_ALIAS(myuart));
 	if (!uart) {
 		return -ENXIO;
 	}
@@ -141,7 +140,7 @@ int uart_send(const uint8_t *buf, uint16_t len)
 	tx->len = len;
 	err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
 	if (err) {
-		LOG_WRN("buffer uart tx data for later retry");
+		LOG_WRN("buffer uart tx data for later retry (err %d)", err);
 		k_fifo_put(&fifo_uart_tx_data, tx);
 	}
 	return err;		
@@ -166,7 +165,7 @@ void uart_rx_cb(uint8_t *data, uint16_t len)
 	}
 }
 
-void main(void)
+int main(void)
 {
 	int err = 0;
 
@@ -183,5 +182,7 @@ void main(void)
 		/* Wait indefinitely for UART data*/
 		uart_receive();
 	}
+
+	return 0;
 }
 
