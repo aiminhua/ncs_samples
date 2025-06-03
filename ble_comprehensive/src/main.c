@@ -68,13 +68,17 @@ static struct k_work_q application_work_q;
 
 #ifdef CONFIG_PM_DEVICE
 const struct device *devUart0;
+#ifdef CONFIG_EXAMPLE_HS_UART
 const struct device *devUart1;
+#endif
 const struct device *devI2C;
 const struct device *devSPI;
 static void get_device_handles(void)
 {
 	devUart0 = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+#ifdef CONFIG_EXAMPLE_HS_UART	
     devUart1 = DEVICE_DT_GET(DT_ALIAS(myuart));
+#endif
 	devI2C = DEVICE_DT_GET(DT_ALIAS(myi2c));
     devSPI = DEVICE_DT_GET(DT_ALIAS(myspi));	
 }
@@ -91,9 +95,10 @@ void set_device_pm_state(void)
 		is_off = false;
 		err = pm_device_action_run(devUart0, PM_DEVICE_ACTION_RESUME);
 		err |= pm_device_action_run(devI2C,	PM_DEVICE_ACTION_RESUME);
-		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_RESUME);		
+		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_RESUME);
+#ifdef CONFIG_EXAMPLE_HS_UART				
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_RESUME);
-
+#endif
 		if (err) {
 			LOG_ERR("Activating err %d", err);			
 		}
@@ -113,12 +118,13 @@ void set_device_pm_state(void)
 		is_off = true;
 		err = pm_device_action_run(devI2C,	PM_DEVICE_ACTION_SUSPEND);
 		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_SUSPEND);		
-
+#ifdef CONFIG_EXAMPLE_HS_UART
 #if CONFIG_UART_ASYNC_API
 		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
 #endif			
 		k_msleep(10);  //just to simulate a thread calling rx_disable
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_SUSPEND);
+#endif
 		if (err) {
 			LOG_ERR("Entering low power err %d", err);			
 		}
@@ -313,7 +319,9 @@ static struct bt_conn_auth_cb conn_auth_callbacks;
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
 #endif
 
+#ifdef CONFIG_EXAMPLE_HS_UART
 extern int my_uart_send(const uint8_t *buf, size_t len);
+#endif
 
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 			  uint16_t len)
@@ -323,8 +331,9 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
 	LOG_INF("Received data from: %s", addr);
-
+#ifdef CONFIG_EXAMPLE_HS_UART
 	my_uart_send(data, len);
+#endif
 	
 }
 
@@ -480,7 +489,7 @@ int main(void)
 
 	struct bt_le_adv_param adv_para;
 	memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
-	adv_para.options = BT_LE_ADV_OPT_CONNECTABLE;
+	adv_para.options = BT_LE_ADV_OPT_CONN;
 	adv_para.interval_min = 200;
 	adv_para.interval_max = 300;
 

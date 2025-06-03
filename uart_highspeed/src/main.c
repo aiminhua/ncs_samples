@@ -174,7 +174,7 @@ int main(void)
 	err = uart_init(uart_rx_cb);
 	if (err) {
 		LOG_ERR("uart init err %d", err);
-		return;
+		return err;
 	}
 	
 	uart_send(help_string, sizeof(help_string));
