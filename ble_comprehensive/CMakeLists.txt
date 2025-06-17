@@ -34,6 +34,10 @@ target_sources_ifdef(CONFIG_EXAMPLE_FLASH_SETTINGS app
 target_sources_ifdef(CONFIG_EXAMPLE_FLASH_NVS app
                      PRIVATE src/nvs_thread.c)
 
+if (CONFIG_DTM_IN_APP)
+    add_subdirectory(src/dtm)
+endif()
+
 zephyr_library_include_directories(.)
 
 # NORDIC SDK APP END

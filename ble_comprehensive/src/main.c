@@ -55,6 +55,7 @@ static const struct bt_data ad[] = {
 K_THREAD_STACK_DEFINE(application_stack_area,
 		      1024);
 static struct k_work_q application_work_q;
+static struct k_work adv_work;
 
 #define LED0_NODE DT_ALIAS(led0)
 #define LED0	DT_GPIO_CTLR(LED0_NODE, gpios)
@@ -169,6 +170,23 @@ static void exchange_func(struct bt_conn *conn, uint8_t att_err,
 }
 #endif
 
+static void adv_work_handler(struct k_work *work)
+{
+	int err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), NULL, 0);
+
+	if (err) {
+		LOG_ERR("Advertising failed to start (err %d)", err);
+		return;
+	}
+
+	LOG_INF("Advertising successfully started");
+}
+
+static void advertising_start(void)
+{
+	k_work_submit(&adv_work);
+}
+
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
@@ -219,6 +237,12 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	}
 }
 
+static void recycled_cb(void)
+{
+	LOG_INF("Connection object available from previous conn. Disconnect is complete!");
+	advertising_start();
+}
+
 #ifdef CONFIG_BT_NUS_SECURITY_ENABLED
 static void security_changed(struct bt_conn *conn, bt_security_t level,
 			     enum bt_security_err err)
@@ -243,9 +267,9 @@ static void param_updated(struct bt_conn *conn, uint16_t interval,
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
-	.connected    = connected,
-	.disconnected = disconnected,
-	.le_param_updated = param_updated,
+	.connected        = connected,
+	.disconnected     = disconnected,
+	.recycled         = recycled_cb,
 #ifdef CONFIG_BT_NUS_SECURITY_ENABLED
 	.security_changed = security_changed,
 #endif
@@ -487,18 +511,21 @@ int main(void)
 		return err;
 	}
 
-	struct bt_le_adv_param adv_para;
-	memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
-	adv_para.options = BT_LE_ADV_OPT_CONN;
-	adv_para.interval_min = 200;
-	adv_para.interval_max = 300;
+	// struct bt_le_adv_param adv_para;
+	// memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
+	// adv_para.options = BT_LE_ADV_OPT_CONN;
+	// adv_para.interval_min = 200;
+	// adv_para.interval_max = 300;
 
-	err = bt_le_adv_start(&adv_para, ad, ARRAY_SIZE(ad), NULL,
-			      0);
-	if (err) {
-		LOG_ERR("Advertising failed to start (err %d)", err);
-		return err;
-	}
+	// err = bt_le_adv_start(&adv_para, ad, ARRAY_SIZE(ad), NULL,
+	// 		      0);
+	// if (err) {
+	// 	LOG_ERR("Advertising failed to start (err %d)", err);
+	// 	return err;
+	// }
+
+	k_work_init(&adv_work, adv_work_handler);
+	advertising_start();
 
 	while(1)
 	{

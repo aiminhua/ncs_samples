@@ -19,7 +19,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define UART_BUF_SIZE 255
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(100)
-#define UART_WAIT_FOR_RX 10000
+#define UART_WAIT_FOR_RX 50000
+uint8_t welcome_msg[] = "Starting async UART sample with baud rate = 1Mbps\n";
 
 static const struct device *uart;
 
@@ -112,12 +113,16 @@ static int uart_init(void)
 	if (!uart) {
 		return -ENXIO;
 	}
+	if (!device_is_ready(uart)) {
+		return -ENODEV;
+	}	
 
 	err = uart_callback_set(uart, uart_cb, NULL);
 	if (err) {
 		return err;
 	}
 
+	my_uart_send(welcome_msg, sizeof(welcome_msg) - 1);
 	return uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
 
 }

@@ -4,6 +4,7 @@
 	chosen {
 		nordic,pm-ext-flash = &mx25r64;
 		zephyr,console = &uart30;
+		ncs,dtm-uart = &uart20;
 	};
 	aliases {
 		myi2c = &i2c22;
@@ -15,6 +16,30 @@
 		io-channels = <&adc 0>, <&adc 1>;
 		extint-gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
 	};		
+};
+
+&radio {
+	status = "okay";
+	/delete-property/ dfe-supported;
+	// /* This is a number of antennas that are available on antenna matrix
+	//  * designed by Nordic. For more information see README.rst.
+	//  */
+	// dfe-antenna-num = <12>;
+	// /* This is a setting that enables antenna 12 (in antenna matrix designed
+	//  * by Nordic) for PDU. For more information see README.rst.
+	//  */
+	// dfe-pdu-antenna = <0x0>;
+
+	// /* These are GPIO pin numbers that are provided to
+	//  * Radio peripheral. The pins will be acquired by Radio to
+	//  * drive antenna switching.
+	//  * Pin numbers are selected to drive switches on antenna matrix
+	//  * desinged by Nordic. For more information see README.rst.
+	//  */
+	// dfegpio0-gpios = <&gpio0 4 0>;
+	// dfegpio1-gpios = <&gpio0 5 0>;
+	// dfegpio2-gpios = <&gpio0 6 0>;
+	// dfegpio3-gpios = <&gpio0 7 0>;
 };
 
 &uicr {
@@ -109,6 +134,10 @@
 };
 
 &timer20 {
+    status="okay";
+};
+
+&timer21 {
     status="okay";
 };
 

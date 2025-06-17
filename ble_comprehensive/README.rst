@@ -230,6 +230,8 @@ In this module, you can achieve 1Mbps baud rate. UART has 3 working mode: poll, 
 To test the reliability of 1Mbps UART, you can transfer a file from PC end to the device end. In this example, when PC sends some data to the device, the device 
 would send the same data back to the PC. In this way, you can verify the reliability of 1Mbps UART.
 
+Rember to uncomment both UART1 and UART0 pincontrol in Devicetree overlay file. And disable CONFIG_DTM_IN_APP and related Kconfigs for nRF54L15.
+
 When doing the loopback test of 1Mbps UART, make sure BLE connection is disconnected and logging terminal is closed since they would have a great
 impact on the UART communication. You can use app: ``Serial Debug Assistant`` from Microsoft Store for the test. 
 
