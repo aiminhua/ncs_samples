@@ -436,7 +436,7 @@ int main(void)
 	int err;
 	uint32_t rc;	
 
-	LOG_INF("### Comprehensive example v2.0 @ %s built at %s %s\n", CONFIG_BOARD_TARGET, __TIME__, __DATE__);
+	LOG_INF("### Comprehensive example v3.0 @ %s built at %s %s\n", CONFIG_BOARD_TARGET, __TIME__, __DATE__);
 
 	rc = nrfx_reset_reason_get();
 	LOG_INF("=== Reset reason:0x%x", rc);
