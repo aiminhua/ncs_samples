@@ -22,6 +22,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define UART_WAIT_FOR_RX 50000
 uint8_t welcome_msg[] = "Starting async UART sample with baud rate = 1Mbps\n";
 
+int my_uart_send(const uint8_t *buf, size_t len);
 static const struct device *uart;
 
 struct uart_data_t {

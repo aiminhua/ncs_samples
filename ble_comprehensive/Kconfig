@@ -7,6 +7,11 @@
 source "Kconfig.zephyr"
 menu "comprehensive example"
 
+if BOOTLOADER_MCUBOOT
+config NCS_SAMPLE_MCUMGR_BT_OTA_DFU
+	default y
+endif
+
 config EXAMPLE_I2C
 	bool "load I2C example or not"
 	help

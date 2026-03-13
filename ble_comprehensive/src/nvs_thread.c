@@ -18,6 +18,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define STORAGE_NODE_LABEL storage
 static struct nvs_fs fs;
+#define NVS_PARTITION		storage_partition
+#define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
+#define NVS_PARTITION_OFFSET	FIXED_PARTITION_OFFSET(NVS_PARTITION)
 
 #define KEY_ID 0x1000
 #define RBT_CNT_ID 0x1001
@@ -28,7 +31,7 @@ static int nvs_usage_init(void)
 {
 	int rc;
 	struct flash_pages_info info;
-
+#ifdef CONFIG_PARTITION_MANAGER_ENABLED
 	fs.flash_device = FLASH_AREA_DEVICE(STORAGE_NODE_LABEL);
 	if (!device_is_ready(fs.flash_device)) {
 		printk("Flash device %s is not ready\n", fs.flash_device->name);
@@ -40,6 +43,24 @@ static int nvs_usage_init(void)
 		printk("Unable to get page info\n");
 		return -EINVAL;
 	}
+#else
+	/* define the nvs file system by settings with:
+	 *	sector_size equal to the pagesize,
+	 *	3 sectors
+	 *	starting at NVS_PARTITION_OFFSET
+	 */
+	fs.flash_device = NVS_PARTITION_DEVICE;
+	if (!device_is_ready(fs.flash_device)) {
+		printk("Flash device %s is not ready\n", fs.flash_device->name);
+		return 0;
+	}
+	fs.offset = NVS_PARTITION_OFFSET;
+	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
+	if (rc) {
+		printk("Unable to get page info, rc=%d\n", rc);
+		return 0;
+	}
+#endif
 	fs.sector_size = info.size;
 	fs.sector_count = CONFIG_PM_PARTITION_SIZE_SETTINGS_STORAGE / info.size;
 

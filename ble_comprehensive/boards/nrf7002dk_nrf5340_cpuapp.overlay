@@ -127,11 +127,11 @@
 	pinctrl-0 = < &i2c2_default >;
 	pinctrl-1 = < &i2c2_sleep >;
 	pinctrl-names = "default", "sleep";	
-	i2c_dev_0: i2c_dev_0@0 {
+	i2c_dev_0: i2c_dev_0@50 {
 		compatible = "i2c-device";
 		reg = <0x50>;
 	};
-	i2c_dev_1: i2c_dev_1@1 {
+	i2c_dev_1: i2c_dev_1@B {
 		compatible = "i2c-device";
 		reg = <0x0B>;
 	}; 	
@@ -149,12 +149,12 @@
 	pinctrl-names = "default", "sleep";	
 	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>, <&gpio1 6 GPIO_ACTIVE_LOW>;
 	spi_dev_0: spi_dev_0@0 {
-		compatible = "spi-user-define";
+		compatible = "vnd,spi-device";
 		reg = <0>;
 		spi-max-frequency = <DT_FREQ_M(8)>;
 	}; 
 	spi_dev_1: spi_dev_1@1 {
-		compatible = "spi-user-define";
+		compatible = "vnd,spi-device";
 		reg = <1>;
 		spi-max-frequency = <DT_FREQ_M(8)>;
 	};    			   	

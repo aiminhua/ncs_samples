@@ -153,12 +153,12 @@
 	pinctrl-names = "default", "sleep";	
     cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>, <&gpio2 8 GPIO_ACTIVE_LOW>;
 	spi_dev_0: spi_dev_0@0 {
-		compatible = "spi-user-define";
+		compatible = "vnd,spi-device";
 		reg = <0>;
 		spi-max-frequency = <DT_FREQ_M(4)>;
 	}; 
 	spi_dev_1: spi_dev_1@1 {
-		compatible = "spi-user-define";
+		compatible = "vnd,spi-device";
 		reg = <1>;
 		spi-max-frequency = <DT_FREQ_M(8)>;
 	};    			   	

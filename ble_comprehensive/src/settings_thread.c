@@ -125,6 +125,7 @@ static int flash_access(void)
 	return rc;
 }
 
+#if 0 //#ifdef CONFIG_NCS_SAMPLE_MCUMGR_BT_OTA_DFU
 static void erase_secondary_slot(void)
 {
 	const struct flash_area *fa;
@@ -144,6 +145,7 @@ static void erase_secondary_slot(void)
 	}		
 
 }
+#endif
 
 void settings_thread(void)
 {

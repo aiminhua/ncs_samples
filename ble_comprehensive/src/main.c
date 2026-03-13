@@ -10,7 +10,6 @@
 #include <zephyr/drivers/gpio.h>
 #include <stdio.h>
 #include <dk_buttons_and_leds.h>
-#include <nrf.h>
 #include <nrfx.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/bluetooth/bluetooth.h>
@@ -260,11 +259,11 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 }
 #endif
 
-static void param_updated(struct bt_conn *conn, uint16_t interval,
-				 uint16_t latency, uint16_t timeout)
-{
-	LOG_INF("conn interval=%d, latency=%d, timeout=%d", interval, latency, timeout);
-}
+// static void param_updated(struct bt_conn *conn, uint16_t interval,
+// 				 uint16_t latency, uint16_t timeout)
+// {
+// 	LOG_INF("conn interval=%d, latency=%d, timeout=%d", interval, latency, timeout);
+// }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected        = connected,
