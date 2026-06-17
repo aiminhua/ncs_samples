@@ -14,7 +14,11 @@
 #include "dtm_transport.h"
 #include <nrfx_uarte.h>
 #include <helpers/nrfx_gppi.h>
-#include <haly/nrfy_uarte.h>
+#include <hal/nrf_uarte.h>
+
+/* Direct UARTE register access (bypasses Zephyr async-mode poll_in block) */
+static uint8_t dtm_poll_byte;
+static NRF_UARTE_Type *dtm_uarte_regs;
 
 #define CONFIG_DTM_UART_BAUDRATE 19200
 
@@ -788,11 +792,23 @@ int dtm_tr_init(void)
 		return -EIO;
 	}
 
+	/* Reconfigure UART to DTM baudrate (19200). The devicetree may
+	 * have set a different rate (e.g. 1Mbps for high-speed UART).
+	 */
 	uart_api = (const struct uart_driver_api *)dtm_uart->api;
-	uart_api->config_get(dtm_uart, &uart_cfg);
-	uart_cfg.baudrate = CONFIG_DTM_UART_BAUDRATE;
-	uart_api->configure(dtm_uart, &uart_cfg);
-	
+	if (uart_api) {
+		uart_api->config_get(dtm_uart, &uart_cfg);
+		uart_cfg.baudrate = CONFIG_DTM_UART_BAUDRATE;
+		uart_api->configure(dtm_uart, &uart_cfg);
+
+		/* Set up direct UARTE register access for poll_in/out.
+		 * Bypasses Zephyr driver which blocks poll_in in async mode.
+		 */
+		dtm_uarte_regs = *(NRF_UARTE_Type **)dtm_uart->config;
+		nrf_uarte_rx_buffer_set(dtm_uarte_regs, &dtm_poll_byte, 1);
+		nrf_uarte_task_trigger(dtm_uarte_regs, NRF_UARTE_TASK_STARTRX);
+	}
+
 	err = dtm_init(NULL);
 	if (err) {
 		printk("Error during DTM initialization: %d\n", err);
@@ -801,6 +817,7 @@ int dtm_tr_init(void)
 
 	err = dtm_uart_wait_init();
 	if (err) {
+		printk("Error during dtm_uart_wait_init: %d\n", err);
 		return err;
 	}
 
@@ -819,8 +836,18 @@ union dtm_tr_packet dtm_tr_get(void)
 
 	printk("\nWaiting for DTM command\n");
 	for (;;) {
-		current_time = dtm_uart_wait();		
-		err = uart_poll_in(dtm_uart, &rx_byte);
+		current_time = dtm_uart_wait();
+		if (nrf_uarte_event_check(dtm_uarte_regs, NRF_UARTE_EVENT_ENDRX)) {
+			/* Byte received into dtm_poll_byte via DMA */
+			rx_byte = dtm_poll_byte;
+			nrf_uarte_event_clear(dtm_uarte_regs, NRF_UARTE_EVENT_ENDRX);
+			/* Re-arm RX buffer for next byte */
+			nrf_uarte_rx_buffer_set(dtm_uarte_regs, &dtm_poll_byte, 1);
+			nrf_uarte_task_trigger(dtm_uarte_regs, NRF_UARTE_TASK_STARTRX);
+			err = 0;
+		} else {
+			err = -1;
+		}
 		if (err) {
 			if (err != -1) {
 				printk("UART polling error\n: %d", err);

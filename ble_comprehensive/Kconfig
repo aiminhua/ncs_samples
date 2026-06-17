@@ -57,9 +57,7 @@ config BT_NUS_SECURITY_ENABLED
 config DTM_IN_APP
 	bool "load DTM in application or not"
 	depends on SOC_NRF54L15_CPUAPP
-	imply NRFX_TIMER10
-	imply NRFX_TIMER11
-	imply UART_NRFX_UARTE_LEGACY_SHIM
+	imply NRFX_TIMER
 	# imply KERNEL_INIT_PRIORITY_DEVICE=20
 	# imply CONSOLE_INIT_PRIORITY=21
 	# imply UART_ASYNC_API=n
@@ -77,14 +75,6 @@ if DTM_IN_APP
 # config CONSOLE_INIT_PRIORITY
 #     int
 #     default 21 if DTM_IN_APP
-
-config UART_ASYNC_API
-    bool
-	default n if DTM_IN_APP
-
-# config UART_20_ASYNC
-#     bool
-# 	default n if DTM_IN_APP
 
 config LOG_PRINTK
     bool

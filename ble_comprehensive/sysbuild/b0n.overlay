@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * DTS partition layout for the b0n network core secure bootloader.
+ * This must be consistent with sysbuild/ipc_radio.overlay since both
+ * images share the same flash1 device.
+ */
+
+&flash1 {
+	/delete-node/ partitions;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		b0n_partition: partition@0 {
+			label = "b0n";
+			reg = <0x0 0x8580>;
+		};
+
+		provision_partition: partition@8580 {
+			label = "b0-provision-data";
+			reg = <0x8580 0x280>;
+		};
+
+		s0_partition: slot0_partition: partition@8800 {
+			label = "image-0";
+			reg = <0x8800 0x37800>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		zephyr,code-partition = &b0n_partition;
+	};
+};
+
+/* bl_storage = provision_partition in flash1 (not in OTP).
+ * flash1 base = 0x01000000, provision offset = 0x8580, absolute = 0x1008580.
+ * This must match the provision_partition in flash1 partitions above.
+ */
+/ {
+	soc {
+		bl_storage: bl_storage@1008580 {
+			reg = <0x1008580 0x280>;
+		};
+	};
+};

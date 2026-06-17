@@ -123,8 +123,14 @@ static int uart_init(void)
 		return err;
 	}
 
+	err = uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
+	if (err) {
+		LOG_ERR("UART RX enable failed: %d", err);
+		return err;
+	}
+
 	my_uart_send(welcome_msg, sizeof(welcome_msg) - 1);
-	return uart_rx_enable(uart, uart_rx_buf[0], sizeof(uart_rx_buf[0]), UART_WAIT_FOR_RX);
+	return 0;
 
 }
 

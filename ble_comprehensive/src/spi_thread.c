@@ -17,8 +17,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define TEST_STRING "Nordic"
 extern struct k_sem sem_spi_txrx;
 #define SPI_OP     SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_WORD_SET(8) | SPI_LINES_SINGLE
-static struct spi_dt_spec spi_dev0 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_0), SPI_OP, 0);
-static struct spi_dt_spec spi_dev1 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_1), SPI_OP, 0);
+static struct spi_dt_spec spi_dev0 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_0), SPI_OP);
+static struct spi_dt_spec spi_dev1 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_1), SPI_OP);
 
 static int spi_data_exchange(void)
 {

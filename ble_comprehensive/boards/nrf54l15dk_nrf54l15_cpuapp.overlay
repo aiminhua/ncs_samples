@@ -1,10 +1,51 @@
-/* overlay file for app core */
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &storage_partition;
+
+&cpuapp_rram {
+	partitions {
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x0 0xc000>;
+		};
+
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0xc000 0x166000>;
+		};
+
+		storage_partition: partition@172000 {
+			label = "storage";
+			reg = <0x172000 0xb000>;
+		};
+	};
+};
+
+&mx25r64 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		slot1_partition: partition@0 {
+			label = "image-1";
+			reg = <0x0 0x166000>;
+		};
+
+		littlefs_storage: partition@166000 {
+			label = "littlefs-storage";
+			reg = <0x166000 0x69a000>;
+		};
+	};
+};
 
 / {
 	chosen {
 		nordic,pm-ext-flash = &mx25r64;
 		zephyr,console = &uart30;
 		ncs,dtm-uart = &uart20;
+		zephyr,code-partition = &slot0_partition;
 	};
 	aliases {
 		myi2c = &i2c22;
@@ -121,16 +162,15 @@
 	/delete-property/ rts-pin;
 	/delete-property/ cts-pin;
 	/delete-property/ hw-flow-control;
-	/delete-property/ frame-timeout-supported;
 };
 
 &uart20 {
 	status = "okay";
 	current-speed = < 1000000 >;
+		timer = <&timer20>;
 	/delete-property/ rts-pin;
 	/delete-property/ cts-pin;
 	/delete-property/ hw-flow-control;
-	/delete-property/ frame-timeout-supported;
 };
 
 &timer20 {

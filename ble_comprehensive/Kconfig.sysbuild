@@ -4,20 +4,9 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
+if SOC_SERIES_NRF53
+
 if BOOTLOADER_MCUBOOT
-
-#### DFU multi-image support
-config DFU_MULTI_IMAGE_PACKAGE_BUILD
-	default y
-
-config DFU_MULTI_IMAGE_PACKAGE_APP
-	default y
-
-config PM_EXTERNAL_FLASH_MCUBOOT_SECONDARY
-	default y
-
-#### DFU network core configuration
-if SOC_SERIES_NRF53X
 
 config MCUBOOT_UPDATEABLE_IMAGES
 	default 2
@@ -32,11 +21,17 @@ config SECURE_BOOT_NETCORE
 config NETCORE_APP_UPDATE
 	default y
 
-config DFU_MULTI_IMAGE_PACKAGE_NET
+config MCUBOOT_NRF53_MULTI_IMAGE_UPDATE
 	default y
 
-endif # SOC_SERIES_NRF53X
 endif # BOOTLOADER_MCUBOOT
+
+config NRF_DEFAULT_IPC_RADIO
+	default y
+
+config NETCORE_IPC_RADIO_BT_HCI_IPC
+	default y 
+endif # SOC_SERIES_NRF53
 
 choice APPCORE
 	default APPCORE_REMOTE_HCI if DTM_TRANSPORT_HCI
@@ -81,4 +76,4 @@ config DTM_NO_DFE
 	help
 	  Disable direction finding feature.
 
-source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"
+source "share/sysbuild/Kconfig"

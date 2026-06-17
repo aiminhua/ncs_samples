@@ -1,11 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.13.1)
-
-# set(mcuboot_DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/child_image/mcuboot.overlay)
-
-SET(hci_rpmsg_b0n_OVERLAY_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/child_image/b0n.conf")
-
+cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(comprensive_example)
 

@@ -10,8 +10,6 @@
 #include "dtm.h"
 #include "dtm_hw.h"
 #include "dtm_hw_config.h"
-#include <nrfx.h>
-#include <nrfx_clock.h>
 
 #if CONFIG_FEM
 #include <fem_al/fem_al.h>
@@ -21,9 +19,9 @@
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
 #include <zephyr/sys/__assert.h>
-#if !(defined(CONFIG_SOC_SERIES_NRF54HX) || defined(CONFIG_SOC_SERIES_NRF54LX))
+#if !(defined(CONFIG_SOC_SERIES_NRF54H) || defined(CONFIG_SOC_SERIES_NRF54L))
 #include <hal/nrf_nvmc.h>
-#endif /* !defined(CONFIG_SOC_SERIES_NRF54HX) || defined(CONFIG_SOC_SERIES_NRF54LX) */
+#endif /* !defined(CONFIG_SOC_SERIES_NRF54H) || defined(CONFIG_SOC_SERIES_NRF54L) */
 
 #include <hal/nrf_egu.h>
 #include <hal/nrf_radio.h>
@@ -38,27 +36,27 @@
 
 #include <helpers/nrfx_gppi.h>
 #include <nrfx_timer.h>
-#include <nrf_erratas.h>
+#include <nrfx_clock.h>
 
-#define NRF54H20_ERRATA_216_PRESENT \
-	DT_NODE_HAS_STATUS(DT_NODELABEL(cpurad_cpusys_errata216_mboxes), okay)
-
-#if NRF54H20_ERRATA_216_PRESENT
-#include <zephyr/drivers/mbox.h>
-
-/* Delay time from triggering the task "ON" for SysCtrl to starting RADIO (setting RADIO TASK RXEN
- * or TXEN)
+/* TODO: DRGN-27733 Remove the alternative condition for nRF54LS05B
+ * when the errata has been applied to this chip and the errata
+ * check can be used instead.
  */
-#define HMPAN_216_DELAY_US (40)
-#endif /* NRF54H20_ERRATA_216_PRESENT */
+#if NRF54L_ERRATA_20_PRESENT || defined(NRF54LS05B_ENGA_XXAA)
+#include <hal/nrf_power.h>
+#endif /* NRF54L_ERRATA_20_PRESENT */
 
-#if defined(CONFIG_SOC_SERIES_NRF54HX)
+#if NRF54H_ERRATA_216_PRESENT
+#include <zephyr/drivers/mbox.h>
+#endif /* NRF54H_ERRATA_216_PRESENT */
+
+#if defined(CONFIG_SOC_SERIES_NRF54H)
 	#define DEFAULT_TIMER_INSTANCE            020
 	#define RADIO_IRQn                        RADIO_0_IRQn
 	#define DTM_EGU                           NRF_EGU020
 	#define DTM_RADIO_SHORT_READY_START_MASK  NRF_RADIO_SHORT_READY_START_MASK
 	#define DTM_RADIO_SHORT_END_DISABLE_MASK  NRF_RADIO_SHORT_PHYEND_DISABLE_MASK
-#elif defined(CONFIG_SOC_SERIES_NRF54LX)
+#elif defined(CONFIG_SOC_SERIES_NRF54L)
 	#define DEFAULT_TIMER_INSTANCE            10
 	#define RADIO_IRQn                        RADIO_0_IRQn
 	#define DTM_EGU                           NRF_EGU10
@@ -70,15 +68,12 @@
 	#define DTM_EGU                           NRF_EGU0
 	#define DTM_RADIO_SHORT_READY_START_MASK  NRF_RADIO_SHORT_READY_START_MASK
 	#define DTM_RADIO_SHORT_END_DISABLE_MASK  NRF_RADIO_SHORT_END_DISABLE_MASK
-#endif /* defined(CONFIG_SOC_SERIES_NRF54HX) */
+#endif /* defined(CONFIG_SOC_SERIES_NRF54H) */
 
 /* Default timer used for timing. */
 #define DEFAULT_TIMER_IRQ          NRFX_CONCAT_3(TIMER,			 \
 						 DEFAULT_TIMER_INSTANCE, \
 						 _IRQn)
-#define DEFAULT_TIMER_IRQ_HANDLER  NRFX_CONCAT_3(nrfx_timer_,		 \
-						 DEFAULT_TIMER_INSTANCE, \
-						 _irq_handler)
 
 /* Note that the timer instance 1 can be used in the communication module. */
 
@@ -90,19 +85,6 @@
 #define ANOMALY_172_TIMER_IRQ          NRFX_CONCAT_3(TIMER,		    \
 						ANOMALY_172_TIMER_INSTANCE, \
 						_IRQn)
-#define ANOMALY_172_TIMER_IRQ_HANDLER  NRFX_CONCAT_3(nrfx_timer_,	    \
-						ANOMALY_172_TIMER_INSTANCE, \
-						_irq_handler)
-#endif /* NRF52_ERRATA_172_PRESENT */
-
-/* Helper macro for labeling timer instances. */
-#define NRFX_TIMER_CONFIG_LABEL(_num) NRFX_CONCAT_3(CONFIG_, NRFX_TIMER, _num)
-
-BUILD_ASSERT(NRFX_TIMER_CONFIG_LABEL(DEFAULT_TIMER_INSTANCE) == 1,
-	     "Core DTM timer needs additional KConfig configuration");
-#if NRF52_ERRATA_172_PRESENT
-BUILD_ASSERT(NRFX_TIMER_CONFIG_LABEL(ANOMALY_172_TIMER_INSTANCE) == 1,
-	     "Anomaly DTM timer needs additional KConfig configuration");
 #endif /* NRF52_ERRATA_172_PRESENT */
 
 #define DTM_EGU_EVENT NRF_EGU_EVENT_TRIGGERED0
@@ -182,10 +164,6 @@ BUILD_ASSERT(NRFX_TIMER_CONFIG_LABEL(ANOMALY_172_TIMER_INSTANCE) == 1,
 #define PACKET_BA_LEN             3
 /* CTE IQ sample data size. */
 #define DTM_CTE_SAMPLE_DATA_SIZE  0x52
-/* Vendor specific packet type for internal use. */
-#define DTM_PKT_TYPE_VENDORSPECIFIC  0xFE
-/* 1111111 bit pattern packet type for internal use. */
-#define DTM_PKT_TYPE_0xFF            0xFF
 
 /* Maximum number of payload octets that the local Controller supports for
  * transmission of a single Link Layer Data Physical Channel PDU.
@@ -410,11 +388,11 @@ static struct dtm_instance {
 	uint32_t address;
 
 	/* Timer to be used for scheduling TX packets. */
-	const nrfx_timer_t timer;
+	nrfx_timer_t timer;
 
 #if NRF52_ERRATA_172_PRESENT
 	/* Timer to be used to handle Anomaly 172. */
-	const nrfx_timer_t anomaly_timer;
+	nrfx_timer_t anomaly_timer;
 
 	/* Enable or disable the workaround for Errata 172. */
 	bool anomaly_172_wa_enabled;
@@ -438,7 +416,7 @@ static struct dtm_instance {
 #endif
 
 	/* Radio Enable PPI channel. */
-	uint8_t ppi_radio_start;
+	nrfx_gppi_handle_t ppi_radio_start;
 
 	/* PPI endpoint status.*/
 	atomic_t endpoint_state;
@@ -446,9 +424,9 @@ static struct dtm_instance {
 	.state = STATE_UNINITIALIZED,
 	.packet_hdr_plen = NRF_RADIO_PREAMBLE_LENGTH_8BIT,
 	.address = DTM_RADIO_ADDRESS,
-	.timer = NRFX_TIMER_INSTANCE(DEFAULT_TIMER_INSTANCE),
+	.timer = NRFX_TIMER_INSTANCE(NRF_TIMER_INST_GET(DEFAULT_TIMER_INSTANCE)),
 #if NRF52_ERRATA_172_PRESENT
-	.anomaly_timer = NRFX_TIMER_INSTANCE(ANOMALY_172_TIMER_INSTANCE),
+	.anomaly_timer = NRFX_TIMER_INSTANCE(NRF_TIMER_INST_GET(ANOMALY_172_TIMER_INSTANCE)),
 #endif /* NRF52_ERRATA_172_PRESENT */
 	.radio_mode = NRF_RADIO_MODE_BLE_1MBIT,
 	.txpower = 0,
@@ -457,23 +435,36 @@ static struct dtm_instance {
 #endif
 };
 
-#if NRF54H20_ERRATA_216_PRESENT
+#if NRF54H_ERRATA_216_PRESENT
 static const struct mbox_dt_spec on_channel =
 	MBOX_DT_SPEC_GET(DT_NODELABEL(cpurad_cpusys_errata216_mboxes), on_req);
 static const struct mbox_dt_spec off_channel =
 	MBOX_DT_SPEC_GET(DT_NODELABEL(cpurad_cpusys_errata216_mboxes), off_req);
-static K_SEM_DEFINE(errata216_sem, 0, 1);
+#endif /* NRF54H_ERRATA_216_PRESENT */
+
+/* Delay time from triggering the task "ON" for SysCtrl to starting RADIO (setting RADIO TASK RXEN
+ * or TXEN)
+ */
+#define HMPAN_216_DELAY_US (40)
+
+static K_SEM_DEFINE(errata_216_sem, 0, 1);
 
 /**
  * @brief Send errata HMPAN-216 on request signal to SysCtrl
  *
- * Also ensure RADIO is not started within 40 us after the signal is triggered,
+ * According to HMPAN-216, this procedure should be executed every time
+ * before RADIO is started (for TX and RX).
+ * Ensure RADIO is not started within 40 us after the signal is triggered,
  * so execution is blocked until then by a semaphore.
  *
  * @return 0 if successful, otherwise a negative error code
  */
-static int errata216_on_wait(void)
+static int errata_216_on_wait(void)
 {
+	if (!nrf54h_errata_216()) {
+		return 0;
+	}
+
 	int err = 0;
 
 	nrfx_timer_disable(&dtm_inst.timer);
@@ -485,13 +476,15 @@ static int errata216_on_wait(void)
 		nrfx_timer_us_to_ticks(&dtm_inst.timer, HMPAN_216_DELAY_US),
 		true);
 
+#if NRF54H_ERRATA_216_PRESENT
 	err = mbox_send_dt(&on_channel, NULL);
+#endif /* NRF54H_ERRATA_216_PRESENT */
 
 	if (!err) {
 		nrfx_timer_enable(&dtm_inst.timer);
 
 		/* Wait for the TIMER to count the required delay before starting the Radio*/
-		err = k_sem_take(&errata216_sem, K_FOREVER);
+		err = k_sem_take(&errata_216_sem, K_FOREVER);
 	}
 
 	return err;
@@ -500,39 +493,39 @@ static int errata216_on_wait(void)
 /**
  * @brief Send errata HMPAN-216 off request signal to SysCtrl
  *
+ * According to HMPAN-216, this procedure should be executed
+ * after RADIO goes to DISABLED state and will not be started again
+ * in less than 100 us.
+ *
  * @return 0 if successful, otherwise a negative error code
  */
-static int errata216_off(void)
+static int errata_216_off(void)
 {
+	if (!nrf54h_errata_216()) {
+		return 0;
+	}
+
+#if NRF54H_ERRATA_216_PRESENT
 	return mbox_send_dt(&off_channel, NULL);
+#else
+	return 0;
+#endif /* NRF54H_ERRATA_216_PRESENT */
 }
 
 /**
  * @brief Return to code execution after the required delay for errata HMPAN-216 has elapsed.
  */
-static void errata216_release(void)
+static void errata_216_release(void)
 {
-	/* Release the waiting semaphore, coninue code execution and disable TIMER */
-	k_sem_give(&errata216_sem);
+	if (!nrf54h_errata_216()) {
+		return;
+	}
+
+	/* Release the waiting semaphore, continue code execution and disable TIMER */
+	k_sem_give(&errata_216_sem);
 	nrfx_timer_disable(&dtm_inst.timer);
 	nrf_timer_int_disable(dtm_inst.timer.p_reg, ~0);
 }
-#else
-static int errata216_on_wait(void)
-{
-	return 0;
-}
-
-static int errata216_off(void)
-{
-	return 0;
-}
-
-static void errata216_release(void)
-{
-	/* Do nothing */
-}
-#endif /* NRF54H20_ERRATA_216_PRESENT */
 
 /* The PRBS9 sequence used as packet payload.
  * The bytes in the sequence is in the right order, but the bits of each byte
@@ -730,203 +723,38 @@ static void anomaly_timer_handler(nrf_timer_event_t event_type, void *context);
 static void dtm_timer_handler(nrf_timer_event_t event_type, void *context);
 void radio_handler(const void *context);
 
-static nrf_clock_lfclk_t clock_initial_lfclksrc_get(void)
-{
-#if NRFX_CHECK(NRFX_CLOCK_CONFIG_LFXO_TWO_STAGE_ENABLED)
-    return NRF_CLOCK_LFCLK_RC;
-#else
-    return (nrf_clock_lfclk_t)NRFX_CLOCK_CONFIG_LF_SRC;
-#endif
-}
-
-static void nrfx_clock_start2(nrf_clock_domain_t domain)
-{
-    uint32_t          int_mask;
-    nrf_clock_event_t event;
-    nrf_clock_task_t  task;
-
-	// printk("nrfx_clock_start2\n");
-    switch (domain)
-    {
-        case NRF_CLOCK_DOMAIN_LFCLK:
-        {
-            nrf_clock_lfclk_t lfclksrc;
-            // if (nrf_clock_is_running(NRF_CLOCK, NRF_CLOCK_DOMAIN_LFCLK, &lfclksrc))
-            // {
-            //     // LF clock is already running. Inspect its source.
-            //     // If LF clock source is inappropriate then it will be stopped and modified.
-            //     // Ignore return value as LF clock will be started again regardless of the result.
-            //     (void)clock_lfclksrc_tweak(&lfclksrc);
-            // }
-            // else if (nrf_clock_start_task_check(NRF_CLOCK, NRF_CLOCK_DOMAIN_LFCLK))
-            // {
-            //     // LF clock is not active yet but was started already. Inspect its source.
-            //     lfclksrc = nrf_clock_lf_srccopy_get(NRF_CLOCK);
-            //     if (clock_lfclksrc_tweak(&lfclksrc))
-            //     {
-            //         // LF clock was started already and the configured source
-            //         // corresponds to the user configuration.
-            //         // No action is needed as the chosen LF clock source will become active soon.
-            //         // if (m_clock_cb.event_handler)
-			// 		if (1)
-            //         {
-            //             nrf_clock_int_enable(NRF_CLOCK, NRF_CLOCK_INT_LF_STARTED_MASK);
-            //         }
-            //         else
-            //         {
-            //             while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED))
-            //             {}
-            //             nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
-            //         }
-            //         return;
-            //     }
-            //     // Otherwise LF clock was started already but with inappropriate source.
-            //     // LF clock was stopped and modified. Now it will be restarted.
-            // }
-            // else
-            {
-                // LF clock not active and not started.
-                lfclksrc = clock_initial_lfclksrc_get();
-            }
-            nrf_clock_lf_src_set(NRF_CLOCK, lfclksrc);
-        }
-            event    = NRF_CLOCK_EVENT_LFCLKSTARTED;
-            int_mask = NRF_CLOCK_INT_LF_STARTED_MASK;
-            task     = NRF_CLOCK_TASK_LFCLKSTART;
-            break;
-        case NRF_CLOCK_DOMAIN_HFCLK:
-            event    = NRF_CLOCK_EVENT_HFCLKSTARTED;
-            int_mask = NRF_CLOCK_INT_HF_STARTED_MASK |
-#if NRF_CLOCK_HAS_XO_TUNE
-                       NRF_CLOCK_INT_XOTUNED_MASK |
-                       NRF_CLOCK_INT_XOTUNEERROR_MASK |
-                       NRF_CLOCK_INT_XOTUNEFAILED_MASK |
-#endif
-                       0;
-#if NRF_CLOCK_HAS_XO_TUNE
-            nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_XOTUNED);
-            nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_XOTUNEFAILED);
-            nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_XOTUNEERROR);
-#endif
-            task     = NRF_CLOCK_TASK_HFCLKSTART;
-#if NRFX_CHECK(NRF54L_ERRATA_39_ENABLE_WORKAROUND)
-            if (nrf54l_errata_39())
-            {
-                nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_PLLSTART);
-            }
-#endif
-            break;
-#if NRF_CLOCK_HAS_HFCLK192M
-        case NRF_CLOCK_DOMAIN_HFCLK192M:
-            event    = NRF_CLOCK_EVENT_HFCLK192MSTARTED;
-            int_mask = NRF_CLOCK_INT_HF192M_STARTED_MASK;
-            task     = NRF_CLOCK_TASK_HFCLK192MSTART;
-            break;
-#endif
-#if NRF_CLOCK_HAS_HFCLKAUDIO
-        case NRF_CLOCK_DOMAIN_HFCLKAUDIO:
-            event    = NRF_CLOCK_EVENT_HFCLKAUDIOSTARTED;
-            int_mask = NRF_CLOCK_INT_HFAUDIO_STARTED_MASK;
-            task     = NRF_CLOCK_TASK_HFCLKAUDIOSTART;
-            break;
-#endif
-        default:
-            NRFX_ASSERT(0);
-            return;
-    }
-
-    nrf_clock_event_clear(NRF_CLOCK, event);
-#if NRFX_CHECK(USE_WORKAROUND_FOR_ANOMALY_132)
-    if (event == NRF_CLOCK_EVENT_LFCLKSTARTED)
-    {
-        nrfx_clock_anomaly_132();
-    }
-#endif
-    nrf_clock_task_trigger(NRF_CLOCK, task);
-    if (0)
-    {
-        nrf_clock_int_enable(NRF_CLOCK, int_mask);
-    }
-    else
-    {
-        while (!nrf_clock_event_check(NRF_CLOCK, event))
-        {}
-        nrf_clock_event_clear(NRF_CLOCK, event);
-    }
-	// printk("Clock started for domain %d\n", domain);		
-}
-
 #if defined(CONFIG_CLOCK_CONTROL_NRF)
 static int clock_init(void)
 {
-	int err = 0;
-	// int res;
-	// struct onoff_manager *clk_mgr;
-	// struct onoff_client clk_cli;
-
-	// clk_mgr = z_nrf_clock_control_get_onoff(CLOCK_CONTROL_NRF_SUBSYS_HF);
-	// if (!clk_mgr) {
-	// 	printk("Unable to get the Clock manager\n");
-	// 	return -ENXIO;
-	// }
-
-	// sys_notify_init_spinwait(&clk_cli.notify);
-
-	// err = onoff_request(clk_mgr, &clk_cli);
-	// if (err < 0) {
-	// 	printk("Clock request failed: %d\n", err);
-	// 	return err;
-	// }
-	// printk("onoff_request err=%d\n", err);
-	
-	nrfx_clock_start2(NRF_CLOCK_DOMAIN_HFCLK);
-
-	// do {
-	// 	err = sys_notify_fetch_result(&clk_cli.notify, &res);
-	// 	// printk("sys_notify_fetch_result err=%d , res=%d\n", err, res);
-	// 	if (!err && res) {
-	// 		printk("Clock could not be started: %d\n", res);
-	// 		return res;
-	// 	}
-	// } while (err);
-
-#if defined(NRF54L15_XXAA)
-	/* MLTPAN-20 */
-	nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_PLLSTART);
-#endif /* defined(NRF54L15_XXAA) */
-
-	return err;
+	/* HF clock on nRF54L15 is started by Zephyr SoC init before PRE_KERNEL_1.
+	 * The Zephyr clock_control driver is not available at PRE_KERNEL_1
+	 * (causes MPU fault). No additional clock init needed for DTM.
+	 * Works both with and without MCUboot.
+	 */
+	return 0;
 }
 
 #elif defined(CONFIG_CLOCK_CONTROL_NRF2)
 
 int clock_init(void)
 {
-	int err;
-	int res;
-	const struct device *radio_clk_dev =
-		DEVICE_DT_GET_OR_NULL(DT_CLOCKS_CTLR(DT_NODELABEL(radio)));
-	struct onoff_client radio_cli;
-
 	/** Keep radio domain powered all the time to reduce latency. */
 	nrf_lrcconf_poweron_force_set(NRF_LRCCONF010, NRF_LRCCONF_POWER_DOMAIN_1, true);
 
-	sys_notify_init_spinwait(&radio_cli.notify);
+#if NRF54L_ERRATA_20_PRESENT
+	if (nrf54l_errata_20()) {
+		nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
+	}
+	/* TODO: DRGN-27733 Remove the elif block for nRF54LS05B when the errata has
+	 * been applied to this chip and the errata check can be used instead.
+	 */
+#elif defined(NRF54LS05B_ENGA_XXAA)
+	nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
+#endif /* NRF54L_ERRATA_20_PRESENT */
 
-	err = nrf_clock_control_request(radio_clk_dev, NULL, &radio_cli);
-
-	do {
-		err = sys_notify_fetch_result(&radio_cli.notify, &res);
-		if (!err && res) {
-			printk("Clock could not be started: %d\n", res);
-			return res;
-		}
-	} while (err == -EAGAIN);
-
-#if defined(NRF54L15_XXAA)
-	/* MLTPAN-20 */
+#if defined(NRF54LM20A_XXAA)
 	nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_PLLSTART);
-#endif /* defined(NRF54L15_XXAA) */
+#endif /* defined(NRF54LM20A_XXAA) */
 
 	return 0;
 }
@@ -937,7 +765,7 @@ BUILD_ASSERT(false, "No Clock Control driver");
 
 static int timer_init(void)
 {
-	nrfx_err_t err;
+	int err;
 	nrfx_timer_config_t timer_cfg = {
 		.frequency = NRFX_MHZ_TO_HZ(1),
 		.mode      = NRF_TIMER_MODE_TIMER,
@@ -945,13 +773,13 @@ static int timer_init(void)
 	};
 
 	err = nrfx_timer_init(&dtm_inst.timer, &timer_cfg, dtm_timer_handler);
-	if (err != NRFX_SUCCESS) {
+	if (err != 0) {
 		printk("nrfx_timer_init failed with: %d\n", err);
 		return -EAGAIN;
 	}
 
 	IRQ_CONNECT(DEFAULT_TIMER_IRQ, CONFIG_DTM_TIMER_IRQ_PRIORITY,
-		    DEFAULT_TIMER_IRQ_HANDLER, NULL, 0);
+		    nrfx_timer_irq_handler, &dtm_inst.timer, 0);
 
 	return 0;
 }
@@ -959,7 +787,7 @@ static int timer_init(void)
 #if NRF52_ERRATA_172_PRESENT
 static int anomaly_timer_init(void)
 {
-	nrfx_err_t err;
+	int err;
 	nrfx_timer_config_t timer_cfg = {
 		.frequency = NRFX_KHZ_TO_HZ(125),
 		.mode      = NRF_TIMER_MODE_TIMER,
@@ -968,15 +796,15 @@ static int anomaly_timer_init(void)
 
 	err = nrfx_timer_init(&dtm_inst.anomaly_timer, &timer_cfg,
 			      anomaly_timer_handler);
-	if (err != NRFX_SUCCESS) {
+	if (err != 0) {
 		printk("nrfx_timer_init failed with: %d\n", err);
 		return -EAGAIN;
 	}
 
 	IRQ_CONNECT(ANOMALY_172_TIMER_IRQ,
 		    CONFIG_ANOMALY_172_TIMER_IRQ_PRIORITY,
-		    ANOMALY_172_TIMER_IRQ_HANDLER,
-		    NULL, 0);
+		    nrfx_timer_irq_handler,
+		    &dtm_inst.anomaly_timer, 0);
 
 	nrfx_timer_compare(&dtm_inst.anomaly_timer,
 		NRF_TIMER_CC_CHANNEL0,
@@ -990,12 +818,14 @@ static int anomaly_timer_init(void)
 
 static int gppi_init(void)
 {
-	nrfx_err_t err;
+	int err;
+	uint32_t rad_domain = nrfx_gppi_domain_id_get((uint32_t)NRF_RADIO);
 
-	err = nrfx_gppi_channel_alloc(&dtm_inst.ppi_radio_start);
-	if (err != NRFX_SUCCESS) {
-		printk("nrfx_gppi_channel_alloc failed with: %d\n", err);
-		return -EAGAIN;
+	err = nrfx_gppi_domain_conn_alloc(rad_domain, rad_domain, &dtm_inst.ppi_radio_start);
+
+	if (err < 0) {
+		printk("nrfx_gppi channel alloc failed with: %d\n", err);
+		return err;
 	}
 
 	return 0;
@@ -1167,20 +997,21 @@ static nrf_radio_txpower_t dbm_to_nrf_radio_txpower(int8_t tx_power)
 }
 
 #if CONFIG_DTM_POWER_CONTROL_AUTOMATIC
-static int8_t dtm_radio_min_power_get(uint16_t frequency)
+static int8_t dtm_radio_min_power_get(nrf_radio_mode_t radio_mode, uint16_t frequency)
 {
-	return fem_tx_output_power_min_get(frequency);
+	return fem_tx_output_power_min_get(radio_mode, frequency);
 }
 
-static int8_t dtm_radio_max_power_get(uint16_t frequency)
+static int8_t dtm_radio_max_power_get(nrf_radio_mode_t radio_mode, uint16_t frequency)
 {
-	return fem_tx_output_power_max_get(frequency);
+	return fem_tx_output_power_max_get(radio_mode, frequency);
 }
 
-static int8_t dtm_radio_nearest_power_get(int8_t tx_power, uint16_t frequency)
+static int8_t dtm_radio_nearest_power_get(int8_t tx_power, nrf_radio_mode_t radio_mode,
+					  uint16_t frequency)
 {
-	int8_t tx_power_floor = fem_tx_output_power_check(tx_power, frequency, false);
-	int8_t tx_power_ceiling = fem_tx_output_power_check(tx_power, frequency, true);
+	int8_t tx_power_floor = fem_tx_output_power_check(tx_power, radio_mode, frequency, false);
+	int8_t tx_power_ceiling = fem_tx_output_power_check(tx_power, radio_mode, frequency, true);
 	int8_t output_power;
 
 	output_power = (abs(tx_power_floor - tx_power) > abs(tx_power_ceiling - tx_power)) ?
@@ -1190,26 +1021,30 @@ static int8_t dtm_radio_nearest_power_get(int8_t tx_power, uint16_t frequency)
 }
 
 #else
-static int8_t dtm_radio_min_power_get(uint16_t frequency)
+static int8_t dtm_radio_min_power_get(nrf_radio_mode_t radio_mode, uint16_t frequency)
 {
+	ARG_UNUSED(radio_mode);
 	ARG_UNUSED(frequency);
 
 	return dtm_hw_radio_min_power_get();
 }
 
-static int8_t dtm_radio_max_power_get(uint16_t frequency)
+static int8_t dtm_radio_max_power_get(nrf_radio_mode_t radio_mode, uint16_t frequency)
 {
+	ARG_UNUSED(radio_mode);
 	ARG_UNUSED(frequency);
 
 	return dtm_hw_radio_max_power_get();
 }
 
-static int8_t dtm_radio_nearest_power_get(int8_t tx_power, uint16_t frequency)
+static int8_t dtm_radio_nearest_power_get(int8_t tx_power, nrf_radio_mode_t radio_mode,
+					  uint16_t frequency)
 {
 	int8_t output_power = INT8_MAX;
 	const size_t size = dtm_hw_radio_power_array_size_get();
 	const int8_t *power = dtm_hw_radio_power_array_get();
 
+	ARG_UNUSED(radio_mode);
 	ARG_UNUSED(frequency);
 
 	for (size_t i = 1; i < size; i++) {
@@ -1242,7 +1077,7 @@ static uint16_t radio_frequency_get(uint8_t channel)
 	return (channel << 1) + base_frequency;
 }
 
-static void radio_tx_power_set(uint8_t channel, int8_t tx_power)
+static void radio_tx_power_set(uint8_t channel, int8_t tx_power, nrf_radio_mode_t radio_mode)
 {
 	int8_t radio_power = tx_power;
 
@@ -1257,11 +1092,12 @@ static void radio_tx_power_set(uint8_t channel, int8_t tx_power)
 		 * Tx output power level for channel 0. That is why output Tx power needs to be
 		 * aligned for final transmission channel.
 		 */
-		tx_power = dtm_radio_nearest_power_get(tx_power, frequency);
-		(void)fem_tx_output_power_prepare(tx_power, &radio_power, frequency);
+		tx_power = dtm_radio_nearest_power_get(tx_power, radio_mode, frequency);
+		(void)fem_tx_output_power_prepare(tx_power, &radio_power, radio_mode, frequency);
 	}
 #else
 	ARG_UNUSED(channel);
+	ARG_UNUSED(radio_mode);
 #endif /* CONFIG_FEM */
 
 #ifdef NRF53_SERIES
@@ -1280,9 +1116,7 @@ static void radio_tx_power_set(uint8_t channel, int8_t tx_power)
 
 static void radio_reset(void)
 {
-	if (nrfx_gppi_channel_check(dtm_inst.ppi_radio_start)) {
-		nrfx_gppi_channels_disable(BIT(dtm_inst.ppi_radio_start));
-	}
+	nrfx_gppi_conn_disable(dtm_inst.ppi_radio_start);
 
 	nrf_radio_shorts_set(NRF_RADIO, 0);
 	nrf_radio_event_clear(NRF_RADIO, NRF_RADIO_EVENT_DISABLED);
@@ -1315,7 +1149,7 @@ static int radio_init(void)
 	/* Turn off radio before configuring it */
 	radio_reset();
 
-	radio_tx_power_set(dtm_inst.phys_ch, dtm_inst.txpower);
+	radio_tx_power_set(dtm_inst.phys_ch, dtm_inst.txpower, dtm_inst.radio_mode);
 	nrf_radio_mode_set(NRF_RADIO, dtm_inst.radio_mode);
 	nrf_radio_fast_ramp_up_enable_set(NRF_RADIO, IS_ENABLED(CONFIG_DTM_FAST_RAMP_UP));
 
@@ -1369,7 +1203,7 @@ int dtm_init(dtm_iq_report_callback_t callback)
 		return err;
 	}
 
-#if defined(CONFIG_SOC_SERIES_NRF54HX)
+#if defined(CONFIG_SOC_SERIES_NRF54H)
 	/* Apply HMPAN-102 workaround for nRF54H series */
 	*(volatile uint32_t *)0x5302C7E4 =
 				(((*((volatile uint32_t *)0x5302C7E4)) & 0xFF000FFF) | 0x0012C000);
@@ -1425,7 +1259,7 @@ int dtm_init(dtm_iq_report_callback_t callback)
 	*(volatile uint32_t *) 0x5302C7AC = 0x8672827A;
 	*(volatile uint32_t *) 0x5302C7B0 = 0x7E768672;
 	*(volatile uint32_t *) 0x5302C7B4 = 0x0406007E;
-#endif /* defined(CONFIG_SOC_SERIES_NRF54HX) */
+#endif /* defined(CONFIG_SOC_SERIES_NRF54H) */
 
 	err = timer_init();
 	if (err) {
@@ -1463,8 +1297,8 @@ int dtm_init(dtm_iq_report_callback_t callback)
 #endif /* CONFIG_DTM_POWER_CONTROL_AUTOMATIC */
 
 	/** Connect radio interrupts. */
-	// IRQ_CONNECT(RADIO_IRQn, CONFIG_DTM_RADIO_IRQ_PRIORITY, radio_handler,
-	// 	    NULL, 0);
+	IRQ_CONNECT(RADIO_IRQn, CONFIG_DTM_RADIO_IRQ_PRIORITY, radio_handler,
+		    NULL, 0);
 	irq_enable(RADIO_IRQn);
 
 
@@ -1724,7 +1558,7 @@ static void errata_172_handle(bool enable)
 
 static void errata_117_handle(bool enable)
 {
-	if (!nrf52_errata_117()) {
+	if (!nrf53_errata_117()) {
 		return;
 	}
 
@@ -1754,34 +1588,27 @@ static void errata_191_handle(bool enable)
 static void endpoints_clear(void)
 {
 	if (atomic_test_and_clear_bit(&dtm_inst.endpoint_state, ENDPOINT_FORK_EGU_TIMER)) {
-		nrfx_gppi_fork_endpoint_clear(dtm_inst.ppi_radio_start,
+		nrfx_gppi_ep_clear(
 			nrf_timer_task_address_get(dtm_inst.timer.p_reg, NRF_TIMER_TASK_START));
 	}
 	if (atomic_test_and_clear_bit(&dtm_inst.endpoint_state, ENDPOINT_EGU_RADIO_TX)) {
-		nrfx_gppi_channel_endpoints_clear(
-			dtm_inst.ppi_radio_start,
-			nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT),
-			nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN));
+		nrfx_gppi_ep_clear(nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT));
+		nrfx_gppi_ep_clear(nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN));
 	}
 	if (atomic_test_and_clear_bit(&dtm_inst.endpoint_state, ENDPOINT_EGU_RADIO_RX)) {
-		nrfx_gppi_channel_endpoints_clear(
-			dtm_inst.ppi_radio_start,
-			nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT),
-			nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_RXEN));
+		nrfx_gppi_ep_clear(nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT));
+		nrfx_gppi_ep_clear(nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_RXEN));
 	}
 	if (atomic_test_and_clear_bit(&dtm_inst.endpoint_state, ENDPOINT_TIMER_RADIO_TX)) {
-		nrfx_gppi_channel_endpoints_clear(
-			dtm_inst.ppi_radio_start,
-			nrf_timer_event_address_get(dtm_inst.timer.p_reg, NRF_TIMER_EVENT_COMPARE0),
-			nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN));
+		nrfx_gppi_ep_clear(
+		   nrf_timer_event_address_get(dtm_inst.timer.p_reg, NRF_TIMER_EVENT_COMPARE0));
+		nrfx_gppi_ep_clear(nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN));
 	}
 }
 
 static void radio_ppi_clear(void)
 {
-	if (nrfx_gppi_channel_check(dtm_inst.ppi_radio_start)) {
-		nrfx_gppi_channels_disable(BIT(dtm_inst.ppi_radio_start));
-	}
+	nrfx_gppi_conn_disable(dtm_inst.ppi_radio_start);
 
 	nrf_egu_event_clear(DTM_EGU, DTM_EGU_EVENT);
 
@@ -1791,19 +1618,19 @@ static void radio_ppi_clear(void)
 
 static void radio_ppi_configure(bool rx, uint32_t timer_short_mask)
 {
-	nrfx_gppi_channel_endpoints_setup(
-		dtm_inst.ppi_radio_start,
-		nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT),
-		nrf_radio_task_address_get(NRF_RADIO,
-					   rx ? NRF_RADIO_TASK_RXEN : NRF_RADIO_TASK_TXEN));
+	nrfx_gppi_ep_attach(nrf_egu_event_address_get(DTM_EGU, DTM_EGU_EVENT),
+			    dtm_inst.ppi_radio_start);
+	nrfx_gppi_ep_attach(nrf_radio_task_address_get(NRF_RADIO,
+					   rx ? NRF_RADIO_TASK_RXEN : NRF_RADIO_TASK_TXEN),
+			    dtm_inst.ppi_radio_start);
 	atomic_set_bit(&dtm_inst.endpoint_state,
 		       (rx ? ENDPOINT_EGU_RADIO_RX : ENDPOINT_EGU_RADIO_TX));
 
-	nrfx_gppi_fork_endpoint_setup(dtm_inst.ppi_radio_start,
-		nrf_timer_task_address_get(dtm_inst.timer.p_reg, NRF_TIMER_TASK_START));
+	nrfx_gppi_ep_attach(nrf_timer_task_address_get(dtm_inst.timer.p_reg, NRF_TIMER_TASK_START),
+			    dtm_inst.ppi_radio_start);
 	atomic_set_bit(&dtm_inst.endpoint_state, ENDPOINT_FORK_EGU_TIMER);
 
-	nrfx_gppi_channels_enable(BIT(dtm_inst.ppi_radio_start));
+	nrfx_gppi_conn_enable(dtm_inst.ppi_radio_start);
 
 	if (timer_short_mask) {
 		nrf_timer_shorts_set(dtm_inst.timer.p_reg, timer_short_mask);
@@ -1812,18 +1639,17 @@ static void radio_ppi_configure(bool rx, uint32_t timer_short_mask)
 
 static void radio_tx_ppi_reconfigure(void)
 {
-	if (nrfx_gppi_channel_check(dtm_inst.ppi_radio_start)) {
-		nrfx_gppi_channels_disable(BIT(dtm_inst.ppi_radio_start));
-	}
+	nrfx_gppi_conn_disable(dtm_inst.ppi_radio_start);
 
 	endpoints_clear();
 
-	nrfx_gppi_channel_endpoints_setup(
-		dtm_inst.ppi_radio_start,
-		nrf_timer_event_address_get(dtm_inst.timer.p_reg, NRF_TIMER_EVENT_COMPARE0),
-		nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN));
+	nrfx_gppi_ep_attach(nrf_timer_event_address_get(dtm_inst.timer.p_reg,
+									NRF_TIMER_EVENT_COMPARE0),
+			    dtm_inst.ppi_radio_start);
+	nrfx_gppi_ep_attach(nrf_radio_task_address_get(NRF_RADIO, NRF_RADIO_TASK_TXEN),
+			    dtm_inst.ppi_radio_start);
 	atomic_set_bit(&dtm_inst.endpoint_state, ENDPOINT_TIMER_RADIO_TX);
-	nrfx_gppi_channels_enable(BIT(dtm_inst.ppi_radio_start));
+	nrfx_gppi_conn_enable(dtm_inst.ppi_radio_start);
 }
 
 static void dtm_test_done(void)
@@ -1855,11 +1681,6 @@ static void dtm_test_done(void)
 
 static void radio_start(bool rx, bool force_egu)
 {
-	/* Send the nRF54H20 errata 216 on signal */
-	if (errata216_on_wait()) {
-		printk("Failed to send errata HMPAN-216 on signal\n");
-	}
-
 	if (IS_ENABLED(CONFIG_FEM) || force_egu) {
 		nrf_egu_event_clear(DTM_EGU, DTM_EGU_EVENT);
 		nrf_egu_task_trigger(DTM_EGU, DTM_EGU_TASK);
@@ -1946,7 +1767,7 @@ static void radio_prepare(bool rx)
 
 		radio_start(rx, false);
 	} else { /* tx */
-		radio_tx_power_set(dtm_inst.phys_ch, dtm_inst.txpower);
+		radio_tx_power_set(dtm_inst.phys_ch, dtm_inst.txpower, dtm_inst.radio_mode);
 
 #if NRF52_ERRATA_172_PRESENT
 		/* Stop the timer used by anomaly 172 */
@@ -2003,9 +1824,16 @@ static int dtm_vendor_specific_pkt(uint32_t vendor_cmd, uint32_t vendor_option)
 	 */
 	case CARRIER_TEST:
 	case CARRIER_TEST_STUDIO:
+		/* Send the nRF54H20 errata 216 on signal */
+		if (errata_216_on_wait()) {
+			printk("Failed to send errata HMPAN-216 on signal\n");
+		}
+
 		/* Not a packet type, but used to indicate that a continuous
-		 * carrier signal should be transmitted by the radio.
+		 * carrier signal should be transmitted by the radio on the
+		 * channel indicated by the 'option' field.
 		 */
+		dtm_inst.phys_ch = vendor_option;
 		radio_prepare(TX_MODE);
 		nrf_radio_fast_ramp_up_enable_set(NRF_RADIO, IS_ENABLED(CONFIG_DTM_FAST_RAMP_UP));
 
@@ -2157,8 +1985,11 @@ static uint32_t dtm_packet_interval_calculate(uint32_t test_payload_length,
 
 	if (dtm_inst.cte_info.mode != DTM_CTE_MODE_OFF) {
 		/* Add 8 - bit S1 field with CTEInfo. */
-		((test_packet_length += mode) == RADIO_MODE_MODE_Ble_1Mbit) ?
-						 8 : 4;
+		if (mode == NRF_RADIO_MODE_BLE_1MBIT) {
+			test_packet_length += 8; /* 1 byte */
+		} else {
+			test_packet_length += 4; /* 0.5 byte */
+		}
 
 		/* Add CTE length in us to test packet length. */
 		test_packet_length +=
@@ -2426,8 +2257,8 @@ struct dtm_tx_power dtm_setup_set_transmit_power(enum dtm_tx_power_request power
 						 uint8_t channel)
 {
 	uint16_t frequency = radio_frequency_get(channel);
-	const int8_t tx_power_min = dtm_radio_min_power_get(frequency);
-	const int8_t tx_power_max = dtm_radio_max_power_get(frequency);
+	const int8_t tx_power_min = dtm_radio_min_power_get(dtm_inst.radio_mode, frequency);
+	const int8_t tx_power_max = dtm_radio_max_power_get(dtm_inst.radio_mode, frequency);
 	struct dtm_tx_power tmp = {
 		.power = 0,
 		.min = false,
@@ -2449,7 +2280,8 @@ struct dtm_tx_power dtm_setup_set_transmit_power(enum dtm_tx_power_request power
 		} else if (val >= tx_power_max) {
 			dtm_inst.txpower = tx_power_max;
 		} else {
-			dtm_inst.txpower = dtm_radio_nearest_power_get(val, frequency);
+			dtm_inst.txpower = dtm_radio_nearest_power_get(val, dtm_inst.radio_mode,
+								       frequency);
 		}
 
 		break;
@@ -2484,6 +2316,11 @@ int dtm_test_receive(uint8_t channel)
 	 */
 	memset(&dtm_inst.pdu, 0, sizeof(dtm_inst.pdu));
 
+	/* Send the nRF54H20 errata 216 on signal */
+	if (errata_216_on_wait()) {
+		printk("Failed to send errata HMPAN-216 on signal\n");
+	}
+
 	/* Reinitialize "everything"; RF interrupts OFF */
 	radio_prepare(RX_MODE);
 
@@ -2510,8 +2347,14 @@ int dtm_test_transmit(uint8_t channel, uint8_t length, enum dtm_packet pkt)
 
 	dtm_inst.packet_type = pkt;
 	dtm_inst.packet_len = length;
-	dtm_inst.phys_ch = channel;
 	dtm_inst.current_pdu = dtm_inst.pdu;
+
+	/* 'channel' may be used for different purposes if the packet
+	 * is vendor-specific
+	 */
+	if (pkt != DTM_PACKET_VENDOR) {
+		dtm_inst.phys_ch = channel;
+	}
 
 	/* Check for illegal values of m_phys_ch. Skip the check if the
 	 * packet is vendor specific.
@@ -2525,7 +2368,7 @@ int dtm_test_transmit(uint8_t channel, uint8_t length, enum dtm_packet pkt)
 	/* Check for illegal values of packet_len. Skip the check
 	 * if the packet is vendor spesific.
 	 */
-	if (dtm_inst.packet_type != DTM_PKT_TYPE_VENDORSPECIFIC &&
+	if (dtm_inst.packet_type != DTM_PACKET_VENDOR &&
 	    dtm_inst.packet_len > DTM_PAYLOAD_MAX_SIZE) {
 		/* Parameter error */
 		return -EINVAL;
@@ -2631,6 +2474,11 @@ int dtm_test_transmit(uint8_t channel, uint8_t length, enum dtm_packet pkt)
 							dtm_inst.cte_info.info;
 	}
 
+	/* Send the nRF54H20 errata 216 on signal */
+	if (errata_216_on_wait()) {
+		printk("Failed to send errata HMPAN-216 on signal\n");
+	}
+
 	/* Initialize CRC value, set channel */
 	radio_prepare(TX_MODE);
 
@@ -2680,7 +2528,7 @@ int dtm_test_end(uint16_t *pack_cnt)
 	dtm_test_done();
 
 	/* Send the nRF54H20 errata 216 off signal */
-	if (errata216_off()) {
+	if (errata_216_off()) {
 		printk("Failed to send errata HMPAN-216 off signal\n");
 	}
 
@@ -2747,16 +2595,9 @@ static void on_radio_end_event(void)
 	/* Zero fill all pdu fields to avoid stray data */
 	memset(received_pdu, 0, DTM_PDU_MAX_MEMORY_SIZE);
 }
-typedef struct {
-    uint32_t r0, r1, r2, r3, r12, lr, pc, xpsr;
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
-    float s[16];  // 保存 FPU 寄存器 S0-S15（按需调整）
-#endif
-} cortex_m33_context_t;
 
 void radio_handler(const void *context)
 {
-
 	if (nrf_radio_event_check(NRF_RADIO, NRF_RADIO_EVENT_ADDRESS)) {
 		nrf_radio_event_clear(NRF_RADIO, NRF_RADIO_EVENT_ADDRESS);
 #if NRF52_ERRATA_172_PRESENT
@@ -2803,7 +2644,7 @@ static void dtm_timer_handler(nrf_timer_event_t event_type, void *context)
 	 * errata workaround for nRF54H20 SoCs
 	 */
 	if (event_type == NRF_TIMER_EVENT_COMPARE1) {
-		errata216_release();
+		errata_216_release();
 	} else {
 		/* Do nothing */
 	}
