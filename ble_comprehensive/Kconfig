@@ -5,80 +5,72 @@
 #
 
 source "Kconfig.zephyr"
-menu "comprehensive example"
+menu "BLE Comprehensive Example"
 
 if BOOTLOADER_MCUBOOT
 config NCS_SAMPLE_MCUMGR_BT_OTA_DFU
 	default y
 endif
 
-config EXAMPLE_I2C
-	bool "load I2C example or not"
+config SAMPLE_I2C
+	bool "Enable I2C master example"
 	help
-		if yes, load I2C example
-		
-config EXAMPLE_SPIM
-	bool "load SPI master example or not"
-	help
-		if yes, load SPI master example		
-		
-config EXAMPLE_EXT_INT
-	bool "load external IO interrupt example or not"
-	help
-		if yes, load external IO interrupt example
+	  Enable I2C master communication example using simulated EEPROM.
 
-config EXAMPLE_ADC
-	bool "load ADC example or not"
+config SAMPLE_SPIM
+	bool "Enable SPI master example"
 	help
-		if yes, load ADC example		
+	  Enable SPI master communication example.
 
-config EXAMPLE_HS_UART
-	bool "load high speed UART example or not"
+config SAMPLE_EXT_INT
+	bool "Enable external GPIO interrupt example"
 	help
-		if yes, load high speed UART example	  
+	  Enable external IO interrupt example triggering I2C on interrupt.
 
-config EXAMPLE_FLASH_NVS
-	bool "load NVS Flash access usage example"	
+config SAMPLE_ADC
+	bool "Enable ADC sampling example"
 	help
-		if yes, load NVS Flash access usage example
+	  Enable ADC sampling example reading multiple channels.
 
-config EXAMPLE_FLASH_SETTINGS
-	bool "load Settings Flash access usage example"	
+config SAMPLE_HS_UART
+	bool "Enable high-speed UART example"
 	help
-		if yes, load Settings Flash access usage example
-		
+	  Enable high-speed async UART example at 1 Mbps.
+
+config SAMPLE_FLASH_NVS
+	bool "Enable NVS flash access example"
+	help
+	  Enable Non-Volatile Storage (NVS) flash access usage example.
+
+config SAMPLE_FLASH_SETTINGS
+	bool "Enable Settings flash access example"
+	help
+	  Enable Zephyr Settings subsystem flash access usage example.
+
+# Auto-select storage backend based on SoC flash type
+config ZMS
+	default y if (SOC_FLASH_NRF_RRAM || SOC_FLASH_NRF_MRAM)
+
+config NVS
+	default y if !(SOC_FLASH_NRF_RRAM || SOC_FLASH_NRF_MRAM)
+
 config BT_NUS_SECURITY_ENABLED
 	bool "Enable security"
 	default n
 	select BT_SMP
 	help
-	  "Enable BLE security for the UART service"
+	  Enable BLE security for the UART service.
+	  Requires CONFIG_BT_NUS_SECURITY_ENABLED=y in prj.conf to activate.
 
 config DTM_IN_APP
-	bool "load DTM in application or not"
+	bool "Enable DTM in application"
 	depends on SOC_NRF54L15_CPUAPP
-	imply NRFX_TIMER
-	# imply KERNEL_INIT_PRIORITY_DEVICE=20
-	# imply CONSOLE_INIT_PRIORITY=21
-	# imply UART_ASYNC_API=n
-	# imply UART_20_ASYNC=n
-	# imply LOG_PRINTK=n	
 	help
-		if yes, enable DTM in application
+	  Enable Direct Test Mode (DTM) running at PRE_KERNEL_1 before
+	  the application main. When enabled, hold Button 2 at boot to
+	  enter DTM mode; otherwise the application boots normally.
 
 if DTM_IN_APP
-
-# config KERNEL_INIT_PRIORITY_DEVICE
-#     int
-#     default 20 if DTM_IN_APP
-
-# config CONSOLE_INIT_PRIORITY
-#     int
-#     default 21 if DTM_IN_APP
-
-config LOG_PRINTK
-    bool
-	default n if DTM_IN_APP
 
 mainmenu "Nordic DTM sample"
 
@@ -115,8 +107,8 @@ config DTM_USB
 	depends on SOC_NRF5340_CPUNET && !DTM_TRANSPORT_HCI
 	select EXPERIMENTAL
 	help
-	  Use USB instead of UART as the DTM interface. For nRF5340 the USB from application core
-	  is used as communication interface.
+	  Use USB instead of UART as the DTM interface. For nRF5340 the USB
+	  from application core is used as communication interface.
 
 config DTM_TRANSPORT_HCI
 	bool "DTM over HCI UART [EXPERIMENTAL]"
@@ -160,22 +152,24 @@ config DTM_POWER_CONTROL_AUTOMATIC
 	depends on FEM
 	default y
 	help
-	  Set the SoC output power and the front-end module gain to achieve the TX output power
-	  requested by user. If the exact value cannot be achieved, power is set to the closest
-	  possible value. If this option is disabled, user can set the SoC output power and the
-	  front-end module gain with the separate vendor specific commands.
+	  Set the SoC output power and the front-end module gain to achieve
+	  the TX output power requested by user. If the exact value cannot be
+	  achieved, power is set to the closest possible value. If this option
+	  is disabled, user can set the SoC output power and the front-end
+	  module gain with the separate vendor specific commands.
 
 config DTM_FAST_RAMP_UP
 	bool "Enable radio fast ramp up mode"
 	default y
 	help
-	  Do fast ramp up when starting the radio peripheral. This mode will significancy reduce
-	  the ramp up time and makes it almost the same on all supported chips.
+	  Do fast ramp up when starting the radio peripheral. This mode will
+	  significantly reduce the ramp up time and makes it almost the same
+	  on all supported chips.
 
-endif
-		
-module = COMPREHENSIVE_EXAMPLE_CONFIG
-module-str = comprehensive example configurations
+endif # DTM_IN_APP
+
+module = BLE_COMPREHENSIVE_CONFIG
+module-str = BLE Comprehensive Example configurations
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
 
 endmenu

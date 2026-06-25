@@ -8,13 +8,12 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/i2c.h>
 #include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME extint_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-//Correspondent to Button4. Change it as per your board's definition
+// Corresponding to Button4. Change as per your board's definition
 #define ZEPHYR_USER_NODE DT_PATH(zephyr_user)
 const struct gpio_dt_spec ext_int =
         GPIO_DT_SPEC_GET(ZEPHYR_USER_NODE, extint_gpios);

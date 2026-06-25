@@ -10,7 +10,6 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/fs/nvs.h>
-#include <zephyr/settings/settings.h>
 #include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME nvs_thread
@@ -34,13 +33,13 @@ static int nvs_usage_init(void)
 #ifdef CONFIG_PARTITION_MANAGER_ENABLED
 	fs.flash_device = FLASH_AREA_DEVICE(STORAGE_NODE_LABEL);
 	if (!device_is_ready(fs.flash_device)) {
-		printk("Flash device %s is not ready\n", fs.flash_device->name);
+		LOG_ERR("Flash device %s is not ready", fs.flash_device->name);
 		return -EINVAL;
 	}
 	fs.offset = FLASH_AREA_OFFSET(STORAGE_NODE_LABEL);
 	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
 	if (rc) {
-		printk("Unable to get page info\n");
+		LOG_ERR("Unable to get page info");
 		return -EINVAL;
 	}
 #else
@@ -51,13 +50,13 @@ static int nvs_usage_init(void)
 	 */
 	fs.flash_device = NVS_PARTITION_DEVICE;
 	if (!device_is_ready(fs.flash_device)) {
-		printk("Flash device %s is not ready\n", fs.flash_device->name);
+		LOG_ERR("Flash device %s is not ready", fs.flash_device->name);
 		return 0;
 	}
 	fs.offset = NVS_PARTITION_OFFSET;
 	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
 	if (rc) {
-		printk("Unable to get page info, rc=%d\n", rc);
+		LOG_ERR("Unable to get page info, rc=%d", rc);
 		return 0;
 	}
 #endif

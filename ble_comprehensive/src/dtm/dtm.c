@@ -18,6 +18,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
+#include <hal/nrf_clock.h>
 #include <zephyr/sys/__assert.h>
 #if !(defined(CONFIG_SOC_SERIES_NRF54H) || defined(CONFIG_SOC_SERIES_NRF54L))
 #include <hal/nrf_nvmc.h>
@@ -36,7 +37,6 @@
 
 #include <helpers/nrfx_gppi.h>
 #include <nrfx_timer.h>
-#include <nrfx_clock.h>
 
 /* TODO: DRGN-27733 Remove the alternative condition for nRF54LS05B
  * when the errata has been applied to this chip and the errata
@@ -721,16 +721,36 @@ static void anomaly_timer_handler(nrf_timer_event_t event_type, void *context);
 #endif /* NRF52_ERRATA_172_PRESENT */
 
 static void dtm_timer_handler(nrf_timer_event_t event_type, void *context);
+/* 非 static：DTM 独占 radio 时由 MPSL 重定向(mpsl_radio_isr_redirect)调用。 */
 void radio_handler(const void *context);
 
 #if defined(CONFIG_CLOCK_CONTROL_NRF)
+/* DTM 运行在 SYS_INIT(PRE_KERNEL_1)：内核尚未启动，不能用 onoff manager / 信号量
+ * 等内核对象。直接用 nrfx HAL 启动 HFCLK 并轮询启动完成事件(bare-metal)，
+ * 与原 v3.0.0 的底层模式一致。
+ */
 static int clock_init(void)
 {
-	/* HF clock on nRF54L15 is started by Zephyr SoC init before PRE_KERNEL_1.
-	 * The Zephyr clock_control driver is not available at PRE_KERNEL_1
-	 * (causes MPU fault). No additional clock init needed for DTM.
-	 * Works both with and without MCUboot.
-	 */
+	nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED);
+	nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
+	while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED)) {
+		/* spin until HFCLK is running */
+	}
+	nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED);
+
+#if NRF54L_ERRATA_20_PRESENT
+	if (nrf54l_errata_20()) {
+		nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
+	}
+#elif defined(NRF54LS05B_ENGA_XXAA)
+	nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
+#endif /* NRF54L_ERRATA_20_PRESENT */
+
+#if defined(NRF54L15_XXAA)
+	/* MLTPAN-20: 启动 radio 使用的 PLL。 */
+	nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_PLLSTART);
+#endif /* defined(NRF54L15_XXAA) */
+
 	return 0;
 }
 
@@ -738,23 +758,26 @@ static int clock_init(void)
 
 int clock_init(void)
 {
+	int err;
+	int res;
+	const struct device *radio_clk_dev =
+		DEVICE_DT_GET_OR_NULL(DT_CLOCKS_CTLR(DT_NODELABEL(radio)));
+	struct onoff_client radio_cli;
+
 	/** Keep radio domain powered all the time to reduce latency. */
 	nrf_lrcconf_poweron_force_set(NRF_LRCCONF010, NRF_LRCCONF_POWER_DOMAIN_1, true);
 
-#if NRF54L_ERRATA_20_PRESENT
-	if (nrf54l_errata_20()) {
-		nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
-	}
-	/* TODO: DRGN-27733 Remove the elif block for nRF54LS05B when the errata has
-	 * been applied to this chip and the errata check can be used instead.
-	 */
-#elif defined(NRF54LS05B_ENGA_XXAA)
-	nrf_power_task_trigger(NRF_POWER, NRF_POWER_TASK_CONSTLAT);
-#endif /* NRF54L_ERRATA_20_PRESENT */
+	sys_notify_init_spinwait(&radio_cli.notify);
 
-#if defined(NRF54LM20A_XXAA)
-	nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_PLLSTART);
-#endif /* defined(NRF54LM20A_XXAA) */
+	err = nrf_clock_control_request(radio_clk_dev, NULL, &radio_cli);
+
+	do {
+		err = sys_notify_fetch_result(&radio_cli.notify, &res);
+		if (!err && res) {
+			printk("Clock could not be started: %d\n", res);
+			return res;
+		}
+	} while (err == -EAGAIN);
 
 	return 0;
 }
@@ -778,8 +801,14 @@ static int timer_init(void)
 		return -EAGAIN;
 	}
 
+#if !defined(CONFIG_MPSL)
+	/* MPSL 存在时核心 timer(nRF54L:TIMER10) 的 IRQ 向量已被 MPSL 静态占用，
+	 * 不能重复 IRQ_CONNECT。nRF54L 下该 timer 仅经 PPI/shorts 驱动 radio，
+	 * 不需要自身中断。
+	 */
 	IRQ_CONNECT(DEFAULT_TIMER_IRQ, CONFIG_DTM_TIMER_IRQ_PRIORITY,
 		    nrfx_timer_irq_handler, &dtm_inst.timer, 0);
+#endif
 
 	return 0;
 }
@@ -1296,9 +1325,14 @@ int dtm_init(dtm_iq_report_callback_t callback)
 	dtm_inst.txpower = fem_default_tx_output_power_get();
 #endif /* CONFIG_DTM_POWER_CONTROL_AUTOMATIC */
 
-	/** Connect radio interrupts. */
-	IRQ_CONNECT(RADIO_IRQn, CONFIG_DTM_RADIO_IRQ_PRIORITY, radio_handler,
-		    NULL, 0);
+	/** Connect radio interrupts.
+	 * MPSL 已通过 IRQ_DIRECT_CONNECT 静态占用 RADIO_0 向量；这里不能重复
+	 * IRQ_CONNECT，否则 ISR 表冲突。DTM 激活时经 mpsl_radio_isr_redirect()
+	 * 把中断重定向到本地 radio_handler。仅需使能 NVIC 线。
+	 */
+	/* IRQ_CONNECT(RADIO_IRQn, CONFIG_DTM_RADIO_IRQ_PRIORITY, radio_handler,
+	 *	    NULL, 0);
+	 */
 	irq_enable(RADIO_IRQn);
 
 
@@ -2637,6 +2671,24 @@ void radio_handler(const void *context)
 #endif
 
 }
+
+#if defined(CONFIG_MPSL)
+/* MPSL 默认拥有 RADIO IRQ 向量；mpsl_init.c 通过弱函数 mpsl_radio_isr_redirect()
+ * 提供重定向钩子。DTM 在 PRE_KERNEL_1 独占 radio 时把 RADIO 中断交给本地
+ * radio_handler 处理，并返回 true 通知 MPSL 跳过自身处理。
+ */
+bool mpsl_radio_isr_redirect(void)
+{
+	extern bool b_dtm_mode;
+
+	if (b_dtm_mode) {
+		radio_handler(NULL);
+		return true;
+	}
+
+	return false;
+}
+#endif /* CONFIG_MPSL */
 
 static void dtm_timer_handler(nrf_timer_event_t event_type, void *context)
 {

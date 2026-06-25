@@ -44,13 +44,12 @@
 	aliases {
 		myi2c = &i2c0;
 		myspi = &spi1;
-		myuart = &uart1; 
-	};			
-	/* See &GPIO0 definition below */
+		myuart = &uart1;
+	};
 	zephyr,user {
 		io-channels = <&adc 0>, <&adc 1>;
 		extint-gpios = <&gpio0 0x19 GPIO_ACTIVE_LOW>;
-	};		
+	};
 };
 
 &uicr {
@@ -58,48 +57,12 @@
 };
 
 &pinctrl {
-	// uart0_default: uart0_default {
-	// 	group1 {
-	// 		psels = <NRF_PSEL(UART_TX, 1, 2)>;			
-	// 	};
-	// 	group2 {
-	// 		psels = <NRF_PSEL(UART_RX, 1, 1)>;		
-	// 		bias-pull-up;
-	// 	};
-	// };
-
-	// uart0_sleep: uart0_sleep {
-	// 	group1 {
-	// 		psels = <NRF_PSEL(UART_TX, 1, 2)>,
-	// 				<NRF_PSEL(UART_RX, 1, 1)>;
-	// 		low-power-enable;
-	// 	};
-	// };
-
-	// uart1_default: uart1_default {
-	// 	group1 {
-	// 		psels = <NRF_PSEL(UART_TX, 0, 6)>;
-	// 	};
-	// 	group2 {
-	// 		psels = <NRF_PSEL(UART_RX, 0, 8)>;
-	// 		bias-pull-up;
-	// 	};
-	// };
-
-	// uart1_sleep: uart1_sleep {
-	// 	group1 {
-	// 		psels = <NRF_PSEL(UART_TX, 0, 6)>,
-	// 			<NRF_PSEL(UART_RX, 0, 8)>;
-	// 		low-power-enable;
-	// 	};
-	// };
-
 	i2c0_default: i2c0_default {
 		group1 {
 			psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
 				<NRF_PSEL(TWIM_SCL, 0, 27)>;
 			bias-pull-up;
-			nordic,drive-mode = <NRF_DRIVE_S0D1>;				
+			nordic,drive-mode = <NRF_DRIVE_S0D1>;
 		};
 	};
 
@@ -109,7 +72,7 @@
 				<NRF_PSEL(TWIM_SCL, 0, 27)>;
 			low-power-enable;
 		};
-	};	
+	};
 
 	spi1_default: spi1_default {
 		group1 {
@@ -129,25 +92,9 @@
 	};
 };
 
-
-// &uart0 {
-// 	compatible = "nordic,nrf-uarte";
-// 	status = "okay";
-// 	current-speed = < 115200 >;
-// 	pinctrl-0 = < &uart0_default >;
-// 	pinctrl-1 = < &uart0_sleep >;
-// 	pinctrl-names = "default", "sleep";	
-// 	/* delete rts-pin&cts-pin to release the related 2 pins for other uses */
-// 	/delete-property/ rts-pin;
-// 	/delete-property/ cts-pin;
-// };
-
 &uart1 {
 	status = "okay";
 	current-speed = < 1000000 >;
-	// pinctrl-0 = < &uart1_default >;
-	// pinctrl-1 = < &uart1_sleep >;
-	// pinctrl-names = "default", "sleep";
 };
 
 &i2c0 {
@@ -163,7 +110,7 @@
 	i2c_dev_1: i2c_dev_1@b {
 		compatible = "i2c-device";
 		reg = <0x0B>;
-	}; 	
+	};
 };
 
 &spi0 {
@@ -171,7 +118,7 @@
 };
 
 &spi1 {
-	status = "okay"; 
+	status = "okay";
 	compatible = "nordic,nrf-spim";
 	pinctrl-0 = <&spi1_default>;
 	pinctrl-1 = <&spi1_sleep>;
@@ -181,12 +128,12 @@
 		compatible = "vnd,spi-device";
 		reg = <0>;
 		spi-max-frequency = <DT_FREQ_M(8)>;
-	}; 
+	};
 	spi_dev_1: spi_dev_1@1 {
 		compatible = "vnd,spi-device";
 		reg = <1>;
 		spi-max-frequency = <DT_FREQ_M(8)>;
-	};    			   	
+	};
 
 };
 
@@ -206,9 +153,9 @@
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
 		zephyr,input-positive = <NRF_SAADC_AIN0>;
 		zephyr,vref-mv = <600>;
-		zephyr,resolution = <10>;						
+		zephyr,resolution = <10>;
 	};
-	
+
 	channel@1 {
 		reg = <1>;
 		zephyr,gain = "ADC_GAIN_1_6";
@@ -216,14 +163,14 @@
 		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 20)>;
 		zephyr,input-positive = <NRF_SAADC_VDD>;
 		zephyr,vref-mv = <600>;
-		zephyr,resolution = <10>;					
+		zephyr,resolution = <10>;
 	};
 
 };
 
 /* delete sw3 to reserve the related pin for GPIO use */
 / {
-	aliases {  
+	aliases {
 	 /delete-property/ sw3;
 	};
   };

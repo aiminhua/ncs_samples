@@ -16,7 +16,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define TEST_STRING "Nordic"
 extern struct k_sem sem_spi_txrx;
-#define SPI_OP     SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_WORD_SET(8) | SPI_LINES_SINGLE
+#define SPI_OP     (SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_WORD_SET(8) | SPI_LINES_SINGLE)
 static struct spi_dt_spec spi_dev0 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_0), SPI_OP);
 static struct spi_dt_spec spi_dev1 = SPI_DT_SPEC_GET(DT_NODELABEL(spi_dev_1), SPI_OP);
 
@@ -94,7 +94,10 @@ void spi_thread(void)
 		return;
 	}
 
-    k_sem_take(&sem_spi_txrx, K_FOREVER);
+	/* Wait for one-shot trigger from Button2 via sem_spi_txrx,
+	 * then run continuous periodic SPI transactions.
+	 */
+	k_sem_take(&sem_spi_txrx, K_FOREVER);
 	while (1) {                
         LOG_INF("spi master thread");
         spi_data_exchange();

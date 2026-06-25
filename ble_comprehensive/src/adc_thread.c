@@ -12,7 +12,7 @@
 #include <zephyr/drivers/adc.h>
 #include <hal/nrf_saadc.h>
 
-LOG_MODULE_REGISTER(adc_thread, 3);
+LOG_MODULE_REGISTER(adc_thread);
 
 #if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
 	!DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
@@ -42,6 +42,7 @@ void adc_sample_sync(void)
 	for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++) {
 		int32_t val_mv;
 
+		/* printk used for progressive single-line ADC output formatting */
 		printk("- %s, channel %d: ",
 				adc_channels[i].dev->name,
 				adc_channels[i].channel_id);
@@ -102,7 +103,7 @@ static int init_adc(void)
 void adc_thread(void)
 {	
 	
-	LOG_INF("**ADC sampling example");
+	LOG_INF("**ADC sampling example **");
 	init_adc();
 
 	while (1) {                

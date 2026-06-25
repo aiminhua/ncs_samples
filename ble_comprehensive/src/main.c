@@ -37,18 +37,14 @@ K_SEM_DEFINE(sem_spi_txrx, 0, 1);
 
 static struct bt_conn *current_conn;
 static struct bt_conn *auth_conn;
-const struct device *runLED;
-const struct device *conLED;
-bool led_is_on = true;
+static const struct device *runLED;
+static const struct device *conLED;
+static bool led_is_on = true;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
-
-// static const struct bt_data sd[] = {
-// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
-// };
 
 /* Stack definition for application workqueue */
 K_THREAD_STACK_DEFINE(application_stack_area,
@@ -68,7 +64,7 @@ static struct k_work adv_work;
 
 #ifdef CONFIG_PM_DEVICE
 const struct device *devUart0;
-#ifdef CONFIG_EXAMPLE_HS_UART
+#ifdef CONFIG_SAMPLE_HS_UART
 const struct device *devUart1;
 #endif
 const struct device *devI2C;
@@ -76,11 +72,11 @@ const struct device *devSPI;
 static void get_device_handles(void)
 {
 	devUart0 = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-#ifdef CONFIG_EXAMPLE_HS_UART	
+#ifdef CONFIG_SAMPLE_HS_UART
     devUart1 = DEVICE_DT_GET(DT_ALIAS(myuart));
 #endif
 	devI2C = DEVICE_DT_GET(DT_ALIAS(myi2c));
-    devSPI = DEVICE_DT_GET(DT_ALIAS(myspi));	
+    devSPI = DEVICE_DT_GET(DT_ALIAS(myspi));
 }
 
 extern int my_uart_enable();
@@ -88,7 +84,7 @@ void set_device_pm_state(void)
 {
 	static bool is_off;
 	int err = 0;
-	
+
 	if (is_off)
 	{
 		LOG_INF("Turning on UART/SPI/I2C");
@@ -96,18 +92,18 @@ void set_device_pm_state(void)
 		err = pm_device_action_run(devUart0, PM_DEVICE_ACTION_RESUME);
 		err |= pm_device_action_run(devI2C,	PM_DEVICE_ACTION_RESUME);
 		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_RESUME);
-#ifdef CONFIG_EXAMPLE_HS_UART				
+#ifdef CONFIG_SAMPLE_HS_UART
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_RESUME);
 #endif
 		if (err) {
-			LOG_ERR("Activating err %d", err);			
+			LOG_ERR("Activating err %d", err);
 		}
 		else
 		{
 			LOG_INF("Entered active state");
 		}
 
-#if CONFIG_UART_ASYNC_API
+#ifdef CONFIG_UART_ASYNC_API
 		my_uart_enable();
 #endif
 
@@ -117,22 +113,24 @@ void set_device_pm_state(void)
 		LOG_INF("Turning off UART/SPI/I2C to save power");
 		is_off = true;
 		err = pm_device_action_run(devI2C,	PM_DEVICE_ACTION_SUSPEND);
-		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_SUSPEND);		
-#ifdef CONFIG_EXAMPLE_HS_UART
-#if CONFIG_UART_ASYNC_API
+		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_SUSPEND);
+#ifdef CONFIG_SAMPLE_HS_UART
+#ifdef CONFIG_UART_ASYNC_API
 		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
-#endif			
+#endif
 		k_msleep(10);  //just to simulate a thread calling rx_disable
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_SUSPEND);
 #endif
 		if (err) {
-			LOG_ERR("Entering low power err %d", err);			
+			LOG_ERR("Entering low power err %d", err);
 		}
 		else
 		{
-			LOG_INF("Entered lowe power");
-		}			
-		while(log_process());
+			LOG_INF("Entered low power");
+		}
+		if (IS_ENABLED(CONFIG_LOG_MODE_DEFERRED)) {
+			while(log_process());
+		}
 
 		err = pm_device_action_run(devUart0, PM_DEVICE_ACTION_SUSPEND);
 	}
@@ -142,7 +140,6 @@ void set_device_pm_state(void)
 
 static void blinky_work_fn(struct k_work *work)
 {
-    //LOG_INF("blinky fn in system workqueue\n");
 	gpio_pin_set(runLED, LED0_PIN, (int)led_is_on);
 	led_is_on = !led_is_on;
 
@@ -163,9 +160,9 @@ static void exchange_func(struct bt_conn *conn, uint8_t att_err,
 	}
 	else
 	{
-		LOG_INF("MTU updated to %d", bt_gatt_get_mtu(conn)); 
+		LOG_INF("MTU updated to %d", bt_gatt_get_mtu(conn));
 	}
-	
+
 }
 #endif
 
@@ -203,14 +200,14 @@ static void connected(struct bt_conn *conn, uint8_t err)
 #ifdef CONFIG_BT_NUS_SECURITY_ENABLED
 	if (bt_conn_set_security(conn, BT_SECURITY_L3)) {
 		LOG_INF("Failed to set security\n");
-	}	
+	}
 #endif
-#ifdef CONFIG_BT_GATT_CLIENT		
+#ifdef CONFIG_BT_GATT_CLIENT
 	exchange_params.func = exchange_func;
 	err = bt_gatt_exchange_mtu(conn, &exchange_params);
 	if (err) {
 		LOG_ERR("MTU exchange failed");
-	} 		
+	}
 #endif
 
 	gpio_pin_set(conLED, LED1_PIN, 1);
@@ -258,12 +255,6 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 	}
 }
 #endif
-
-// static void param_updated(struct bt_conn *conn, uint16_t interval,
-// 				 uint16_t latency, uint16_t timeout)
-// {
-// 	LOG_INF("conn interval=%d, latency=%d, timeout=%d", interval, latency, timeout);
-// }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected        = connected,
@@ -342,22 +333,22 @@ static struct bt_conn_auth_cb conn_auth_callbacks;
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
 #endif
 
-#ifdef CONFIG_EXAMPLE_HS_UART
+#ifdef CONFIG_SAMPLE_HS_UART
 extern int my_uart_send(const uint8_t *buf, size_t len);
 #endif
 
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 			  uint16_t len)
-{	
+{
 	char addr[BT_ADDR_LE_STR_LEN] = {0};
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
 	LOG_INF("Received data from: %s", addr);
-#ifdef CONFIG_EXAMPLE_HS_UART
+#ifdef CONFIG_SAMPLE_HS_UART
 	my_uart_send(data, len);
 #endif
-	
+
 }
 
 static struct bt_nus_cb nus_cb = {
@@ -402,9 +393,9 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 
 	if (buttons & DK_BTN1_MSK) {
 		LOG_INF("button1 isr");
-#ifdef CONFIG_PM_DEVICE		
+#ifdef CONFIG_PM_DEVICE
 		set_device_pm_state();
-#endif		
+#endif
 	}
 
 #if defined(CONFIG_BT_NUS_SECURITY_ENABLED)
@@ -433,7 +424,7 @@ static struct bt_gatt_cb mtu_cb = {
 int main(void)
 {
 	int err;
-	uint32_t rc;	
+	uint32_t rc;
 
 	LOG_INF("### Comprehensive example v3.0 @ %s built at %s %s\n", CONFIG_BOARD_TARGET, __TIME__, __DATE__);
 
@@ -447,7 +438,7 @@ int main(void)
 	}
 	err = gpio_pin_configure(runLED, LED0_PIN, GPIO_OUTPUT_ACTIVE | LED0_FLAGS);
 	if (err < 0) {
-		LOG_ERR("led0 configure error %d \n", err);		
+		LOG_ERR("led0 configure error %d \n", err);
 	}
 
 	conLED = DEVICE_DT_GET(LED1);
@@ -456,9 +447,9 @@ int main(void)
 	}
 	err = gpio_pin_configure(conLED, LED1_PIN, GPIO_OUTPUT_ACTIVE | LED1_FLAGS);
 	if (err < 0) {
-		LOG_ERR("led1 configure error %d \n", err);		
+		LOG_ERR("led1 configure error %d \n", err);
 	}
-	gpio_pin_set(conLED, LED1_PIN, 0);	
+	gpio_pin_set(conLED, LED1_PIN, 0);
 
 	//only initialize buttons module. LED moudle is not used!
 	err = dk_buttons_init(button_changed);
@@ -475,7 +466,7 @@ int main(void)
 			   NULL);
 	k_work_init_delayable(&blinky_work, blinky_work_fn);
 	k_work_reschedule_for_queue(&application_work_q, &blinky_work,
-					   	K_MSEC(20));	
+					   	K_MSEC(20));
 
 	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED)) {
 		err = bt_conn_auth_cb_register(&conn_auth_callbacks);
@@ -510,19 +501,6 @@ int main(void)
 		return err;
 	}
 
-	// struct bt_le_adv_param adv_para;
-	// memset(&adv_para, 0, sizeof(struct bt_le_adv_param));
-	// adv_para.options = BT_LE_ADV_OPT_CONN;
-	// adv_para.interval_min = 200;
-	// adv_para.interval_max = 300;
-
-	// err = bt_le_adv_start(&adv_para, ad, ARRAY_SIZE(ad), NULL,
-	// 		      0);
-	// if (err) {
-	// 	LOG_ERR("Advertising failed to start (err %d)", err);
-	// 	return err;
-	// }
-
 	k_work_init(&adv_work, adv_work_handler);
 	advertising_start();
 
@@ -530,7 +508,7 @@ int main(void)
 	{
 		//add your code here
 		LOG_INF("main thread");
-		k_sleep(K_SECONDS(20));		
+		k_sleep(K_SECONDS(20));
 	}
 
 	return 0;

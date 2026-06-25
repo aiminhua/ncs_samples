@@ -7,14 +7,12 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME i2c_thread
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-const struct device *i2c_dev;
 extern struct k_sem sem_i2c_op;
 
 const struct i2c_dt_spec i2c_dev0 = I2C_DT_SPEC_GET(DT_NODELABEL(i2c_dev_0));
@@ -66,7 +64,7 @@ static void eeprom_cmd_read(void)
     }
 }
 
-void iic_thread(void)
+void i2c_thread(void)
 {	
 	
 	LOG_INF("** I2C master example **");
@@ -86,5 +84,5 @@ void iic_thread(void)
 	}
 }
 
-K_THREAD_DEFINE(iic_thread_id, 1024, iic_thread, NULL, NULL,
+K_THREAD_DEFINE(i2c_thread_id, 1024, i2c_thread, NULL, NULL,
 		NULL, 8, 0, 0);
