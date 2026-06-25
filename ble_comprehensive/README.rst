@@ -20,13 +20,13 @@ Read `Testing`_ for more information of each separate module of this sample.
 Build & Programming
 *******************
 
-The following nRF Connect SDK (ncs) tags are tested for this sample. By default, nRF Connect SDK ``v3.0.0`` is used.
+The following nRF Connect SDK (ncs) tags are tested for this sample. By default, nRF Connect SDK ``v3.3.0`` is used.
 
-+----------------------------------------------------------------------------------------------------------+
-|nRF Connect SDK tags                                                                                      +
-+==========================================================================================================+
-|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x/v2.6.x/v2.7.x/v2.8.0/v2.9.1/v3.0.0  |
-+----------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------+
+|nRF Connect SDK tags                                                                                           +
++===============================================================================================================+
+|v1.5.x/v1.6.x/v1.7.x/v1.8.x/v1.9.x/v2.0.x/v2.2.x/v2.3.x/v2.4.x/v2.5.x/v2.6.x/v2.7.x/v2.8.0/v2.9.1/v3.0.0/v3.3.0|
++---------------------------------------------------------------------------------------------------------------+
 
 Use ``git tag`` to see supported tags. For ncs versions later than v1.9.0, for example ncs v2.0.0, 
 use ``git checkout v2.0`` to switch to the specified NCS tag. Use ``git checkout v1.5_v1.9`` to switch to 
@@ -230,10 +230,7 @@ In this module, you can achieve 1Mbps baud rate. UART has 3 working mode: poll, 
 To test the reliability of 1Mbps UART, you can transfer a file from PC end to the device end. In this example, when PC sends some data to the device, the device 
 would send the same data back to the PC. In this way, you can verify the reliability of 1Mbps UART.
 
-Rember to uncomment both UART1 and UART0 pincontrol in Devicetree overlay file. And disable CONFIG_DTM_IN_APP and related Kconfigs for nRF54L15.
-
-When doing the loopback test of 1Mbps UART, make sure BLE connection is disconnected and logging terminal is closed since they would have a great
-impact on the UART communication. You can use app: ``Serial Debug Assistant`` from Microsoft Store for the test. 
+When doing the loopback test of 1Mbps UART, make sure BLE connection is disconnected and logging terminal is closed since they would have a great impact on the UART communication. You can use app: ``Serial Debug Assistant`` from Microsoft Store for the test. 
 
 Use ``Serial Debug Assistant`` to send a file to the board. The board would forward the same file back to the PC. Verify whether they are identical.
 
@@ -261,3 +258,13 @@ Note: please shut down your logging terminal to achieve the 1Mbps baud rate.
 										0a 54 68 65 20 6d 65 65  74 69 6e 67 20 77 69 6c 
 										6c 20 6c 61 73 74 20 66  6f 72 20 61 62 6f 75    
 	[00:01:50.630,096] <inf> uart_thread: UART_TX_DONE 255 
+
+DTM testing
+===========
+This sample can run BLE Direct Test Mode (DTM) inside the application on nRF54L15.
+DTM starts at ``PRE_KERNEL_1`` (not in ``main()``), before the normal application boots.
+
+* Hold **Button2** (GPIO P1.08) at reset to enter DTM mode.
+* Release **Button2** at reset to boot the normal comprehensive application.
+* DTM UART: **UART20** at **19200** baud, 8N1, no flow control.
+* Application console: **UART30** at **115200** baud.
