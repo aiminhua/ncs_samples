@@ -12,26 +12,30 @@
 	/delete-node/ partitions;
 
 	partitions {
-		compatible = "fixed-partitions";
+		ranges;
 		#address-cells = <1>;
 		#size-cells = <1>;
 
 		b0n_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
 			label = "b0n";
 			reg = <0x0 0x8580>;
 		};
 
 		provision_partition: partition@8580 {
+			compatible = "zephyr,mapped-partition";
 			label = "b0-provision-data";
 			reg = <0x8580 0x280>;
 		};
 
 		s0_partition: slot0_partition: partition@8800 {
+			compatible = "zephyr,mapped-partition";
 			label = "image-0";
 			reg = <0x8800 0x37800>;
 		};
 
 		bl_storage: bl_storage@1008580 {
+			compatible = "zephyr,mapped-partition";
 			reg = <0x1008580 0x280>;
 			label = "bl_storage";
 		};

@@ -1,21 +1,25 @@
-/delete-node/ &boot_partition;
-/delete-node/ &slot0_partition;
-/delete-node/ &slot1_partition;
-/delete-node/ &storage_partition;
-
 &cpuapp_rram {
+	/delete-node/ partitions;
+
 	partitions {
+		ranges;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
 		boot_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
 			label = "mcuboot";
 			reg = <0x0 0xc000>;
 		};
 
 		slot0_partition: partition@c000 {
+			compatible = "zephyr,mapped-partition";
 			label = "image-0";
 			reg = <0xc000 0x166000>;
 		};
 
 		storage_partition: partition@172000 {
+			compatible = "zephyr,mapped-partition";
 			label = "storage";
 			reg = <0x172000 0xb000>;
 		};
@@ -114,7 +118,7 @@
 &uart20 {
 	status = "okay";
 	current-speed = < 1000000 >;
-		timer = <&timer20>;
+	timer = <&timer20>;
 	/delete-property/ rts-pin;
 	/delete-property/ cts-pin;
 	/delete-property/ hw-flow-control;
@@ -146,7 +150,7 @@
 	pinctrl-0 = <&spi21_default>;
 	pinctrl-1 = <&spi21_sleep>;
 	pinctrl-names = "default", "sleep";
-    cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>, <&gpio2 8 GPIO_ACTIVE_LOW>;
+    	cs-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>, <&gpio2 8 GPIO_ACTIVE_LOW>;
 	spi_dev_0: spi_dev_0@0 {
 		compatible = "vnd,spi-device";
 		reg = <0>;

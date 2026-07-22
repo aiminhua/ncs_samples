@@ -9,7 +9,7 @@
 #include <string.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
-#include <zephyr/fs/nvs.h>
+#include <zephyr/kvss/nvs.h>
 #include <zephyr/logging/log.h>
 
 #define LOG_MODULE_NAME nvs_thread
@@ -18,8 +18,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define STORAGE_NODE_LABEL storage
 static struct nvs_fs fs;
 #define NVS_PARTITION		storage_partition
-#define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
-#define NVS_PARTITION_OFFSET	FIXED_PARTITION_OFFSET(NVS_PARTITION)
+#define NVS_PARTITION_DEVICE	PARTITION_DEVICE(NVS_PARTITION)
+#define NVS_PARTITION_OFFSET	PARTITION_OFFSET(NVS_PARTITION)
+#define NVS_PARTITION_SIZE	PARTITION_SIZE(NVS_PARTITION)
 
 #define KEY_ID 0x1000
 #define RBT_CNT_ID 0x1001
@@ -61,7 +62,7 @@ static int nvs_usage_init(void)
 	}
 #endif
 	fs.sector_size = info.size;
-	fs.sector_count = CONFIG_PM_PARTITION_SIZE_SETTINGS_STORAGE / info.size;
+	fs.sector_count = NVS_PARTITION_SIZE / info.size;
 
 	LOG_INF("NVS sector size=%d sector count=%d\n", fs.sector_size, fs.sector_count);
 	
