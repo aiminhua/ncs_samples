@@ -14,8 +14,11 @@
 #include "dtm_transport.h"
 #include <nrfx_uarte.h>
 #include <helpers/nrfx_gppi.h>
-#include <haly/nrfy_uarte.h>
 #include <hal/nrf_uarte.h>
+
+/* Direct UARTE register access (bypasses Zephyr async-mode poll_in block) */
+static uint8_t dtm_poll_byte;
+static NRF_UARTE_Type *dtm_uarte_regs;
 
 #define CONFIG_DTM_UART_BAUDRATE 19200
 
@@ -102,66 +105,6 @@
 #define MAX_ITERATIONS_NEEDED_FOR_NEXT_BYTE ((5000 + 2 * UART_POLL_CYCLE) / UART_POLL_CYCLE)
 
 static const struct device *dtm_uart = DEVICE_DT_GET(DTM_UART);
-
-/* DTM 2-wire 直接驱动 UARTE(bare-metal)。
- * UART20 在 app 模式由 async 驱动接管，而 async 模式下 uart_poll_in() 返回
- * -ENOTSUP，无法用于 DTM。DTM 运行在 SYS_INIT(PRE_KERNEL_1) 且独占该外设
- * (app 的 async 收发要等内核启动后才发生，而 DTM 模式永不返回)，因此这里用
- * nrf_uarte HAL 轮询收发单字节，符合底层使用 nrfx/HAL 的要求。
- */
-#define DTM_UARTE_REG ((NRF_UARTE_Type *)DT_REG_ADDR(DTM_UART))
-
-/* EasyDMA 单字节收发缓冲(置于普通 SRAM，UARTE20 EasyDMA 可访问)。 */
-static uint8_t dtm_uart_rx_byte;
-static uint8_t dtm_uart_tx_byte;
-
-static void dtm_uart_hal_init(void)
-{
-	NRF_UARTE_Type *u = DTM_UARTE_REG;
-
-	/* 驱动已配置好引脚与 8N1 帧格式，这里仅切换到 DTM 标准的 19200 波特率，
-	 * 并启动单字节接收。
-	 */
-	nrf_uarte_baudrate_set(u, NRF_UARTE_BAUDRATE_19200);
-	nrf_uarte_enable(u);
-
-	nrf_uarte_event_clear(u, NRF_UARTE_EVENT_ENDRX);
-	nrf_uarte_rx_buffer_set(u, &dtm_uart_rx_byte, 1);
-	nrf_uarte_task_trigger(u, NRF_UARTE_TASK_STARTRX);
-}
-
-/* 非阻塞读取 1 字节：收到返回 0，无数据返回 -1。 */
-static int dtm_uart_hal_poll_in(uint8_t *b)
-{
-	NRF_UARTE_Type *u = DTM_UARTE_REG;
-
-	if (!nrf_uarte_event_check(u, NRF_UARTE_EVENT_ENDRX)) {
-		return -1;
-	}
-
-	*b = dtm_uart_rx_byte;
-	nrf_uarte_event_clear(u, NRF_UARTE_EVENT_ENDRX);
-	nrf_uarte_rx_buffer_set(u, &dtm_uart_rx_byte, 1);
-	nrf_uarte_task_trigger(u, NRF_UARTE_TASK_STARTRX);
-
-	return 0;
-}
-
-/* 阻塞发送 1 字节。 */
-static void dtm_uart_hal_poll_out(uint8_t b)
-{
-	NRF_UARTE_Type *u = DTM_UARTE_REG;
-
-	dtm_uart_tx_byte = b;
-	nrf_uarte_event_clear(u, NRF_UARTE_EVENT_ENDTX);
-	nrf_uarte_tx_buffer_set(u, &dtm_uart_tx_byte, 1);
-	nrf_uarte_task_trigger(u, NRF_UARTE_TASK_STARTTX);
-	while (!nrf_uarte_event_check(u, NRF_UARTE_EVENT_ENDTX)) {
-		/* spin until the byte is shifted out */
-	}
-	nrf_uarte_event_clear(u, NRF_UARTE_EVENT_ENDTX);
-	nrf_uarte_task_trigger(u, NRF_UARTE_TASK_STOPTX);
-}
 
 /* DTM command codes */
 enum dtm_cmd_code {
@@ -826,19 +769,45 @@ static uint16_t dtm_cmd_put(uint16_t cmd)
 	}
 }
 
+/**
+ * @brief Structure for UARTE configuration.
+ */
+struct uarte_nrfx_config {
+	const struct uart_async_to_irq_config *a2i_config;
+	nrfx_uarte_t nrfx_dev;
+	nrfx_uarte_config_t nrfx_config;
+	const struct pinctrl_dev_config *pcfg;
+	uint32_t flags;
+
+};
+
 int dtm_tr_init(void)
 {
 	int err;
+	struct uart_config uart_cfg;
+	const struct uart_driver_api *uart_api;
 
 	if (!device_is_ready(dtm_uart)) {
 		printk("UART device not ready\n");
 		return -EIO;
 	}
 
-	/* 直接用 HAL 把 UART20 切到 DTM 的 19200 8N1 并启动接收，
-	 * 绕过 async 驱动(其 poll_in 在 async 模式返回 -ENOTSUP)。
+	/* Reconfigure UART to DTM baudrate (19200). The devicetree may
+	 * have set a different rate (e.g. 1Mbps for high-speed UART).
 	 */
-	dtm_uart_hal_init();
+	uart_api = (const struct uart_driver_api *)dtm_uart->api;
+	if (uart_api) {
+		uart_api->config_get(dtm_uart, &uart_cfg);
+		uart_cfg.baudrate = CONFIG_DTM_UART_BAUDRATE;
+		uart_api->configure(dtm_uart, &uart_cfg);
+
+		/* Set up direct UARTE register access for poll_in/out.
+		 * Bypasses Zephyr driver which blocks poll_in in async mode.
+		 */
+		dtm_uarte_regs = *(NRF_UARTE_Type **)dtm_uart->config;
+		nrf_uarte_rx_buffer_set(dtm_uarte_regs, &dtm_poll_byte, 1);
+		nrf_uarte_task_trigger(dtm_uarte_regs, NRF_UARTE_TASK_STARTRX);
+	}
 
 	err = dtm_init(NULL);
 	if (err) {
@@ -848,6 +817,7 @@ int dtm_tr_init(void)
 
 	err = dtm_uart_wait_init();
 	if (err) {
+		printk("Error during dtm_uart_wait_init: %d\n", err);
 		return err;
 	}
 
@@ -866,8 +836,18 @@ union dtm_tr_packet dtm_tr_get(void)
 
 	printk("\nWaiting for DTM command\n");
 	for (;;) {
-		current_time = dtm_uart_wait();		
-		err = dtm_uart_hal_poll_in(&rx_byte);
+		current_time = dtm_uart_wait();
+		if (nrf_uarte_event_check(dtm_uarte_regs, NRF_UARTE_EVENT_ENDRX)) {
+			/* Byte received into dtm_poll_byte via DMA */
+			rx_byte = dtm_poll_byte;
+			nrf_uarte_event_clear(dtm_uarte_regs, NRF_UARTE_EVENT_ENDRX);
+			/* Re-arm RX buffer for next byte */
+			nrf_uarte_rx_buffer_set(dtm_uarte_regs, &dtm_poll_byte, 1);
+			nrf_uarte_task_trigger(dtm_uarte_regs, NRF_UARTE_TASK_STARTRX);
+			err = 0;
+		} else {
+			err = -1;
+		}
 		if (err) {
 			if (err != -1) {
 				printk("UART polling error\n: %d", err);
@@ -923,8 +903,8 @@ int dtm_tr_process(union dtm_tr_packet cmd)
 	ret = dtm_cmd_put(tmp);
 	printk("Sending 0x%04x response\n", ret);
 
-	dtm_uart_hal_poll_out((ret >> 8) & 0xFF);
-	dtm_uart_hal_poll_out(ret & 0xFF);
+	uart_poll_out(dtm_uart, (ret >> 8) & 0xFF);
+	uart_poll_out(dtm_uart, ret & 0xFF);
 
 	return 0;
 }

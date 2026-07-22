@@ -37,8 +37,8 @@ int dtm_main(void)
 	} else {
 		printk("DTM mode not enabled by Button2\n");
 		return 0; // Exit if DTM mode is not enabled
-	}	
-	
+	}
+
 	printk("Starting Direct Test Mode sample\n");
 
 	//unlock interrupts pri > 6
