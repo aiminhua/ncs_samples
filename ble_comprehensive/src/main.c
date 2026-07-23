@@ -116,7 +116,8 @@ void set_device_pm_state(void)
 		err |= pm_device_action_run(devSPI,	PM_DEVICE_ACTION_SUSPEND);
 #ifdef CONFIG_SAMPLE_HS_UART
 #ifdef CONFIG_UART_ASYNC_API
-		((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
+		// ((const struct uart_driver_api *)devUart1->api)->rx_disable(devUart1);
+		uart_rx_disable(devUart1);
 #endif
 		k_msleep(10);  //just to simulate a thread calling rx_disable
 		err |= pm_device_action_run(devUart1, PM_DEVICE_ACTION_SUSPEND);

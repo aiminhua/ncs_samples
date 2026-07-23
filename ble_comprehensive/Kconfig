@@ -62,13 +62,26 @@ config BT_NUS_SECURITY_ENABLED
 	  Enable BLE security for the UART service.
 	  Requires CONFIG_BT_NUS_SECURITY_ENABLED=y in prj.conf to activate.
 
-config DTM_IN_APP
+menuconfig DTM_IN_APP
 	bool "Enable DTM in application"
 	depends on SOC_NRF54L15_CPUAPP
+	select NRFX_TIMER
 	help
 	  Enable Direct Test Mode (DTM) running at PRE_KERNEL_1 before
-	  the application main. When enabled, hold Button 2 at boot to
-	  enter DTM mode; otherwise the application boots normally.
+	  the application main.
+
+if DTM_IN_APP
+	config LOG_PRINTK
+		default n
+
+	config KERNEL_INIT_PRIORITY_DEVICE
+		int
+		default 20
+
+	config CONSOLE_INIT_PRIORITY
+		int
+		default 21
+endif # DTM_IN_APP
 
 if DTM_IN_APP
 
