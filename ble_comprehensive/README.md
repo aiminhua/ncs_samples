@@ -37,7 +37,7 @@
 
 | 模块 | 说明 | 源文件 |
 |------|------|--------|
-| **BLE NUS** | Nordic UART Service，手机与设备间的无线串口透传 | `src/main.c` |
+| **BLE NUS** | Nordic UART Service，手机与设备间的蓝牙串口透传 | `src/main.c` |
 | **BLE OTA DFU** | 通过 BLE SMP 协议进行设备固件升级（MCUboot + MCUmgr） | sysbuild 配置 |
 | **高速 UART** | 1 Mbps 异步 UART 回环测试，用于验证高速串口可靠性 | `src/uart_thread.c` |
 | **SPI Master** | SPI 主设备通信示例，演示 `spi_transceive_dt` / `spi_write_dt` API | `src/spi_thread.c` |
@@ -103,7 +103,7 @@ west build -b nrf7002dk/nrf5340/cpuapp --sysbuild -p
 > **Sysbuild 说明：** `--sysbuild` 参数启用多镜像构建系统，会同时编译：
 > - MCUboot（引导加载程序，应用核）
 > - ble_comprehensive（主应用，应用核）
-> - IPC Radio / b0n（网络核固件 + 安全引导，仅 nRF5340/nRF54L15/nRF7002DK）
+> - IPC Radio / b0n（网络核固件 + 安全引导，仅 nRF5340/nRF7002DK）
 
 ### 烧录
 
@@ -447,7 +447,7 @@ Sysbuild 构建完成后，`build/` 目录下的关键文件：
 | `ble_comprehensive/zephyr/zephyr.signed.bin` | 应用核签名固件（单个） |
 | `ble_comprehensive/zephyr/zephyr.hex` | 应用核 Intel HEX 文件 |
 | `mcuboot/zephyr/zephyr.hex` | MCUboot 引导程序 |
-| `ipc_radio/zephyr/zephyr.hex` | 网络核 IPC Radio 固件（nRF53/nRF54L） |
+| `ipc_radio/zephyr/zephyr.hex` | 网络核 IPC Radio 固件（nRF53） |
 
 ---
 
