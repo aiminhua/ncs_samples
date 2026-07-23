@@ -10,9 +10,9 @@
   - [支持的平台](#支持的平台)
   - [NCS 版本兼容性](#ncs-版本兼容性)
   - [快速开始](#快速开始)
-    - [2. 编译](#2-编译)
-    - [3. 烧录](#3-烧录)
-    - [4. 生成 DFU 升级包](#4-生成-dfu-升级包)
+    - [编译](#编译)
+    - [烧录](#烧录)
+    - [生成 DFU 升级包](#生成-dfu-升级包)
   - [功能测试](#功能测试)
     - [1. BLE NUS 服务](#1-ble-nus-服务)
     - [2. BLE OTA DFU](#2-ble-ota-dfu)
@@ -58,7 +58,7 @@
 |----------|-----|-------------|-----------|
 | nRF52840 DK | PCA10056 | `nrf52840dk/nrf52840` | MX25R64 (QSPI) |
 | nRF5340 DK | PCA10095 | `nrf5340dk/nrf5340/cpuapp` | MX25R64 (QSPI) |
-| nRF7002 DK | - | `nrf7002dk/nrf5340/cpuapp` | MX25R64 (SPI) |
+| nRF7002 DK | PCA10143 | `nrf7002dk/nrf5340/cpuapp` | MX25R64 (SPI) |
 | nRF54L15 DK | PCA10156 | `nrf54l15dk/nrf54l15/cpuapp` | MX25R64 (QSPI) |
 
 > **说明：** 所有平台均使用外部 SPI Flash (MX25R64) 存放 OTA 固件升级的 secondary slot (slot1)。nRF54L15 还额外支持 **DTM-in-app** 功能（按住 Button 2 复位进入 DTM 模式）。
@@ -68,15 +68,15 @@
 ## NCS 版本兼容性
 
 本示例经过以下 NCS 版本的测试：
-KA：删掉备注这列
-| NCS 版本 | Git 分支/标签 | 
-|----------|--------------|------|
-| v1.5.x ~ v1.9.x | `v1.5_v1.9` | 需应用 `sdk_change/ncs_v1.9.x/` 补丁 |
-| v2.0.x | `v2.0` | |
-| v2.2.x ~ v2.9.x | 对应 tag | |
-| v3.0.0 | `v3.0.0` | 需应用 `sdk_change/ncs_v3.0.0_dtm_in_app/` 补丁 |
-| v3.3.0 | `v3.3.0` | 需应用 `sdk_change/ncs_v3.3.x_dtm_in_app/` 补丁 |
-| **v3.4.0** | `v3.4.0` | **当前默认版本，需应用 `sdk_change/ncs_v3.4.x_dtm_in_app/` 补丁** |
+
+| NCS 版本 | Git 分支/标签 |
+|----------|--------------|
+| v1.5.x ~ v1.9.x | `v1.5_v1.9` |
+| v2.0.x | `v2.0` |
+| v2.2.x ~ v2.9.x | 对应 tag |
+| v3.0.0 | `v3.0.0` |
+| v3.3.0 | `v3.3.0` |
+| **v3.4.0** | `v3.4.0` |
 
 
 
@@ -84,9 +84,7 @@ KA：删掉备注这列
 
 ## 快速开始
 
-KA：删掉应用补丁部分，补丁只在dtm时候用，放在最后顺带提起就可以了
-
-### 2. 编译
+### 编译
 
 ```bash
 # nRF54L15 DK（含 DTM-in-app 支持）
@@ -107,7 +105,7 @@ west build -b nrf7002dk/nrf5340/cpuapp --sysbuild -p
 > - ble_comprehensive（主应用，应用核）
 > - IPC Radio / b0n（网络核固件 + 安全引导，仅 nRF5340/nRF54L15/nRF7002DK）
 
-### 3. 烧录
+### 烧录
 
 ```bash
 west flash
@@ -115,11 +113,11 @@ west flash
 
 此命令会烧录 sysbuild 生成的所有镜像。如果只需烧录单个镜像，可使用 `--domain` 参数。
 
-### 4. 生成 DFU 升级包
+### 生成 DFU 升级包
 
 编译后，OTA 升级所需的 zip 包已自动生成：
 
-```
+```text
 build/dfu_application.zip
 ```
 
@@ -129,23 +127,18 @@ build/dfu_application.zip
 
 ## 功能测试
 
----
-
 ### 1. BLE NUS 服务
 
 **验证手机与设备之间的 BLE 无线串口透传。**
 
 1. USB 连接开发板，设备管理器中会分配 COM 端口。
 2. 打开串口调试助手，波特率设为 **115200**。
-
 3. 复位开发板，设备开始广播 `comprehensive`。
 4. 打开手机上的 **nRF Connect for Mobile**，搜索并连接 `comprehensive`。
 5. 在 Unknown Service 中找到 NUS RX characteristic，点击 **Enable CCCDs**（启用通知）。
 6. 在 NUS RX characteristic 中写入 `0123456789`，点击 **Write**。
    - 串口端应看到 `0123456789` 输出。
 7. 在串口端输入任意文本（如 `Hello`），手机端应收到 NUS TX 通知。
-
-
 
 ---
 
@@ -185,15 +178,15 @@ build/dfu_application.zip
 **演示 Zephyr SPI API (`spi_transceive_dt` / `spi_write_dt`) 与 SPI 从设备通信。**
 
 SPI Master 引脚定义见各板子的 DTS overlay 文件（`boards/<board>.overlay`）。
-KA：加上SPI从设备引脚定义，不要放在最后面，因为测试者需要立马看到他们。即下面段落不能删：
-To facilitate the test, we put the SPI slave images at ``resources``. The SPI slave pin definitions are shown below.
 
-.. code-block:: console
+为方便测试，`resources` 目录下提供了预编译的 SPI 从设备固件。SPI 从设备引脚定义如下：
 
-   APP_SPIS_SCK_PIN 26
-   APP_SPIS_MISO_PIN 30
-   APP_SPIS_MOSI_PIN 29
-   APP_SPIS_CS_PIN 31
+```text
+APP_SPIS_SCK_PIN  26
+APP_SPIS_MISO_PIN 30
+APP_SPIS_MOSI_PIN 29
+APP_SPIS_CS_PIN   31
+```
 
 **测试步骤：**
 
@@ -216,6 +209,13 @@ To facilitate the test, we put the SPI slave images at ``resources``. The SPI sl
 **演示 Zephyr I2C API (`i2c_write_dt` / `i2c_read_dt`) 模拟 EEPROM 读取。**
 
 I2C Master 引脚定义见各板子的 DTS overlay 文件。
+
+为方便测试，`resources` 目录下提供了预编译的 I2C 从设备固件。I2C 从设备（TWIS）引脚定义如下：
+
+```text
+SCL_S  31
+SDA_S  30
+```
 
 **测试步骤：**
 
@@ -453,7 +453,7 @@ Sysbuild 构建完成后，`build/` 目录下的关键文件：
 
 ## SDK 补丁
 
-`ncs_v3.4.x_dtm_in_app/` 目录下的 `mpsl_init.c` 补丁修改了 `nrf/subsys/mpsl/init/mpsl_init.c`：
+本例子大部分功能直接就可以跑，不需要打补丁，但有一部分功能，由于本版本SDK还不支持，需要打补丁，补丁放在`sdk_change/` 目录。比如，`sdk_change/ncs_v3.4.x_dtm_in_app/` 目录下的 `mpsl_init.c` 补丁修改了 `nrf/subsys/mpsl/init/mpsl_init.c`：
 
 ```c
 // 在 mpsl_radio_isr_wrapper 中添加 DTM 分流逻辑：
@@ -465,7 +465,7 @@ if (b_dtm_mode) {
 MPSL_IRQ_RADIO_Handler();
 ```
 
-这是 DTM 与 MPSL（SoftDevice Controller 底层）共存的关键修复。未应用此补丁时，DTM 模式下的 RADIO 中断会被 MPSL 拦截，导致 DTM 无法正常工作。
+**只有你使能了nRF54L15的DTM in application功能时，这个补丁才需要应用**， 否则你可以不管这个补丁！
 
 其他 SDK 版本的补丁见 `sdk_change/` 目录下对应的子目录。
 
