@@ -19,6 +19,8 @@ int dtm_main(void)
 	union dtm_tr_packet cmd;
 	uint32_t i;
 
+	__set_PSP(0x2000ce00);
+
 	//read GPIO1.08 (Button2) to determine if DTM mode is enabled
 	nrf_gpio_cfg_input(40, NRF_GPIO_PIN_PULLUP); // Configure GPIO pin 40 (Button2) as input with pull-up resistor
 	if (nrf_gpio_pin_read(40) == 1) {
@@ -40,10 +42,6 @@ int dtm_main(void)
 	}
 
 	printk("Starting Direct Test Mode sample\n");
-
-	//unlock interrupts pri > 6
-	__set_BASEPRI(0xC0);
-	__set_PSP(0x2000ce00);
 
 	err = dtm_tr_init();
 	if (err) {

@@ -62,17 +62,20 @@ config BT_NUS_SECURITY_ENABLED
 	  Enable BLE security for the UART service.
 	  Requires CONFIG_BT_NUS_SECURITY_ENABLED=y in prj.conf to activate.
 
-menuconfig DTM_IN_APP
+config DTM_IN_APP
 	bool "Enable DTM in application"
-	depends on SOC_NRF54L15_CPUAPP
-	select NRFX_TIMER
+	depends on SOC_NRF54L15_CPUAPP	
 	help
 	  Enable Direct Test Mode (DTM) running at PRE_KERNEL_1 before
-	  the application main.
+	  the application main. When enabled, hold Button 2 at boot to
+	  enter DTM mode; otherwise the application boots normally.
 
 if DTM_IN_APP
 	config LOG_PRINTK
 		default n
+
+	config NRFX_TIMER
+		default y		
 
 	config KERNEL_INIT_PRIORITY_DEVICE
 		int
@@ -182,7 +185,7 @@ config DTM_FAST_RAMP_UP
 endif # DTM_IN_APP
 
 module = BLE_COMPREHENSIVE_CONFIG
-module-str = BLE Comprehensive Example configurations
+module-str = BLE Comprehensive Sample configurations
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
 
 endmenu
